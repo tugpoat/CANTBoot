@@ -48,34 +48,33 @@ Hardware Setup Examples
 -----------------------
 ### Single DIMM:
 
-	+---------+                         +--------------+
-	| NetDIMM | <==[Crossover Cable]==> | Raspberry Pi |
-	+---------+                         +--------------+
-	                                          /\
-	                                          ||
-	                                    [WiFi Connection]
-	                                          ||
-	                                          \/
-	                                  +------------------+
-	                                  | Internet Browser |
-	                                  +------------------+
+    +---------+                         +--------------+
+    | NetDIMM | <==[Crossover Cable]==> | Raspberry Pi |
+    +---------+                         +--------------+
+                                              /\
+                                              ||
+                                        [WiFi Connection]
+                                              ||
+                                              \/
+                                      +------------------+
+                                      | Internet Browser |
+                                      +------------------+
 
 ### Multiple DIMMs:
 
-	+---------+                        
-	| NetDIMM | <==[Straight-thru Cable]==| 
-	+---------+                          ||
-	            						 ||    +--------+
-	                                     |===> |        |
-	+---------+                                |        |							   +--------------+                         +-------------+
-	| NetDIMM | <==[Straight-thru Cable]=====> | Switch | <==[Straight-thru Cable]==>  | Raspberry Pi | <==[WiFi Connection]==> | Web Browser |
-	+---------+                                |        |							   +--------------+                         +-------------+
-										 |===> |        |
-	                                     ||    +--------+
-	+---------+                          ||
-	| NetDIMM | <==[Straight-thru Cable]==| 
-	+---------+      
-	                                
+    +---------+
+    | NetDIMM | <==[Straight-thru Cable]==|
+    +---------+                          ||
+                                         ||    +--------+
+                                         |===> |        |
+    +---------+                                |        |                              +--------------+                         +-------------+
+    | NetDIMM | <==[Straight-thru Cable]=====> | Switch | <==[Straight-thru Cable]==>  | Raspberry Pi | <==[WiFi Connection]==> | Web Browser |
+    +---------+                                |        |                              +--------------+                         +-------------+
+                                         |===> |        |
+                                         ||    +--------+
+    +---------+                          ||
+    | NetDIMM | <==[Straight-thru Cable]==|
+    +---------+
 
 Todo
 ----
