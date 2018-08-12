@@ -34,6 +34,7 @@ def build_games_list(database, prefs, scan_fs=True):
 			# There are a number of reasons this might happen (filesystem unmounted etc)
 			continue
 
+		# Skip checksumming if requested for faster startup time
 		if prefs['Main']['skip_checksum']:
 				game.checksum = igame[4]
 
@@ -50,6 +51,7 @@ def build_games_list(database, prefs, scan_fs=True):
 	# Clean up a little
 	installed_games = None
 
+	#If we don't want to scan the games directory for new roms, then just sort and return what we have.
 	if not scan_fs:
 		games.sort(key = lambda games: games.title.lower())
 		return games
@@ -64,6 +66,11 @@ def build_games_list(database, prefs, scan_fs=True):
 			# Just use the partial games list we generated in the previous step.
 			is_installed = False
 
+			'''
+			Loop through and check the filename against all our installed filenames.
+			No need for search algorithms, this list will never be large.
+			If we find a match, then the game is already installed and no further processing is necessary for this file.
+			'''
 			for igame in games:
 				if igame.filename == filename:
 					is_installed = True
@@ -71,8 +78,16 @@ def build_games_list(database, prefs, scan_fs=True):
 
 			if is_installed: continue
 
+			'''
+			Since we have established that this rom is not yet installed, we need to do the following:
+			Instantiate a new GameDescriptor
+			Ensure it is a valid netboot file
+			Retrieve any information from the database that we can about it
+			Add the game and its related information (represented by the GameDescriptor object) to the list
+			'''
 			game = GameDescriptor(filepath)
 
+			# If it's not a valid netboot file we don't care about it anymore
 			if not game.isValid():
 				continue
 
@@ -84,7 +99,6 @@ def build_games_list(database, prefs, scan_fs=True):
 
 				if not installed_game:
 					# If game is not installed, do so.
-
 					database.installGame(identity[0], filename, game.file_checksum)
 					installed_game = database.getInstalledGameByGameId(identity[0])
 
@@ -95,6 +109,8 @@ def build_games_list(database, prefs, scan_fs=True):
 				games.append(game)
 				print("\tAdded " + game.title)
 			else:
+				# We were unable to retrieve information about this game from the database. 
+				# Just fill in whatever we can and pass it along.
 				print("\tUnable to identify " + filename)
 				game.game_id = 0
 				game.checksum_status = True
@@ -102,5 +118,6 @@ def build_games_list(database, prefs, scan_fs=True):
 				game.attributes = []
 				games.append(game)
 
+	# Sort and return our built list of GameDescriptor objects
 	games.sort(key = lambda games: games.title.lower())
 	return games

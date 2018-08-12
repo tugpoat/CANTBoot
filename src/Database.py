@@ -1,5 +1,9 @@
 import sqlite3
 
+'''
+SQLite3 abstraction for database functionality needed by the application.
+The Database stores both installed game information and also any information about the game that can be used meaningfully.
+'''
 class ACNTBootDatabase:
 	_sqlite = None
 	_dbfile = None

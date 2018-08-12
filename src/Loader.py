@@ -48,24 +48,42 @@ class LoadWorker(Process):
     path = None
     host = None
 
+    '''
+    Construct using bare minimum of information
+    queue: Queue, for passing messages back to the main process
+    abs_path: String, absolute path of ROM file
+    host: String, IP Address of endpoint
+    '''
     def __init__(self, queue, abs_path, host):
         Process.__init__(self)
         self.mq = queue
         self.path = abs_path
         self.host = host
 
+    '''
+    Construct using container objects
+    queue: Queue, for passing messages back to the main process
+    node: NodeDescriptor, contains information about the endpoint
+    game: GameDescriptor, contains information about the ROM we intend to load on the endpoint
+    '''
     def __init__(self, queue, node, game):
         Process.__init__(self)
         self.mq = queue
         self.path = game.filepath
         self.host = node.ip
 
+    '''
+    This is the function that does the actual work.
+    It is invoked with LoadWorker.start() and runs until terminated.
+    '''
     def run(self):
 
         filename = self.path[:(len(self.path) - self.path.rfind(os.pathsep))]
 
         print("Uploading " + filename + " to " + self.host)
 
+        
+        # Open a connection to endpoint and notify the main thread that we are doing so.
         try:
             message = message = [1, ("%s : connecting to %s" % (self.name, self.host))]
             self.mq.put(message)
@@ -76,6 +94,7 @@ class LoadWorker(Process):
             #print(("%s : connection to %s failed! exiting." % (self.name, self.host)))
             return 1
 
+        # We have successfully connected to the endpoint. Let's shove our rom file down its throat.
         try:
             message = [2, ("%s : Uploading " % (self.name, self.path, self.host))]
             self.mq.put(message)
@@ -90,7 +109,7 @@ class LoadWorker(Process):
             message = [3, ("%s : Booting " % (self.name, self.path, self.host))]
             self.mq.put(message)
             
-            # restart host, this will boot into game
+            # restart the endpoint system, this will boot into the game we just sent
             gameboot.HOST_Restart()
 
         except Exception as ex:
@@ -101,6 +120,10 @@ class LoadWorker(Process):
         message = [4, ("%s : Entering Keep-alive loop. " % (self.name))]
         self.mq.put(message)
 
+        '''
+        Some systems and games have some wacky time limit thing where they will stop working after a period of time.
+        We get around this by sending a heartbeat to the endpoint.
+        '''
         while 1:
             try:
                 # set time limit to 10h. According to some reports, this does not work.
