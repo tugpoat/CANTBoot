@@ -51,6 +51,7 @@ def build_games_list(database, prefs, scan_fs=True):
 	installed_games = None
 
 	if not scan_fs:
+		games.sort(key = lambda games: games.title.lower())
 		return games
 
 	print("Looking for new games")
@@ -71,6 +72,10 @@ def build_games_list(database, prefs, scan_fs=True):
 			if is_installed: continue
 
 			game = GameDescriptor(filepath)
+
+			if not game.isValid():
+				continue
+
 			identity = database.getGameInformation(game.rom_title)
 
 			if identity:
