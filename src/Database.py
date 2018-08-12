@@ -1,6 +1,6 @@
 import sqlite3
 
-class NATCBootDatabase:
+class ACNTBootDatabase:
 	_sqlite = None
 	_dbfile = None
 

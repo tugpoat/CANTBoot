@@ -1,6 +1,6 @@
 from multiprocessing import Manager, Process
 from asyncio import Queue
-from Database import NATCBootDatabase
+from Database import ACNTBootDatabase
 from GameDescriptor import GameDescriptor
 from Loader import Loader, LoadWorker
 
@@ -10,7 +10,7 @@ PREFS_FILE = "settings.cfg"
 prefs = configparser.ConfigParser()
 
 #set up database
-db = NATCBootDatabase('db.sqlite')
+db = ACNTBootDatabase('db.sqlite')
 
 #scan games
 games_list = build_games_list(db, prefs)
