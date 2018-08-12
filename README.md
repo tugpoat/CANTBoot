@@ -1,12 +1,12 @@
-NATCBoot
+ACNTBoot
 ========
 ********WARNING: THIS DOES NOT WORK YET.********
 
-NATCBoot is loosely based on NAOMIWeb, and started life as a fork of it.
+ACNTBoot is loosely based on NAOMIWeb, and started life as a fork of it.
 ### Github links:
 		- https://github.com/root670/NaomiWeb
 		- https://github.com/tugpoat/NaomiWeb
-		- https://github.com/tugpoat/NATCBoot
+		- https://github.com/tugpoat/ACNTBoot
 
 I wanted a cleanly-written, easy-to-use, efficient, and easily extensible loader, which was also functional and pleasant to look at.
 I couldn't find one, so I wrote it.
