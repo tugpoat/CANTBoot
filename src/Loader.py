@@ -2,9 +2,10 @@
 import os
 import time
 import json
+import configparser
 from multiprocessing import Manager, Process, Queue
-from configparser import *
-
+from NodeDescriptor import *
+from GameDescriptor import *
 import gameboot
 
 
@@ -27,17 +28,16 @@ Basically just a container for organizational purposes
 Also enables easy generation of JSON that we can send over through the UI
 '''
 class Loader:
-    system_id
+    system_name = None
     status = 0
     error = 0
-    host_name = ""
-    host_ip = ""
     game = None
+    node = None
     pworker = None
 
     def serialize(self):
-        #TODO: Check if self.game is valid GameDescriptor object
-        return json.dumps({"status": self.status, "error": self.error, "hostname": self.host_name, "host_ip": self.host_ip, "game": self.game.serialize()})
+        #TODO: Check if self.game is valid GameDescriptor object and that self.node is valid NodeDescriptor object
+        return json.dumps({"system_name": self.system_name, "status": self.status, "error": self.error, "node": self.node.serialize(), "game": self.game.serialize()})
 
 
 '''
@@ -53,6 +53,12 @@ class LoadWorker(Process):
         self.mq = queue
         self.path = abs_path
         self.host = host
+
+    def __init__(self, queue, node, game):
+        Process.__init__(self)
+        self.mq = queue
+        self.path = game.filepath
+        self.host = node.ip
 
     def run(self):
 
