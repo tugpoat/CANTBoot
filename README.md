@@ -78,12 +78,16 @@ Hardware Setup Examples
 Todo
 ----
  * Make the dang thing work
- * Rework code to be more clean and efficient
+ * Web UI
+ * Adafruit UI
+ * GPIO Reset
+ * DHCP configuration of NetDIMM(s)
+ * Interface for Network Configuration (WiFi SSID, PSK, IP, DNS options, etc.)
+ * Interface for System Settings/Commands (Power off, Reboot, Manual GPIO Reset, etc.)
+ * Card emulation
+ * Multiboot
  * Style the edit buttons to actually look and flow nice
  * Catch exit signals and close everything properly
  * Incorporate actual messaging between load jobs and interface
- * Support hardware reset
- * Create some kind of database manager so I don't have to support this forever or expect users to know SQL
- * Maybe support multiple endpoints for netbooting? Could be useful for users with a number of systems, or for running a tournament or something.
  * Unit tests and E2E tests
  * Set up build pipeline and automatic SD image generation
