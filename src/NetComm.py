@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 # Triforce Netfirm Toolbox, put into the public domain.
 # Please attribute properly, but only if you want.
 
@@ -214,10 +213,17 @@ class NetComm:
 #
 # Good Luck. Warez are evil.
 
-def HOST_DumpToFile(self, file):
-	for x in range(0, 0x10000, 1):
-		file.write(HOST_Read16(0x80000000 + x * 0x10))
-		sys.stderr.write("%08x\r" % x)
+	def HOST_DumpToFile(self, file):
+		for x in range(0, 0x10000, 1):
+			file.write(HOST_Read16(0x80000000 + x * 0x10))
+			sys.stderr.write("%08x\r" % x)
+
+	# PRM - Dump memory to file in chunks of 4 bytes
+	def HOST_DumpToFile4(self, file, addr, len):
+		for x in range(addr, addr + len, 0x04):
+	#		if not (x & 0xFFF):
+			sys.stderr.write("%08x\r" % x)
+			file.write(HOST_Read4(x))
 
 #if 1:
 #	# display "now loading..."

@@ -33,7 +33,7 @@ ui_lcdq = Queue()
 # set up adafruit ui if detected and enabled
 
 # Functionality test
-test_node = NodeDescriptor("localhost", 10763)
+test_node = NodeDescriptor("localhost", 10703)
 print(test_node.ip)
 
 test_loader = Loader()
