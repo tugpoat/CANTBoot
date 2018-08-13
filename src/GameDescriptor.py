@@ -42,8 +42,17 @@ class GameDescriptor:
 		try:
 			fp = open(self.filepath, 'rb')
 			# We only care about the japanese title
-			fp.seek(0x30, os.SEEK_SET)
-			title = fp.read(32).decode('utf-8').rstrip(' ').lstrip(' ')
+			fp.seek(0x30)
+			title = fp.read(32).decode('utf-8').strip(' ')
+
+			'''
+			Dangit Darksoft lmao
+			Also, I didn't quite do my research, and ended up lifting this bit from some dude who forked off.
+			Hi ldindon! Keep at it :)
+			'''
+			if title == "AWNAOMI":
+				fp.seek(0xFF30)
+				title = fp.read(32).decode('utf-8').strip(' ')
 
 			fp.close()
 			return title
@@ -59,12 +68,13 @@ class GameDescriptor:
 			fp.close()
 			if header_magic[:5] == 'NAOMI':
 				return 'NAOMI'
-			elif header_magic[:6] == 'NAOMI2':
+			elif header_magic[:6] == 'Naomi2':
 				return 'NAOMI2'
-			elif header_magic[:7] == 'CHIHIRO':
+			elif header_magic[:4] == 'FATX':
 				return 'CHIHIRO'
-			elif header_magic == 'TRIFORCE':
-				return 'TRIFORCE'
+			# TODO: Triforce has some weird game-specific junk at offset 0x0. Can probably do title detection with that.
+			#elif header_magic == 'TRIFORCE':
+			#	return 'TRIFORCE'
 			else:
 				return False
 
