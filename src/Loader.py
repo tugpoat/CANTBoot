@@ -6,7 +6,7 @@ import configparser
 from multiprocessing import Manager, Process, Queue
 from NodeDescriptor import *
 from GameDescriptor import *
-import gameboot
+from NetComm import *
 
 
 '''
@@ -47,6 +47,7 @@ class LoadWorker(Process):
     mq = None
     path = None
     host = None
+    _comm = None
 
     '''
     Construct using bare minimum of information
@@ -59,6 +60,7 @@ class LoadWorker(Process):
         self.mq = queue
         self.path = abs_path
         self.host = host
+        self._comm = NetComm()
 
     '''
     Construct using container objects
@@ -71,6 +73,7 @@ class LoadWorker(Process):
         self.mq = queue
         self.path = game.filepath
         self.host = node.ip
+        self._comm = NetComm()
 
     '''
     This is the function that does the actual work.
@@ -87,7 +90,7 @@ class LoadWorker(Process):
         try:
             message = message = [1, ("%s : connecting to %s" % (self.name, self.host))]
             self.mq.put(message)
-            gameboot.connect(self.host, 10703)
+            self._comm.connect(self.host, 10703)
         except Exception as ex:
             message = [-1, ("%s : connection to %s failed! exiting." % (self.name, self.host)), repr(ex)]
             self.mq.put(message)
@@ -99,18 +102,18 @@ class LoadWorker(Process):
             message = [2, ("%s : Uploading " % (self.name, self.path, self.host))]
             self.mq.put(message)
 
-            gameboot.HOST_SetMode(0, 1)
+            self._comm.HOST_SetMode(0, 1)
             # disable encryption by setting magic zero-key
-            gameboot.SECURITY_SetKeycode("\x00" * 8)
+            self._comm.SECURITY_SetKeycode("\x00" * 8)
 
             # uploads file. Also sets "dimm information" (file length and crc32)
-            gameboot.DIMM_UploadFile(game_path)
+            self._comm.DIMM_UploadFile(game_path)
             
             message = [3, ("%s : Booting " % (self.name, self.path, self.host))]
             self.mq.put(message)
             
             # restart the endpoint system, this will boot into the game we just sent
-            gameboot.HOST_Restart()
+            self._comm.HOST_Restart()
 
         except Exception as ex:
             message = [-1, ("%s : Error booting game on hardware! " % (self.name, self.path, self.host)), repr(ex)]
