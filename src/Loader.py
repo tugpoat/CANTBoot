@@ -42,6 +42,7 @@ class Loader:
 
 '''
 The actual loader. instantiated inside of Loader and launched by the main thread. That is, if Python will let me do that (It probably will, Python is a mess).
+LoadWorker is instantiated as the final step and all configuration settings should be resolved beforehand.
 '''
 class LoadWorker(Process):
     mq = None

@@ -7,6 +7,10 @@ from GameDescriptor import GameDescriptor
 from GameList import *
 from Loader import Loader, LoadWorker
 
+from queues import *
+
+from ui_web import UIWeb
+
 
 # load settings
 PREFS_FILE = "settings.cfg"
@@ -25,14 +29,12 @@ games_list = build_games_list(db, prefs)
 # set up messaging
 # TODO: At this point maybe I should just use a messagebus
 # TODO: These need to be able to operate asynchronously
-loaderq = Manager().Queue()
-sysq	= Queue()
-ui_webq = Queue()
-ui_lcdq = Queue()
+
 # set up web ui if enabled
 # set up adafruit ui if detected and enabled
 
 # Functionality test
+'''
 test_node = NodeDescriptor("localhost", 10703)
 print(test_node.ip)
 
@@ -48,7 +50,14 @@ print(test_loader.serialize())
 
 test_loader.pworker = LoadWorker(loaderq, test_node, test_game)
 test_loader.pworker.start()
+'''
 # End functionality test
+
+
+#Launch web UI
+app = UIWeb('Web UI', games_list)
+t = Process(target=app.start)
+t.start()
 
 # Main loop
 # Handles messaging between loaders, etc. and the main thread/UI instances
@@ -56,7 +65,12 @@ while 1:
 	try:
 		item = loaderq.get()
 		print(item)
+		witem = ui_webq.get()
+		print(witem)
+		litem = ui_lcdq.get()
+		print(litem)
 	except QueueEmpty as ex:
 		v = 1
+		continue
 		#do nothing
 

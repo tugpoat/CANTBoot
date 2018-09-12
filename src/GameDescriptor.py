@@ -7,7 +7,7 @@ class GameDescriptor:
 	# Things from ROM file
 	filename = None
 	filepath = None
-	file_checksum = None
+	file_size = None
 	file_checksum = None
 	checksum_status = None
 	system_name = None

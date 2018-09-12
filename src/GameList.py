@@ -2,6 +2,7 @@ from GameDescriptor import GameDescriptor
 import configparser
 import os
 
+#TODO: Extend List or something
 class GameList():
 	
 	def helloworld():
