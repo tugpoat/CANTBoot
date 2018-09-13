@@ -84,8 +84,6 @@ class LoadWorker(Process):
 
         filename = self.path[:(len(self.path) - self.path.rfind(os.pathsep))]
 
-        print("Uploading " + filename + " to " + self.host)
-
         
         # Open a connection to endpoint and notify the main thread that we are doing so.
         try:

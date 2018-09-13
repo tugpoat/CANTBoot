@@ -37,7 +37,7 @@
 				<img src="/static/images/{{game.game_id}}.jpg" alt="game image">
 			</div>
 			<div class="col1">
-				<div><a class="game-link" href="load/{{game.file_checksum}}">{{game.title}}</a></div>
+				<div><a class="game-link" href="load/0/{{game.file_checksum}}">{{game.title}}</a></div>
 				<div><span class="filename"><em>{{game.filename}}</em></span> <span class="label label-default fileinfo">{{round(game.file_size/float(1024*1024), 1)}} MB</span></div>
 			</div>
 		</div>

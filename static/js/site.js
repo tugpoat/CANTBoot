@@ -72,7 +72,7 @@ $('#rescan-games').click(function(event) {
 });
 
 //Status bar
-
+/*
 var source = new EventSource("/status");
 source.onmessage = function(event) {
 	var json = $.parseJSON(event.data);
@@ -82,3 +82,4 @@ source.onmessage = function(event) {
 		$('#status').removeClass('error');
 	$("#status").html(json.message);
 };
+*/

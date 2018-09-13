@@ -24,7 +24,7 @@ class NetComm:
 
 	def connect(self, ip, port):
 		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	#	self.ssettimeout(20)
+		self.s.settimeout(20)
 		self.s.connect((ip, port))
 
 	def disconnect(self):

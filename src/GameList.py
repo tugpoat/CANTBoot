@@ -37,7 +37,7 @@ def build_games_list(database, prefs, scan_fs=True):
 
 		# Skip checksumming if requested for faster startup time
 		if prefs['Main']['skip_checksum']:
-				game.checksum = igame[4]
+				game.file_checksum = igame[4]
 
 		if not prefs['Main']['skip_checksum'] and igame[4] != game.file_checksum:
 				print("Checksum error in " + filename + " expected " + installed_game[4] + " got " + game.file_checksum)

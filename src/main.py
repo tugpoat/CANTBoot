@@ -30,9 +30,6 @@ games_list = build_games_list(db, prefs)
 # TODO: At this point maybe I should just use a messagebus
 # TODO: These need to be able to operate asynchronously
 
-# set up web ui if enabled
-# set up adafruit ui if detected and enabled
-
 # Functionality test
 '''
 test_node = NodeDescriptor("localhost", 10703)
@@ -55,22 +52,47 @@ test_loader.pworker.start()
 
 
 #Launch web UI
-app = UIWeb('Web UI', games_list)
+app = UIWeb('Web UI', games_list, prefs)
 t = Process(target=app.start)
 t.start()
 
+# set up adafruit ui if detected and enabled
+
 # Main loop
 # Handles messaging between loaders, etc. and the main thread/UI instances
+print('entering main loop')
 while 1:
 	try:
-		item = loaderq.get()
-		print(item)
-		witem = ui_webq.get()
+
+		#FIXME: Kinda works. finish implementation of messaging.
+		witem = ui_webq.get(False)
 		print(witem)
-		litem = ui_lcdq.get()
+		if witem[0] == 'LOAD':
+			test_game = None
+			
+
+			for g in games_list:
+				if g.file_checksum == witem[1]:
+					test_game = g
+					break
+
+			print(test_game.title)
+
+			test_loader = Loader()
+			test_loader.game = test_game
+
+			test_node = NodeDescriptor(prefs['Network']['dimm_ip'], 10703)
+			test_loader.node = test_node
+			test_loader.system_name = test_game.system_name
+
+			test_loader.pworker = LoadWorker(loaderq, test_node, test_game)
+			test_loader.pworker.start()
+
+		loader_item = loaderq.get(False)
+		print(loader_item)
+		litem = ui_lcdq.get(False)
 		print(litem)
-	except QueueEmpty as ex:
-		v = 1
-		continue
+	except:
+		pass
 		#do nothing
 
