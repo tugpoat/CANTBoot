@@ -29,8 +29,8 @@ def enable_dnsmasq():
 	os.system("sudo service dnsmasq start")
 
 def disable_hostapd():
-	os.system("sudo service dnsmasq disable")
-	os.system("sudo service dnsmasq stop")
+	os.system("sudo service hostapd disable")
+	os.system("sudo service hostapd stop")
 
 def enable_hostapd():
 	os.system("sudo service hostapd enable")

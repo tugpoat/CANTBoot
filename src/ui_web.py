@@ -4,27 +4,36 @@ import signal
 import string
 import json
 from bottle import Bottle, template, static_file, error, request, response, view
+import beaker.middleware
 from Database import ACNTBootDatabase
 from queues import ui_webq
-
-'''
-command codes
-'''
+session_opts = {
+    'session.type': 'file',
+    'session.cookie_expires': 300,
+    'session.data_dir': './data',
+    'session.auto': True
+}
 
 class UIWeb(Bottle):
+    #TODO: The Web UI opening its own DB connection is not ideal.
     _db = None
     _games = None
     _prefs = None
+    _bottle = None
+    _beaker = None
 
     def __init__(self, name, gameslist, prefs):
         super(UIWeb, self).__init__()
+        self._beaker = beaker.middleware.SessionMiddleware(self, session_opts)
         self.name = name
         self._games = gameslist
         self._prefs = prefs
+
         #set up routes
         self.route('/', method="GET", callback=self.index)
         self.route('/static/<filepath:path>', method="GET", callback=self.serve_static)
         self.route('/config', method="GET", callback=self.appconfig)
+        self.route('/config', method="POST", callback=self.do_appconfig)
         self.route('/load/<node>/<fhash>', method="GET", callback=self.load)
 
     def start(self):
@@ -47,8 +56,10 @@ class UIWeb(Bottle):
         else:
             return template('index')
 
+    def auth(self):
+        return
+
     def appconfig(self):        
-        #ugh why is html so poopy for integrating with
         if self._prefs['Main']['skip_checksum'] == 'True':
             skip_checksum = 'checked'
         else:
@@ -59,19 +70,24 @@ class UIWeb(Bottle):
         else:
             gpio_reset =  ''
 
-        #TODO: default settings are stupid
+        #TODO: default settings are stupid, make them go away
         eth0_ip = self._prefs['Network']['eth0_ip'] or '192.168.0.1'
         eth0_netmask = self._prefs['Network']['eth0_netmask'] or '255.255.255.0'
 
         wlan0_ip = self._prefs['Network']['wlan0_ip'] or '10.0.0.1'
         wlan0_netmask = self._prefs['Network']['wlan0_netmask'] or '255.255.255.0'
+        wlan0_ssid = "benis"
+        wlan0_psk = "bepis"
 
         dimm_ip = self._prefs['Network']['dimm_ip'] or '192.168.0.2'
 
         games_directory = self._prefs['Games']['directory'] or 'games'
 
         #render
-        return template('config', skip_checksum=skip_checksum, gpio_reset=gpio_reset, eth0_ip=eth0_ip, eth0_netmask=eth0_netmask, wlan0_ip=wlan0_ip, wlan0_netmask=wlan0_netmask, dimm_ip=dimm_ip, games_directory=games_directory)
+        return template('config', skip_checksum=skip_checksum, gpio_reset=gpio_reset, eth0_ip=eth0_ip, eth0_netmask=eth0_netmask, wlan0_ip=wlan0_ip, wlan0_ssid=wlan0_ssid, wlan0_psk=wlan0_psk, wlan0_netmask=wlan0_netmask, dimm_ip=dimm_ip, games_directory=games_directory)
+        
+    def do_appconfig(self):
+        return
 
     def load(self, node, fhash):
         #TODO: load on target node

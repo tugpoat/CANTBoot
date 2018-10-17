@@ -23,7 +23,6 @@ prefs_file.close()
 db = ACNTBootDatabase('db.sqlite')
 
 # scan games
-print(prefs['Games'])
 games_list = build_games_list(db, prefs)
 
 # set up messaging
@@ -64,10 +63,12 @@ print('entering main loop')
 while 1:
 	try:
 
-		#FIXME: Kinda works. finish implementation of messaging.
+		#FIXME: Kinda works. finish implementation of messaging. needs to be more asynchronous in its fetches.
+
 		witem = ui_webq.get(False)
 		print(witem)
 		if witem[0] == 'LOAD':
+			#FIXME: Check to see if we're already running something on whatever node has been specified and then kill it if yes
 			test_game = None
 			
 
