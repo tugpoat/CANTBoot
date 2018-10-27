@@ -72,7 +72,7 @@ class GameDescriptor:
 				return 'NAOMI2'
 			elif header_magic[:4] == 'FATX':
 				return 'CHIHIRO'
-			# TODO: Triforce has some weird game-specific junk at offset 0x0. Can probably do title detection with that.
+			# TODO: Triforce has some weird, maybe game-specific junk at offset 0x0. Can probably do title detection with that.
 			#elif header_magic == 'TRIFORCE':
 			#	return 'TRIFORCE'
 			else:
@@ -87,7 +87,7 @@ class GameDescriptor:
 			m = hashlib.md5()
 			with open(self.filepath, 'rb') as fh:
 				while True:
-					data = fh.read(8192)
+					data = fh.read(2048000) #read in 2MB chunks so we don't make things slower with a crapload of I/O operations
 					if not data:
 						break
 					m.update(data)

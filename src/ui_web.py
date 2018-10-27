@@ -7,6 +7,7 @@ from bottle import Bottle, template, static_file, error, request, response, view
 import beaker.middleware
 from Database import ACNTBootDatabase
 from queues import ui_webq
+
 session_opts = {
     'session.type': 'file',
     'session.cookie_expires': 300,
@@ -71,26 +72,28 @@ class UIWeb(Bottle):
             gpio_reset =  ''
 
         #TODO: default settings are stupid, make them go away
-        eth0_ip = self._prefs['Network']['eth0_ip'] or '192.168.0.1'
-        eth0_netmask = self._prefs['Network']['eth0_netmask'] or '255.255.255.0'
+        eth0_ip         =   self._prefs['Network']['eth0_ip'] or '192.168.0.1'
+        eth0_netmask    =   self._prefs['Network']['eth0_netmask'] or '255.255.255.0'
 
-        wlan0_ip = self._prefs['Network']['wlan0_ip'] or '10.0.0.1'
-        wlan0_netmask = self._prefs['Network']['wlan0_netmask'] or '255.255.255.0'
-        wlan0_ssid = "benis"
-        wlan0_psk = "bepis"
+        wlan0_mode      =   self._prefs['Network']['wlan0_mode'] or 'AP'
+        wlan0_ip        =   self._prefs['Network']['wlan0_ip'] or '10.0.0.1'
+        wlan0_netmask   =   self._prefs['Network']['wlan0_netmask'] or '255.255.255.0'
+        wlan0_ssid      =   self._prefs['Network']['wlan0_ssid'] or ''
+        wlan0_psk       =   self._prefs['Network']['wlan0_psk'] or ''
 
-        dimm_ip = self._prefs['Network']['dimm_ip'] or '192.168.0.2'
+        dimm_ip         =   self._prefs['Network']['dimm_ip'] or '192.168.0.2'
 
-        games_directory = self._prefs['Games']['directory'] or 'games'
+        games_directory =   self._prefs['Games']['directory'] or 'games'
 
         #render
         return template('config', skip_checksum=skip_checksum, gpio_reset=gpio_reset, eth0_ip=eth0_ip, eth0_netmask=eth0_netmask, wlan0_ip=wlan0_ip, wlan0_ssid=wlan0_ssid, wlan0_psk=wlan0_psk, wlan0_netmask=wlan0_netmask, dimm_ip=dimm_ip, games_directory=games_directory)
         
     def do_appconfig(self):
+        #TODO: Process incoming config from user
         return
 
     def load(self, node, fhash):
         #TODO: load on target node
-        ui_webq.put(["LOAD", fhash])
+        ui_webq.put(["LOAD", node, fhash])
 
     #TODO: other routes

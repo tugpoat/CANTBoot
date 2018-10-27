@@ -36,6 +36,14 @@ def enable_hostapd():
 	os.system("sudo service hostapd enable")
 	os.system("sudo service hostapd start")
 
+def get_ifstate(iface):
+	#get output from ifconfig to check up on live configuration data/state
+	os.system("ifconfig "+iface)
+
+def get_wlanstate(iface):
+	#get output from iwconfig to check up on live state
+	os.sytem("sudo iwconfig "+iface)
+
 def write_ifconfig(prefs):
 	with open("/etc/network/interfaces.default") as defaultconf:
 	data=defaultconf.readlines()

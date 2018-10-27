@@ -1,5 +1,6 @@
 from multiprocessing import Manager, Process
 from asyncio import *
+import time
 import configparser
 from Database import ACNTBootDatabase
 from NodeDescriptor import NodeDescriptor
@@ -49,6 +50,12 @@ test_loader.pworker.start()
 '''
 # End functionality test
 
+#build node list from config
+nodes = []
+nodes.append(NodeDescriptor(prefs['Network']['dimm_ip'], 10703))
+
+loaders = []
+
 
 #Launch web UI
 app = UIWeb('Web UI', games_list, prefs)
@@ -60,40 +67,42 @@ t.start()
 # Main loop
 # Handles messaging between loaders, etc. and the main thread/UI instances
 print('entering main loop')
+
 while 1:
 	try:
 
 		#FIXME: Kinda works. finish implementation of messaging. needs to be more asynchronous in its fetches.
+		if not ui_webq.empty():
+			witem = ui_webq.get(False)
+			print(witem)
+			if witem[0] == 'LOAD':
+				#FIXME: Check to see if we're already running something on whatever node has been specified and then kill it if yes
+				newgame = None
 
-		witem = ui_webq.get(False)
-		print(witem)
-		if witem[0] == 'LOAD':
-			#FIXME: Check to see if we're already running something on whatever node has been specified and then kill it if yes
-			test_game = None
-			
+				#make sure that the requested node is valid
+				if int(witem[1]) < len(nodes) and int(witem[1]) > -1:
+					for g in games_list:
+						if g.file_checksum == witem[2]:
+							newgame = g
+							break
+					print(newgame.title)
+					loader = Loader()
+					loader.game = newgame
+					loader.node = nodes[int(witem[1])]
+					loader.system_name = newgame.system_name
+					loader.pworker = LoadWorker(loaderq, nodes[int(witem[1])], newgame)
+					loader.pworker.start()
+					ui_webq.task_done()
+				else:
+					print('requested node out of range')
 
-			for g in games_list:
-				if g.file_checksum == witem[1]:
-					test_game = g
-					break
 
-			print(test_game.title)
+		if not loaderq.empty():
+			loader_item = loaderq.get(False)
+			print(loader_item)
 
-			test_loader = Loader()
-			test_loader.game = test_game
-
-			test_node = NodeDescriptor(prefs['Network']['dimm_ip'], 10703)
-			test_loader.node = test_node
-			test_loader.system_name = test_game.system_name
-
-			test_loader.pworker = LoadWorker(loaderq, test_node, test_game)
-			test_loader.pworker.start()
-
-		loader_item = loaderq.get(False)
-		print(loader_item)
-		litem = ui_lcdq.get(False)
-		print(litem)
-	except:
+	except Exception as e:
+		print(str(e))
 		pass
 		#do nothing
 

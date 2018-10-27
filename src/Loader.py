@@ -28,11 +28,13 @@ Basically just a container for organizational purposes
 Also enables easy generation of JSON that we can send over through the UI
 '''
 class Loader:
+    label = None
     system_name = None
     status = 0
     error = 0
     game = None
     node = None
+    nodes = []
     pworker = None
 
     def serialize(self):
@@ -57,7 +59,7 @@ class LoadWorker(Process):
     host: String, IP Address of endpoint
     '''
     def __init__(self, queue, abs_path, host):
-        Process.__init__(self)
+        super(LoadWorker, self).__init__()
         self.mq = queue
         self.path = abs_path
         self.host = host
@@ -70,7 +72,7 @@ class LoadWorker(Process):
     game: GameDescriptor, contains information about the ROM we intend to load on the endpoint
     '''
     def __init__(self, queue, node, game):
-        Process.__init__(self)
+        super(LoadWorker, self).__init__()
         self.mq = queue
         self.path = game.filepath
         self.host = node.ip
@@ -81,9 +83,7 @@ class LoadWorker(Process):
     It is invoked with LoadWorker.start() and runs until terminated.
     '''
     def run(self):
-
         filename = self.path[:(len(self.path) - self.path.rfind(os.pathsep))]
-
         
         # Open a connection to endpoint and notify the main thread that we are doing so.
         try:
