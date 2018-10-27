@@ -9,6 +9,12 @@ def remount_root_rw():
 def remount_root_ro():
 	os.system("sudo mount -o remount,ro /")
 
+def reboot_system():
+	os.system("sudo reboot")
+
+def shutdown_system():
+	os.system("sudo shutdown -h now")
+
 def set_ifconfig(iface, ip, mask):
 	os.system("sudo ifconfig ? ? netmask ?", [iface, ip, mask])
 

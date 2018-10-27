@@ -59,8 +59,8 @@
 				<label class="col-sm-2 control-label">Radio Mode</label>
 				<div class="col-sm-3">
 					<select class="form-control" id="wlan0_mode_select" name="wlan0_mode">
-						<option value="wlan0_mode_ap" {{"selected" if eth0_netmask == "" else ""}}>AP</option>
-						<option value="wlan0_mode_client" {{"selected" if eth0_netmask == "" else ""}}>Client</option>
+						<option value="wlan0_mode_ap" {{"selected" if wlan0_mode == "AP" else ""}}>AP</option>
+						<option value="wlan0_mode_client" {{"selected" if wlan0_mode == "Client" else ""}}>Client</option>
 					</select>
 				</div>
 			</div>
@@ -75,7 +75,7 @@
 			<div class="form-group">
 				<label class="col-sm-2 control-label">PSK</label>
 				<div class="col-sm-3">
-					<input type="text" class="form-control" name="wlan0_ssid" value="{{wlan0_psk}}" placeholder="PSK / Network key" />
+					<input type="text" class="form-control" name="wlan0_psk" value="{{wlan0_psk}}" placeholder="PSK / Network key" />
 				</div>
 			</div>
 

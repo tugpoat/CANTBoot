@@ -27,6 +27,16 @@ RETURN CODES
 Basically just a container for organizational purposes
 Also enables easy generation of JSON that we can send over through the UI
 '''
+
+'''
+design possibilities:
+The idea of this is that we have a Loader object for each game we want to load.
+There is a list of endpoints which the loader object will handle.
+pworker should be rejiggered to be a process pool somehow.
+
+I am unsure if this is the best way to do it, or if endpoints should be conifigured individually and saved into a profile.
+That way, the representation would have one single loader per endpoint still, but organizationally the loader would be attached to the node instead of vice-versa.
+'''
 class Loader:
     label = None
     system_name = None

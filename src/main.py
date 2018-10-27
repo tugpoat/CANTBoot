@@ -2,14 +2,13 @@ from multiprocessing import Manager, Process
 from asyncio import *
 import time
 import configparser
+
 from Database import ACNTBootDatabase
 from NodeDescriptor import NodeDescriptor
 from GameDescriptor import GameDescriptor
 from GameList import *
 from Loader import Loader, LoadWorker
-
 from queues import *
-
 from ui_web import UIWeb
 
 
@@ -30,39 +29,20 @@ games_list = build_games_list(db, prefs)
 # TODO: At this point maybe I should just use a messagebus
 # TODO: These need to be able to operate asynchronously
 
-# Functionality test
-'''
-test_node = NodeDescriptor("localhost", 10703)
-print(test_node.ip)
-
-test_loader = Loader()
-test_game = games_list[0]
-print(test_game)
-print(test_game.title)
-test_loader.game = test_game
-test_loader.node = test_node
-test_loader.system_name = test_game.system_name
-
-print(test_loader.serialize())
-
-test_loader.pworker = LoadWorker(loaderq, test_node, test_game)
-test_loader.pworker.start()
-'''
-# End functionality test
-
-#build node list from config
+# TODO: build node list from config or saved profiles or something
 nodes = []
 nodes.append(NodeDescriptor(prefs['Network']['dimm_ip'], 10703))
 
+# loader list
 loaders = []
 
 
-#Launch web UI
+# Launch web UI
 app = UIWeb('Web UI', games_list, prefs)
 t = Process(target=app.start)
 t.start()
 
-# set up adafruit ui if detected and enabled
+# TODO: set up adafruit ui if detected and enabled
 
 # Main loop
 # Handles messaging between loaders, etc. and the main thread/UI instances
@@ -85,13 +65,16 @@ while 1:
 						if g.file_checksum == witem[2]:
 							newgame = g
 							break
+					#set up loader
 					print(newgame.title)
+
 					loader = Loader()
 					loader.game = newgame
 					loader.node = nodes[int(witem[1])]
 					loader.system_name = newgame.system_name
 					loader.pworker = LoadWorker(loaderq, nodes[int(witem[1])], newgame)
 					loader.pworker.start()
+
 					ui_webq.task_done()
 				else:
 					print('requested node out of range')
