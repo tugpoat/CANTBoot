@@ -13,6 +13,10 @@
       <ul class="nav navbar-nav">
         <li {{!'class="active"' if activePage=='games' else ''}}><a href="/">Games</a></li>
         <li {{!'class="active"' if activePage=='config' else ''}}><a href="/config">Configuration</a></li>
+        <li {{!'class="active"' if activePage=='status' else ''}}><a href="/status">Status</a></li>
+        <li><a href="/gpio_reset"><span class="glyphicon glyphicon-exclamation-sign"></span></a></li>
+        <li><a href="/reboot"><span class="glyphicon glyphicon-refresh"></span></a></li>
+        <li><a href="/shutdown"><span class="glyphicon glyphicon-off"></span></a></li>
       </ul>
     </div>
   </div>

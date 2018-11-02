@@ -132,6 +132,7 @@ class UIWeb(Bottle):
 
         self._prefs['Games']['directory']         =     games_directory =   request.forms.get('games_directory')
 
+        # TODO: Maybe farm this out somewhere else (main thread?)
         with open('settings.cfg', 'w') as prefs_file:
             self._prefs.write(prefs_file)
 
@@ -149,12 +150,13 @@ class UIWeb(Bottle):
         return template('config', did_config=True, skip_checksum=skip_checksum, gpio_reset=gpio_reset, eth0_ip=eth0_ip, eth0_netmask=eth0_netmask, wlan0_mode=wlan0_mode, wlan0_ip=wlan0_ip, wlan0_ssid=wlan0_ssid, wlan0_psk=wlan0_psk, wlan0_netmask=wlan0_netmask, dimm_ip=dimm_ip, games_directory=games_directory)
 
     def apply_appconfig(self):
-        #TODO: reconfigure network and stuff
+        #TODO: yell at the main thread to reconfigure the network
         return
 
     def edit(self, fhash):
         g = None
         # we need to fetch the entire list of possible games for the user to select from
+        # TODO: maybe have the main thread do this somehow?
         gamelist = self._db.getGameList()
 
         g = [game for game in self._games if game.file_checksum == fhash][0]

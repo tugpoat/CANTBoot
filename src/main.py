@@ -22,8 +22,7 @@ prefs_file.close()
 # set up database
 db = ACNTBootDatabase('db.sqlite')
 
-# scan games
-games_list = build_games_list(db, prefs)
+games_list = []
 
 # set up messaging
 # TODO: At this point maybe I should just use a messagebus
@@ -36,13 +35,15 @@ nodes.append(NodeDescriptor(prefs['Network']['dimm_ip'], 10703))
 # loader list
 loaders = []
 
-
 # Launch web UI
 app = UIWeb('Web UI', games_list, prefs)
 t = Process(target=app.start)
 t.start()
 
 # TODO: set up adafruit ui if detected and enabled
+
+# scan games. We do this after loading the UIs. This way, we can signal progress (TODO) so the user isn't left in the dark.
+games_list = build_games_list(db, prefs)
 
 # Main loop
 # Handles messaging between loaders, etc. and the main thread/UI instances
@@ -87,5 +88,3 @@ while 1:
 	except Exception as e:
 		print(str(e))
 		pass
-		#do nothing
-
