@@ -37,6 +37,13 @@ pworker should be rejiggered to be a process pool somehow.
 I am unsure if this is the best way to do it, or if endpoints should be conifigured individually and saved into a profile.
 That way, the representation would have one single loader per endpoint still, but organizationally the loader would be attached to the node instead of vice-versa.
 '''
+
+'''
+1 loader per node
+1 load worker per loader obj
+
+maybe combine node into loader
+'''
 class Loader:
     label = None
     system_name = None
@@ -44,7 +51,6 @@ class Loader:
     error = 0
     game = None
     node = None
-    nodes = []
     pworker = None
 
     def serialize(self):
@@ -131,13 +137,22 @@ class LoadWorker(Process):
 
         message = [4, ("%s : Entering Keep-alive loop. " % (self.name))]
         self.mq.put(message)
+        keepalive()
 
+    def keepalive(self):
         '''
         Some systems and games have some wacky time limit thing where they will stop working after a period of time.
         We get around this by sending a heartbeat to the endpoint.
         '''
         while 1:
             try:
+                if not self.mq.empty():
+                    witem = ui_webq.get(False)
+                    if witem[0] == "die":
+                        self.mq.put([0, ("%s : Received termination request, aborting keep-alive, disconnecting and returning to idle." % (self.name, self.path, self.host))])
+                        self._comm.disconnect()
+                        return
+
                 # set time limit to 10h. According to some reports, this does not work.
                 TIME_SetLimit(10*60*1000)
                 time.sleep(5)

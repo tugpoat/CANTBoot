@@ -23,6 +23,7 @@ class UIWeb(Bottle):
     _prefs = None
     _bottle = None
     _beaker = None
+    list_loaded = False
 
     def __init__(self, name, gameslist, prefs):
         super(UIWeb, self).__init__()
@@ -40,6 +41,8 @@ class UIWeb(Bottle):
         self.route('/edit/<fhash>', method="POST", callback=self.do_edit)
         self.route('/load/<node>/<fhash>', method="GET", callback=self.load)
 
+        self.route('/gpio_reset', method="GET", callback=self.do_gpio_reset)
+
     def start(self):
         self._db = ACNTBootDatabase('db.sqlite')
         self.run(host='0.0.0.0', port=8000, debug=False)
@@ -55,10 +58,13 @@ class UIWeb(Bottle):
         filter_groups = self._db.getAttributes()
         filter_values = []
         filters = []
-        if self._games != None:
-            return template('index', games=self._games, filter_groups=filter_groups, filter_values=filter_values, activefilters=filters)
+        if len(self._games) > 0:
+            return template('index', list_loaded=self.list_loaded, games=self._games, filter_groups=filter_groups, filter_values=filter_values, activefilters=filters)
         else:
-            return template('index')
+            return template('index', list_loaded=self.list_loaded)
+
+    def do_gpio_reset(self):
+        ui_webq.put(["gpio", "reset"])
 
     def auth(self):
         return
@@ -164,8 +170,11 @@ class UIWeb(Bottle):
         return template('edit', filename=g.filename, game_title=g.title, hashid=fhash, games_list=gamelist)
 
     def do_edit(self, fhash):
+        # Get params from user input
         new_game_id = request.forms.get('games')
         filename = request.forms.get('filename')
+
+        # Edit the installed game in the DB
         self._db.editGame(new_game_id, filename, fhash)
         # Just rebuild the list for now
         # FIXME: replace the list entry with the updated one instead

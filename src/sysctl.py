@@ -52,8 +52,8 @@ def get_wlanstate(iface):
 
 def write_ifconfig(prefs):
 	with open("/etc/network/interfaces.default") as defaultconf:
-	data=defaultconf.readlines()
-	defaultconf.close()
+		data=defaultconf.readlines()
+		defaultconf.close()
 
 	data.append("#-----Managed by CANTBoot, don't touch")
 	data.append("auto lo")
@@ -62,26 +62,27 @@ def write_ifconfig(prefs):
 
 	with open ("/etc/network/interfaces", "rw") as outfile:
 
-	data.append("auto eth0")
-	if prefs.get('Network', 'eth0_mode') == 'static':
-		data.append("iface eth0 inet static")
-		data.append("address ?", [prefs.get('Network', 'eth0_ip')])
-		data.append("netmask ?", [prefs.get('Network', 'eth0_netmask')])
+		data.append("auto eth0")
+		if prefs.get('Network', 'eth0_mode') == 'static':
+			data.append("iface eth0 inet static")
+			data.append("address ?", [prefs.get('Network', 'eth0_ip')])
+			data.append("netmask ?", [prefs.get('Network', 'eth0_netmask')])
 
-		#TODO: do bitwise operations to figure out the network and bcast from ip and mask.
-		#data.append("network ?", [])
-		data.append("network ?", [prefs.get('Network', 'eth0_network')])
-		data.append("broadcast ?", [prefs.get('Network', 'eth0_bcast')])
+			#TODO: do bitwise operations to figure out the network and bcast from ip and mask.
+			#data.append("network ?", [])
+			data.append("network ?", [prefs.get('Network', 'eth0_network')])
+			data.append("broadcast ?", [prefs.get('Network', 'eth0_bcast')])
 
-	data.append("allow-hotplug wlan0")
-	if prefs.get('Network', 'wlan0_ip') == 'dhcp' || prefs.get('Network', 'wlan0_subnet') == 'dhcp':
-		#DHCP setting
-	else:
-		data.append("iface wlan0 inet static")
-		data.append("address ?", [prefs.get('Network', 'wlan0_ip')])
-		data.append("netmask ?", [prefs.get('Network', 'wlan0_netmask')])
-		data.append("network ?", [prefs.get('Network', 'wlan0_network')])
-		data.append("broadcast ?", [prefs.get('Network', 'wlan0_bcast')])
+		data.append("allow-hotplug wlan0")
+		if prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_subnet') == 'dhcp':
+			setdhcp()
+			#DHCP setting
+		else:
+			data.append("iface wlan0 inet static")
+			data.append("address ?", [prefs.get('Network', 'wlan0_ip')])
+			data.append("netmask ?", [prefs.get('Network', 'wlan0_netmask')])
+			data.append("network ?", [prefs.get('Network', 'wlan0_network')])
+			data.append("broadcast ?", [prefs.get('Network', 'wlan0_bcast')])
 
 	outfile.writelines(data)
 	outfile.close()

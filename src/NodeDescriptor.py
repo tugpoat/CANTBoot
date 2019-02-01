@@ -9,6 +9,7 @@ class NodeDescriptor:
 	hostname = ""
 	ip = ""
 	port = ""
+	system_id =0
 
 	def __init__(self, hostname, port):
 		self.hostname = hostname

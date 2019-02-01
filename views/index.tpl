@@ -3,6 +3,7 @@
 <div class="container">
 	% include('navbar.tpl', activePage='games')
   	
+  	% if defined('filter_groups'):
 		<div class="row container" id="filters">
 			Filters
 			<select class="form-control filter-group" id="filter-group" name="filter-group">
@@ -19,15 +20,20 @@
 					</optgroup>
 				% end
 			</select>
-		<button id="add-filter" class="btn btn-default">Add</button>
+			<button id="add-filter" class="btn btn-default">Add</button>
 
-	</div>
+		</div>
+	% end
+
+	% if defined('activefilters'):
 	<div class="row container">
 		Active Filters:
 		% for f in activefilters:
 			<span><a class="rm-filter" href="/filter/rm/{{f[0]}}/{{f[1]}}">{{f[0]}} = {{f[1]}}</a></span>
 		% end
 	</div>
+	% end
+
 	% if defined('games'):
 	<h4>Choose a game to play</h4>
 	% for game in games:
@@ -44,6 +50,7 @@
 		
 	% end
 	% end
+
 
 
 	% if not defined('games'):

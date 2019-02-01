@@ -14,6 +14,20 @@ $('.game').click(function(event)
 	});
 });
 
+$('#gpio_reboot').click(function() {
+	event.preventDefault();
+	
+	$.ajax
+	({
+		url: "/gpio_reboot",
+		type: 'get',
+		success: function(result)
+		{
+			alert("reboobed");
+		}
+	});
+})
+
 
 //Filters
 $('.filter-group').change(function() {
