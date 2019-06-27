@@ -8,12 +8,17 @@ from NodeDescriptor import NodeDescriptor
 from GameDescriptor import GameDescriptor
 from GameList import *
 from Loader import Loader, LoadWorker
-from queues import *
 from ui_web import UIWeb
 from sysctl import *
 from gpio_reboot import *
-from pybus_core import PyBus
+from queues import *
+from mbus import *
 
+#Message handlers
+
+def cb_gpio_reset():
+	print("got message")
+	GPIO_Reboot();
 
 # load settings
 PREFS_FILE = "settings.cfg"
@@ -30,6 +35,7 @@ games_list = []
 # set up messaging
 # TODO: At this point maybe I should just use a messagebus
 # TODO: These need to be able to operate asynchronously
+MBus.subscribe("gpio.reset", MBus.self, cb_gpio_reset)
 
 # TODO: build node list from config or saved profiles or something
 nodes = []

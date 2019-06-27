@@ -7,6 +7,7 @@ from bottle import Bottle, template, static_file, error, request, response, view
 import beaker.middleware
 from Database import ACNTBootDatabase
 from GameList import *
+from mbus import MBus
 from queues import ui_webq
 
 session_opts = {
@@ -64,7 +65,8 @@ class UIWeb(Bottle):
             return template('index', list_loaded=self.list_loaded)
 
     def do_gpio_reset(self):
-        ui_webq.put(["gpio", "reset"])
+        MBus.bus.publish("gpio.reset", "1")
+        #ui_webq.put(["gpio", "reset"])
 
     def auth(self):
         return
