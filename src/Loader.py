@@ -28,21 +28,10 @@ Basically just a container for organizational purposes
 Also enables easy generation of JSON that we can send over through the UI
 '''
 
-'''
-design possibilities:
-The idea of this is that we have a Loader object for each game we want to load.
-There is a list of endpoints which the loader object will handle.
-pworker should be rejiggered to be a process pool somehow.
-
-I am unsure if this is the best way to do it, or if endpoints should be conifigured individually and saved into a profile.
-That way, the representation would have one single loader per endpoint still, but organizationally the loader would be attached to the node instead of vice-versa.
-'''
 
 '''
 1 loader per node
 1 load worker per loader obj
-
-maybe combine node into loader
 '''
 class Loader:
     label = None
@@ -50,7 +39,6 @@ class Loader:
     status = 0
     error = 0
     game = None
-    node = None
     pworker = None
 
     def serialize(self):
@@ -149,7 +137,7 @@ class LoadWorker(Process):
                 if not self.mq.empty():
                     witem = ui_webq.get(False)
                     if witem[0] == "die":
-                        self.mq.put([0, ("%s : Received termination request, aborting keep-alive, disconnecting and returning to idle." % (self.name, self.path, self.host))])
+                        self.mq.put([0, ("%s : Received termination request. Aborting keep-alive, disconnecting and returning to idle." % (self.name, self.path, self.host))])
                         self._comm.disconnect()
                         return
 

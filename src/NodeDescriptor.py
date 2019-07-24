@@ -10,6 +10,10 @@ class NodeDescriptor:
 	ip = ""
 	port = ""
 	system_id =0
+	loader = None
+
+	#FIXME: store details about the machine, e.g. control panel setup, monitor orientation etc.
+	# we can use this to filter games for this particular node.
 
 	def __init__(self, hostname, port):
 		self.hostname = hostname

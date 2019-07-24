@@ -13,6 +13,7 @@ from sysctl import *
 from gpio_reboot import *
 from queues import *
 from mbus import *
+from dbus.mainloop.glib import DBusGMainLoop
 
 #Message handlers
 
@@ -59,6 +60,10 @@ app.list_loaded = True
 # Main loop
 # Handles messaging between loaders, etc. and the main thread/UI instances
 print('entering main loop')
+loop = GLib.MainLoop()
+loop.run()
+
+DBusGMainLoop(set_as_default=True)
 
 while 1:
 	try:
@@ -80,12 +85,14 @@ while 1:
 					#set up loader
 					print(newgame.title)
 
-					loader = Loader()
-					loader.game = newgame
-					loader.node = nodes[int(witem[1])]
-					loader.system_name = newgame.system_name
-					loader.pworker = LoadWorker(loaderq, nodes[int(witem[1])], newgame)
-					loader.pworker.start()
+					tloader = Loader()
+					tloader.game = newgame
+					#loader.node = nodes[int(witem[1])]
+					tloader.system_name = newgame.system_name
+
+					nodes[int(witem[1])].loader = tloader
+					nodes[int(witem[1])].loader.pworker = LoadWorker(loaderq, nodes[int(witem[1])], newgame)
+					nodes[int(witem[1])].loader.pworker.start()
 
 					ui_webq.task_done()
 				else:
