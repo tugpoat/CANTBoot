@@ -13,6 +13,7 @@ from sysctl import *
 from gpio_reboot import *
 from queues import *
 from mbus import *
+import dbus
 from dbus.mainloop.glib import DBusGMainLoop
 
 #Message handlers
@@ -36,7 +37,7 @@ games_list = []
 # set up messaging
 # TODO: At this point maybe I should just use a messagebus
 # TODO: These need to be able to operate asynchronously
-MBus.subscribe("gpio.reset", MBus.self, cb_gpio_reset)
+#MBus.subscribe("gpio.reset", MBus.self, cb_gpio_reset)
 
 # TODO: build node list from config or saved profiles or something
 nodes = []
@@ -64,6 +65,9 @@ loop = GLib.MainLoop()
 loop.run()
 
 DBusGMainLoop(set_as_default=True)
+
+test = SBus.get_object('com.acntboot.uiweb.test', '/UIWeb')
+print(test)
 
 while 1:
 	try:

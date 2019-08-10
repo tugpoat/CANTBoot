@@ -7,8 +7,10 @@ from bottle import Bottle, template, static_file, error, request, response, view
 import beaker.middleware
 from Database import ACNTBootDatabase
 from GameList import *
-from mbus import MBus
+from mbus import MBus,SBus
 from queues import ui_webq
+import dbus
+import dbus.service
 
 session_opts = {
     'session.type': 'file',
@@ -17,7 +19,32 @@ session_opts = {
     'session.auto': True
 }
 
-class UIWeb(Bottle):
+class UIWeb(dbus.service.Object):
+    _bottle = None
+    def __init__(self, name, gameslist, prefs):
+        self.bus = dbus.SessionBus
+        name = dbus.service.BusName('com.acntboot.uiweb', bus=self.bus)
+        DBusGMainLoop(set_as_default=True)
+        super().__init__(name, '/UIWeb')
+
+        _bottle = UIWeb_Bottle(name, gameslist,prefs)
+
+    def start(self):
+        _bottle.start()
+        import dbus.mainloop.glib
+        from gi.repository import GLib
+
+        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+        loop = GLib.MainLoop()
+        object = self
+        loop.run()
+
+    @dbus.service.method('com.acntboot.uiweb.test', out_signature='s')
+    def test(self):
+        return 'test'
+
+class UIWeb_Bottle(Bottle):
     #TODO: The Web UI opening its own DB connection is not ideal.
     _db = None
     _games = None
@@ -25,6 +52,21 @@ class UIWeb(Bottle):
     _bottle = None
     _beaker = None
     list_loaded = False
+
+    def __init__(self):
+        super(UIWeb, self).__init__()
+        self._beaker = beaker.middleware.SessionMiddleware(self, session_opts)
+
+        #set up routes
+        self.route('/', method="GET", callback=self.index)
+        self.route('/static/<filepath:path>', method="GET", callback=self.serve_static)
+        self.route('/config', method="GET", callback=self.appconfig)
+        self.route('/config', method="POST", callback=self.do_appconfig)
+        self.route('/edit/<fhash>', method="GET", callback=self.edit)
+        self.route('/edit/<fhash>', method="POST", callback=self.do_edit)
+        self.route('/load/<node>/<fhash>', method="GET", callback=self.load)
+
+        self.route('/gpio_reset', method="GET", callback=self.do_gpio_reset)
 
     def __init__(self, name, gameslist, prefs):
         super(UIWeb, self).__init__()
