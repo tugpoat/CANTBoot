@@ -19,30 +19,13 @@ session_opts = {
     'session.auto': True
 }
 
-class UIWeb(dbus.service.Object):
+class UIWeb():
     _bottle = None
     def __init__(self, name, gameslist, prefs):
-        self.bus = dbus.SessionBus
-        name = dbus.service.BusName('com.acntboot.uiweb', bus=self.bus)
-        DBusGMainLoop(set_as_default=True)
-        super().__init__(name, '/UIWeb')
-
-        _bottle = UIWeb_Bottle(name, gameslist,prefs)
+        self._bottle = UIWeb_Bottle(name, gameslist, prefs)
 
     def start(self):
-        _bottle.start()
-        import dbus.mainloop.glib
-        from gi.repository import GLib
-
-        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-
-        loop = GLib.MainLoop()
-        object = self
-        loop.run()
-
-    @dbus.service.method('com.acntboot.uiweb.test', out_signature='s')
-    def test(self):
-        return 'test'
+        self._bottle.start()
 
 class UIWeb_Bottle(Bottle):
     #TODO: The Web UI opening its own DB connection is not ideal.
@@ -54,7 +37,7 @@ class UIWeb_Bottle(Bottle):
     list_loaded = False
 
     def __init__(self):
-        super(UIWeb, self).__init__()
+        super(UIWeb_Bottle, self).__init__()
         self._beaker = beaker.middleware.SessionMiddleware(self, session_opts)
 
         #set up routes
@@ -69,7 +52,7 @@ class UIWeb_Bottle(Bottle):
         self.route('/gpio_reset', method="GET", callback=self.do_gpio_reset)
 
     def __init__(self, name, gameslist, prefs):
-        super(UIWeb, self).__init__()
+        super(UIWeb_Bottle, self).__init__()
         self._beaker = beaker.middleware.SessionMiddleware(self, session_opts)
         self.name = name
         self._games = gameslist
