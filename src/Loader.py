@@ -24,29 +24,6 @@ RETURN CODES
 '''
 
 '''
-Basically just a container for organizational purposes
-Also enables easy generation of JSON that we can send over through the UI
-'''
-
-
-'''
-1 loader per node
-1 load worker per loader obj
-'''
-class Loader:
-    label = None
-    system_name = None
-    status = 0
-    error = 0
-    game = None
-    pworker = None
-
-    def serialize(self):
-        #TODO: Check if self.game is valid GameDescriptor object and that self.node is valid NodeDescriptor object
-        return json.dumps({"system_name": self.system_name, "status": self.status, "error": self.error, "node": self.node.serialize(), "game": self.game.serialize()})
-
-
-'''
 The actual loader. instantiated inside of Loader and launched by the main thread. That is, if Python will let me do that (It probably will, Python is a mess).
 LoadWorker is instantiated as the final step and all configuration settings should be resolved beforehand.
 '''
@@ -54,7 +31,9 @@ class LoadWorker(Process):
     mq = None
     path = None
     host = None
+    port = None
     _comm = None
+    _active = False
 
     '''
     Construct using bare minimum of information
@@ -62,25 +41,16 @@ class LoadWorker(Process):
     abs_path: String, absolute path of ROM file
     host: String, IP Address of endpoint
     '''
-    def __init__(self, queue, abs_path, host):
+    def __init__(self, queue, abs_path, host, port):
         super(LoadWorker, self).__init__()
         self.mq = queue
         self.path = abs_path
         self.host = host
+        self.port = port
         self._comm = NetComm()
 
-    '''
-    Construct using container objects
-    queue: Queue, for passing messages back to the main process
-    node: NodeDescriptor, contains information about the endpoint
-    game: GameDescriptor, contains information about the ROM we intend to load on the endpoint
-    '''
-    def __init__(self, queue, node, game):
-        super(LoadWorker, self).__init__()
-        self.mq = queue
-        self.path = game.filepath
-        self.host = node.ip
-        self._comm = NetComm()
+    def is_active(self):
+        return _active
 
     '''
     This is the function that does the actual work.
@@ -93,7 +63,7 @@ class LoadWorker(Process):
         try:
             message = message = [1, ("%s : connecting to %s" % (self.name, self.host))]
             self.mq.put(message)
-            self._comm.connect(self.host, 10703)
+            self._comm.connect(self.host, self.port)
         except Exception as ex:
             message = [-1, ("%s : connection to %s failed! exiting." % (self.name, self.host)), repr(ex)]
             self.mq.put(message)
@@ -122,6 +92,8 @@ class LoadWorker(Process):
             message = [-1, ("%s : Error booting game on hardware! " % (self.name, self.path, self.host)), repr(ex)]
             self.mq.put(message)
             return 1
+
+        self._active = True
 
         message = [4, ("%s : Entering Keep-alive loop. " % (self.name))]
         self.mq.put(message)

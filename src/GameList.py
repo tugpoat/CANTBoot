@@ -45,7 +45,12 @@ def build_games_list(database, prefs, scan_fs=True):
 
 		game.game_id 	= igame[1]
 		game.title		= igame[3]
-		game.attributes = database.getGameAttributes(igame[1])
+
+		game.setSystem(database.getGameSystem(igame[1]))
+		attributes = database.getGameAttributes(igame[1])
+		if len(attributes) > 0:
+			game.attributes = database.getGameAttributes(igame[1])
+			game.setAttributes(database.getGameAttributes(igame[1]))
 
 		games.append(game)
 
@@ -106,7 +111,10 @@ def build_games_list(database, prefs, scan_fs=True):
 				# TODO: at this point we should just fetch everything back from the DB and load it into a GameDescriptor on the back end.
 				game.game_id = identity[0]
 				game.title = identity[1]
+
+				game.setSystem(database.getGameSystem(installed_game[1]))
 				game.attributes = database.getGameAttributes(installed_game[1])
+				game.setAttributes(database.getGameAttributes(installed_game[1]))
 				games.append(game)
 				print("\tAdded " + game.title)
 			else:

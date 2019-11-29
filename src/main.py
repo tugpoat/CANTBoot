@@ -7,7 +7,7 @@ from Database import ACNTBootDatabase
 from NodeDescriptor import NodeDescriptor, NodeList
 from GameDescriptor import GameDescriptor
 from GameList import *
-from Loader import Loader, LoadWorker
+from Loader import LoadWorker
 from ui_web import UIWeb
 from sysctl import *
 from gpio_reboot import *
@@ -44,6 +44,14 @@ defnode.nickname = 'default'
 defnode.system = (1, 'NAOMI')
 defnode.monitor = (14, 'Horizontal')
 defnode.controls = (25, '2L12B')
+defnode.dimm_ram = (20, '256MB')
+nodes.append(defnode)
+defnode = NodeDescriptor('69.69.69.69', 10703)
+defnode.nickname = 'default2'
+defnode.system = (2, 'NAOMI2')
+defnode.monitor = (15, 'Vertical')
+defnode.controls = (24, '1L6B')
+defnode.dimm_ram = (21, '512MB')
 nodes.append(defnode)
 
 nodes.saveNodes()
@@ -53,17 +61,18 @@ print("yay")
 # loader list
 loaders = []
 
-# Launch web UI
-app = UIWeb('Web UI', games_list, prefs)
-t = Process(target=app.start)
-t.start()
-
 # TODO: set up adafruit ui if detected and enabled
 
 # scan games. We do this after loading the UIs. This way, we can signal progress (TODO) so the user isn't left in the dark.
 games_list = build_games_list(db, prefs)
+
+# Launch web UI
+app = UIWeb('Web UI', games_list, prefs)
 app._games = games_list
 app.list_loaded = True
+t = Process(target=app.start)
+t.start()
+
 
 # Main loop
 # Handles messaging between loaders, etc. and the main thread/UI instances
@@ -81,7 +90,7 @@ while 1:
 				newgame = None
 
 				#make sure that the requested node is valid
-				if int(witem[1]) < len(nodes) and int(witem[1]) > -1:
+				if int(witem[1]) < nodes.len() and int(witem[1]) > -1:
 					for g in games_list:
 						if g.file_checksum == witem[2]:
 							newgame = g
@@ -89,16 +98,9 @@ while 1:
 					#set up loader
 					print(newgame.title)
 
-					tloader = Loader()
-					tloader.game = newgame
-					#loader.node = nodes[int(witem[1])]
-					tloader.system_name = newgame.system_name
-
-					nodes[int(witem[1])].loader = tloader
-					nodes[int(witem[1])].loader.pworker = LoadWorker(loaderq, nodes[int(witem[1])], newgame)
-					nodes[int(witem[1])].loader.pworker.start()
-
 					nodes.saveNodes()
+
+					nodes[1].Load(loaderq, newgame)
 
 					ui_webq.task_done()
 				else:

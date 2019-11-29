@@ -25,9 +25,6 @@ class ACNTBootDatabase:
 	def getInstalledGameByHash(self, file_hash):
 		return self._sqlite.execute("SELECT installed_games.id, games.id as game_id, filename, games.title as game_name, file_hash FROM installed_games JOIN games ON game_id=games.id  WHERE file_hash = ? LIMIT 1", [file_hash]).fetchone()
 
-	def getGameAttributes(self, game_id):
-		return self._sqlite.execute("SELECT attributes.name as name, attributes_values.value as value FROM game_attributes JOIN attributes ON game_attributes.attribute_id=attributes.id JOIN attributes_values ON attributes_values_id=attributes_values.id WHERE game_id = ?", [game_id]).fetchall()
-
 	def installGame(self, game_id, filename, file_hash):
 		self._sqlite.execute("INSERT INTO installed_games(game_id, filename, file_hash) VALUES(?,?,?)", [game_id, filename, file_hash])
 		self._sqlite.commit()
@@ -62,6 +59,14 @@ class ACNTBootDatabase:
 	def getAttributes(self):
 		return self._sqlite.execute("SELECT * FROM attributes").fetchall()
 
+	def getGameSystem(self, game_id):
+		return self._sqlite.execute("SELECT systems.id as id, systems.name as name FROM systems JOIN games ON games.system_id=systems.id WHERE games.id = ? LIMIT 1", [game_id]).fetchone()
+
+	def getGameAttributes(self, game_id):
+		return self._sqlite.execute("SELECT attributes_values.id as id, attributes.name as name, attributes_values.value as value FROM game_attributes JOIN attributes ON game_attributes.attribute_id=attributes.id JOIN attributes_values ON attributes_values_id=attributes_values.id WHERE game_id = ?", [game_id]).fetchall()
+
+	def getGameAttribute(self, game_id, attribute_id):
+		return self._sqlite.execute("SELECT atributes_values.id as value_id, attributes.name as name, attributes_values.value as value FROM game_attributes JOIN attributes ON game_attributes.attribute_id=attributes.id JOIN attributes_values ON attributes_values_id=attributes_values.id WHERE game_attributes.game_id=? AND attribute_id=? LIMIT 1", [game_id], [attribute_id]).fetchone()
+
 	def getValuesForAttribute(self, attribute_id):
 		return self._sqlite.execute("SELECT id, value from attributes_values WHERE attribute_id= ?", [attribute_id]).fetchall()
-

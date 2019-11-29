@@ -1,0 +1,9 @@
+!!python/object:NodeDescriptor.NodeDescriptor
+controls: !!python/tuple [25, 2L12B]
+dimm_ram: !!python/tuple [20, 256MB]
+hostname: 192.168.0.2
+ip: 192.168.0.2
+monitor: !!python/tuple [14, Horizontal]
+nickname: default
+port: 10703
+system: !!python/tuple [1, NAOMI]

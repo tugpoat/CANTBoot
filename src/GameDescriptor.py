@@ -13,10 +13,19 @@ class GameDescriptor:
 	system_name = None
 	rom_title = None
 
+	# For Atomiswave conversions
+	_naomi2_cv = False
+
 	# Things from DB
 	game_id = None
 	title = None
 	attributes = []
+
+	_system = None
+	_control = None
+	_max_players = None
+	_monitor = None
+	_dimm_ram = None
 
 	def __init__(self, filepath, skip_checksum = False):
 		# Gather all the information we can from the filesystem
@@ -37,6 +46,44 @@ class GameDescriptor:
 			#TODO Actually do something
 			return
 
+	def setSystem(self, system):
+		self._system = (system[0], system[1])
+		print(self._system)
+
+	def getSystem(self):
+		return self._system
+
+	def getControls(self):
+		return self._control
+
+	def getMaxPlayers(self):
+		return self._max_players
+
+	def getMonitor(self):
+		return self._monitor
+
+	def getDIMMRAMReq(self):
+		return self._dimm_ram
+
+	def isNaomi2CV(self):
+		return self._naomi2_cv
+
+	def setAttributes(self, attributes):
+		# Example of valid attributes param:
+		# [(7, 'Control', 'Normal'), (11, 'Players', '2'), (14, 'Monitor', 'Horizontal'), (18, 'DIMM Reset', 'Testing'), (20, 'DIMM RAM', '256MB')]
+		print(attributes)
+		self.attributes = attributes
+		for a in attributes:
+			if a[1] == 'Control':
+				self._control =(a[0], a[2])
+			if a[1] == 'Players':
+				self._max_players = (a[0], a[2])
+			if a[1] == 'Monitor':
+				self._monitor = (a[0], a[2])
+			if a[1] == 'DIMM RAM':
+				self._dimm_ram = (a[0], a[2])
+
+
 	def __file_get_title(self):
 		'Get game title from rom file.'
 		try:
@@ -51,6 +98,7 @@ class GameDescriptor:
 			Hi ldindon! Keep at it :)
 			'''
 			if title == "AWNAOMI":
+				_naomi_cv = True
 				fp.seek(0xFF30)
 				title = fp.read(32).decode('utf-8').strip(' ')
 
