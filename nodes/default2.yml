@@ -1,0 +1,10 @@
+!!python/object:NodeDescriptor.NodeDescriptor
+controls: !!python/tuple [24, 1L6B]
+dimm_ram: !!python/tuple [21, 512MB]
+game: null
+hostname: 69.69.69.69
+ip: 69.69.69.69
+monitor: !!python/tuple [15, Vertical]
+nickname: default2
+port: 10703
+system: !!python/tuple [2, NAOMI2]

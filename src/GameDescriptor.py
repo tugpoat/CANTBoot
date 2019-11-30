@@ -48,7 +48,6 @@ class GameDescriptor:
 
 	def setSystem(self, system):
 		self._system = (system[0], system[1])
-		print(self._system)
 
 	def getSystem(self):
 		return self._system
@@ -71,8 +70,8 @@ class GameDescriptor:
 	def setAttributes(self, attributes):
 		# Example of valid attributes param:
 		# [(7, 'Control', 'Normal'), (11, 'Players', '2'), (14, 'Monitor', 'Horizontal'), (18, 'DIMM Reset', 'Testing'), (20, 'DIMM RAM', '256MB')]
-		print(attributes)
 		self.attributes = attributes
+		# I am sure there is a more elegant way to do this. Meh.
 		for a in attributes:
 			if a[1] == 'Control':
 				self._control =(a[0], a[2])
@@ -98,7 +97,7 @@ class GameDescriptor:
 			Hi ldindon! Keep at it :)
 			'''
 			if title == "AWNAOMI":
-				_naomi_cv = True
+				_naomi_cv = True #Flag it as a conversion
 				fp.seek(0xFF30)
 				title = fp.read(32).decode('utf-8').strip(' ')
 

@@ -39,22 +39,9 @@ games_list = []
 
 # TODO: build node list from config or saved profiles or something
 nodes = NodeList()
-defnode = NodeDescriptor(prefs['Network']['dimm_ip'], 10703)
-defnode.nickname = 'default'
-defnode.system = (1, 'NAOMI')
-defnode.monitor = (14, 'Horizontal')
-defnode.controls = (25, '2L12B')
-defnode.dimm_ram = (20, '256MB')
-nodes.append(defnode)
-defnode = NodeDescriptor('69.69.69.69', 10703)
-defnode.nickname = 'default2'
-defnode.system = (2, 'NAOMI2')
-defnode.monitor = (15, 'Vertical')
-defnode.controls = (24, '1L6B')
-defnode.dimm_ram = (21, '512MB')
-nodes.append(defnode)
+nodes.loadNodes()
 
-nodes.saveNodes()
+print(nodes)
 
 print("yay")
 
@@ -90,7 +77,7 @@ while 1:
 				newgame = None
 
 				#make sure that the requested node is valid
-				if int(witem[1]) < nodes.len() and int(witem[1]) > -1:
+				if int(witem[1]) < len(nodes) and int(witem[1]) > -1:
 					for g in games_list:
 						if g.file_checksum == witem[2]:
 							newgame = g
@@ -98,9 +85,9 @@ while 1:
 					#set up loader
 					print(newgame.title)
 
-					nodes.saveNodes()
-
 					nodes[1].Load(loaderq, newgame)
+
+					nodes.saveNodes()
 
 					ui_webq.task_done()
 				else:
