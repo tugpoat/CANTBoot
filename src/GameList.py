@@ -10,7 +10,7 @@ class GameList():
 		print('Hello World!')
 
 # TODO: We shouldn't be writing installation info to the DB. WTF was I thinking?
-# Just serialize the list out to YAML or some shit.
+# Just serialize the list out to YAML or some shit. That way we can keep the main partition read-only, also.
 def build_games_list(database, prefs, scan_fs=True):
 	games = []
 
