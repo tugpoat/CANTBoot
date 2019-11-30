@@ -14,6 +14,8 @@ from gpio_reboot import *
 from queues import *
 from mbus import *
 
+#FIXME: FUCK THIS ENTIRE FILE
+
 #Message handlers
 
 def cb_gpio_reset():
@@ -85,7 +87,7 @@ while 1:
 					#set up loader
 					print(newgame.title)
 
-					nodes[1].Load(loaderq, newgame)
+					nodes[int(witem[1])].load(loaderq, newgame)
 
 					nodes.saveNodes()
 

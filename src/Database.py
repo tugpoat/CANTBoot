@@ -59,6 +59,9 @@ class ACNTBootDatabase:
 	def getAttributes(self):
 		return self._sqlite.execute("SELECT * FROM attributes").fetchall()
 
+	def getSystemFromName(self, name):
+		return self._sqlite.execute("SELECT * from systems where systems.name = ?", [name]).fetchone()
+		
 	def getGameSystem(self, game_id):
 		return self._sqlite.execute("SELECT systems.id as id, systems.name as name FROM systems JOIN games ON games.system_id=systems.id WHERE games.id = ? LIMIT 1", [game_id]).fetchone()
 

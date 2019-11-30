@@ -6,11 +6,13 @@ import glob
 
 import GameDescriptor
 from Loader import LoadWorker
+
 '''
 Organizational container for DIMM endpoints.
-Attached to a Loader object.
 '''
 class NodeDescriptor(yaml.YAMLObject):
+	# 0 = DIMM, 1 = API Slave. Future use.
+	node_type = 0
 	nickname = ""
 	hostname = ""
 	ip = ""
@@ -52,9 +54,22 @@ class NodeDescriptor(yaml.YAMLObject):
 		return socket.gethostbyname(hostname)
 
 	def serialize(self):
-		return json.dumps({"hostname": self.hostname, "ip": self.ip, "port": self.port, "system": self.system, "monitor": self.monitor})
+		return json.dumps({"hostname": self.hostname, 
+			"ip": self.ip, 
+			"port": self.port, 
+			"system": self.system, 
+			"monitor": self.monitor, 
+			"controls": self.controls, 
+			"dimm_ram": self.dimm_ram,
+			"game": game})
 
-	def Load(self, mq, gd):
+	def load(self, mq, gd):
+		#if endpoint is DIMM, do this.
+		return loadToDIMM(mq, gd)
+		#TODO: if endpoint is API slave, do something else. 
+		#Like send the rom file and any player data/patches over TCP.
+
+	def loadToDIMM(self, mq, gd):
 		#if not type(gd) is GameDescriptor:
 		#	raise Exception('load failed, tried to load object of wrong type or invalid game descriptor object')
 
@@ -65,6 +80,9 @@ class NodeDescriptor(yaml.YAMLObject):
 		# If the systems don't match up,
 		# OR if the system is a NAOMI2:
 		#	If the system id of the game isn't NAOMI, NAOMI2, or Atomiswave, and the game isn't a NAOMI2 conversion.....
+		#
+		# Side note: Hard coding ID's like this is bad practice. It's all 20 year old hardware though so fuck it. 
+		# If anyone's going to be messing with this they're gonna be gutting it anyways.
 		if (self.system[0] != gd.getSystem()[0]) and not ((self.system[0] == 2 and int(gd.getSystem()[0]) in {1,2,3}) or (self.system[0] == 2 and gd.isNaomi2CV())) :
 			# You dun goofed.
 			print("Wrong system. Game wants " + gd.getSystem()[1] + " but this node is a " + self.system[1])
@@ -87,10 +105,11 @@ class NodeDescriptor(yaml.YAMLObject):
 
 		self.game = gd
 
+		# Let's make it do the thing
 		self._loader = LoadWorker(mq, gd.filepath, self.ip, self.port)
 		self._loader.start()
 
-
+# Does what it says on the box.
 class NodeList():
 
 	_nodes = []

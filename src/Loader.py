@@ -1,4 +1,3 @@
-
 import os
 import time
 import json
@@ -24,8 +23,7 @@ RETURN CODES
 '''
 
 '''
-The actual loader. instantiated inside of Loader and launched by the main thread. That is, if Python will let me do that (It probably will, Python is a mess).
-LoadWorker is instantiated as the final step and all configuration settings should be resolved beforehand.
+The actual loader. Attached to a NodeDescriptor in practical use, and runs as its own process.
 '''
 class LoadWorker(Process):
     mq = None

@@ -7,10 +7,8 @@ from bottle import Bottle, template, static_file, error, request, response, view
 import beaker.middleware
 from Database import ACNTBootDatabase
 from GameList import *
-from mbus import MBus,SBus
+from mbus import MBus
 from queues import ui_webq
-import dbus
-import dbus.service
 
 session_opts = {
     'session.type': 'file',
@@ -215,6 +213,9 @@ class UIWeb_Bottle(Bottle):
         g = [game for game in self._games if game.file_checksum == fhash][0]
 
         return template('edit', filename=g.filename, game_title=g.title, hashid=fhash, games_list=gamelist, did_edit=True)
+
+    def nodes(self):
+        print("boners")
 
     def load(self, node, fhash):
         #TODO: load on target node

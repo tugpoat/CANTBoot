@@ -47,7 +47,8 @@ class GameDescriptor:
 			return
 
 	def setSystem(self, system):
-		self._system = (system[0], system[1])
+		if type(system) is tuple:
+			self._system = (system[0], system[1])
 
 	def getSystem(self):
 		return self._system
@@ -98,6 +99,7 @@ class GameDescriptor:
 			'''
 			if title == "AWNAOMI":
 				_naomi_cv = True #Flag it as a conversion
+				#Let's seek past the loader stub and snag the real title.
 				fp.seek(0xFF30)
 				title = fp.read(32).decode('utf-8').strip(' ')
 

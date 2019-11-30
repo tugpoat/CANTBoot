@@ -128,6 +128,7 @@ def build_games_list(database, prefs, scan_fs=True):
 				game.checksum_status = True
 				game.title = filename
 				game.attributes = []
+				game.setSystem(database.getSystemFromName(game.system_name.upper()))
 				games.append(game)
 
 	# Sort and return our built list of GameDescriptor objects
