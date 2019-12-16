@@ -1,6 +1,6 @@
 ACNTBoot
 ========
-********WARNING: THIS DOES NOT WORK YET.********
+********WARNING: THIS MIGHT NOT WORK YET.********
 
 It might work. It might load games and stuff, and I try my best to make sure that it does with each commit.
 No guarantees though. Use at your own risk.
@@ -33,14 +33,15 @@ Requirements
  * CAT5 Crossover Cable
 
 ### Software:
- * Raspbian (other Linux distros should work, but haven't been tested)
- * Python 3.3+ with:
+ * Raspbian -- Other Linux distros should work, but haven't been rubberstamped (Works fine on my gentoo-based laptop minus GPIO functionality).
+ * Python 3.6+ with:
  	-asyncio
  	-bottle
   	-hashlib
  	-json
  	-multiprocessing
  	-sqlite3
+	-pymessagebus
  * NetDIMM-compatible game images (these are usually .bin files; you're on your own to find these!)
 
 Software Setup (TODO)
