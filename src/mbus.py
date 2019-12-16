@@ -1,3 +1,3 @@
-from pybus_core import PyBus
+from pymessagebus import *
 
-MBus = PyBus()
+MBus = MessageBus()

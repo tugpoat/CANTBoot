@@ -28,6 +28,12 @@ class UI_Adafruit(Process):
         self._lcd.begin(16, 2)
         self._lcd.message("CANTBoot Loading\n    Hold up.")
 
+        if prefs['Main']['multinode'] == 'True':
+            self._lcd.clear()
+            #TODO: Maybe display Node information in the future?
+            self._lcd.message("MultiNode\nEnabled. No LCD.")
+            return
+
         self._mode ="games" #set for games list by default
 
         self._games = games

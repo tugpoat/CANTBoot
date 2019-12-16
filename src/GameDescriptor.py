@@ -28,10 +28,27 @@ class GameDescriptor:
 	_dimm_ram = None
 
 	def __init__(self, filepath, skip_checksum = False):
+
+		if type(filepath) is GameDescriptor:
+			self.filename = filepath.filename
+			self.filepath = filepath.filepath
+			self.file_checksum = filepath.file_checksum
+			self.checksum_status = filepath.checksum_status
+			self.system_name = filepath.system_name
+			self.rom_title = filepath.rom_title
+			self._naomi2_cv = filepath._naomi2_cv
+			self.game_id = filepath.game_id
+			self.title = filepath.title
+			self.attributes = filepath.attributes.copy() #important to copy because reference shenanigans
+			self._system = filepath._system
+			self._control = filepath._control
+			self._max_players = filepath._max_players
+			self._dimm_ram = filepath._dimm_ram
+			return
+
 		# Gather all the information we can from the filesystem
 		self.filepath = filepath
 		self.filename = os.path.basename(filepath)
-
 		try:
 			# Open the file up and get all the info we need from the header data
 			self.file_size = os.stat(filepath).st_size
@@ -45,7 +62,6 @@ class GameDescriptor:
 		except Exception:
 			#TODO Actually do something
 			return
-
 	def setSystem(self, system):
 		if type(system) is tuple:
 			self._system = (system[0], system[1])
@@ -98,15 +114,15 @@ class GameDescriptor:
 			Hi ldindon! Keep at it :)
 			'''
 			if title == "AWNAOMI":
-				_naomi_cv = True #Flag it as a conversion
+				_naomi2_cv = True #Flag it as a conversion
 				#Let's seek past the loader stub and snag the real title.
 				fp.seek(0xFF30)
 				title = fp.read(32).decode('utf-8').strip(' ')
 
 			fp.close()
 			return title
-		except Exception:
-			print('poop')
+		except Exception as ex:
+			print(repl(ex))
 			# TODO: thing
 
 	def __file_get_target_system(self):
@@ -127,7 +143,7 @@ class GameDescriptor:
 			else:
 				return False
 
-		except Exception:
+		except Exception as ex:
 			# TODO: the thing
 			return False
 

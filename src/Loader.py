@@ -3,9 +3,12 @@ import time
 import json
 import configparser
 from multiprocessing import Manager, Process, Queue
+from mbus import *
 from NodeDescriptor import *
 from GameDescriptor import *
 from NetComm import *
+
+from loader_events import *
 
 
 '''
@@ -22,8 +25,13 @@ RETURN CODES
 1 error
 '''
 
+
+
 '''
 The actual loader. Attached to a NodeDescriptor in practical use, and runs as its own process.
+
+TODO: run a ping against the NetDIMM. if it breaks, then restart the netboot cycle once reachable to maintain the desired state. 
+This will effectively give us single-game functionality without compromise.
 '''
 class LoadWorker(Process):
     mq = None
@@ -59,43 +67,47 @@ class LoadWorker(Process):
         
         # Open a connection to endpoint and notify the main thread that we are doing so.
         try:
-            message = message = [1, ("%s : connecting to %s" % (self.name, self.host))]
-            self.mq.put(message)
+            MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(1)))
             self._comm.connect(self.host, self.port)
         except Exception as ex:
-            message = [-1, ("%s : connection to %s failed! exiting." % (self.name, self.host)), repr(ex)]
-            self.mq.put(message)
+            MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(-1)))
             #print(("%s : connection to %s failed! exiting." % (self.name, self.host)))
             return 1
 
         # We have successfully connected to the endpoint. Let's shove our rom file down its throat.
         try:
-            message = [2, ("%s : Uploading " % (self.name, self.path, self.host))]
-            self.mq.put(message)
+            MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(2)))
 
-            self._comm.HOST_SetMode(0, 1)
-            # disable encryption by setting magic zero-key
-            self._comm.SECURITY_SetKeycode("\x00" * 8)
+            self.uploadrom(game_path)
 
-            # uploads file. Also sets "dimm information" (file length and crc32)
-            self._comm.DIMM_UploadFile(game_path)
-            
             message = [3, ("%s : Booting " % (self.name, self.path, self.host))]
-            self.mq.put(message)
-            
+            MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(3)))
+
             # restart the endpoint system, this will boot into the game we just sent
             self._comm.HOST_Restart()
 
         except Exception as ex:
-            message = [-1, ("%s : Error booting game on hardware! " % (self.name, self.path, self.host)), repr(ex)]
-            self.mq.put(message)
+            MBus.handle(Node_LoaderExceptionMessage(payload=("%s : Error booting game on hardware! ex: %s" % (self.name, self.path, self.host, repr(ex)))))
+            MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(0)))
             return 1
 
         self._active = True
 
         message = [4, ("%s : Entering Keep-alive loop. " % (self.name))]
-        self.mq.put(message)
+        MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(4)))
         keepalive()
+
+    def uploadrom(self, rom_path):
+        self._comm.HOST_SetMode(0, 1)
+        # disable encryption by setting magic zero-key
+        self._comm.SECURITY_SetKeycode("\x00" * 8)
+
+        # uploads file. Also sets "dimm information" (file length and crc32)
+        self._comm.DIMM_UploadFile(rom_path, None, upload_pct_callback)
+    
+    def upload_pct_callback(percent_complete):
+        #TODO: deliver this number to UI and/or main thread via messagebus
+        print("upload cb: " + percent_complete + "%")
 
     def keepalive(self):
         '''

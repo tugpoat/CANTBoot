@@ -29,34 +29,23 @@ prefs_file = open(PREFS_FILE, 'r')
 prefs.read_file(prefs_file)
 prefs_file.close()
 
+#TODO: if file/directory does not exist, copy a default from the read-only partition to the SD card.
+
 # set up database
 db = ACNTBootDatabase('db.sqlite')
 
-games_list = []
+#set up game list
+games_list = GameList(prefs['Directories']['cfg_dir'], prefs['Directories']['games_dir'])
+games_list.scanForNewGames(db)
 
-# set up messaging
-# TODO: At this point maybe I should just use a messagebus
-# TODO: These need to be able to operate asynchronously
-#MBus.subscribe("gpio.reset", MBus.self, cb_gpio_reset)
-
-# TODO: build node list from config or saved profiles or something
-nodes = NodeList()
+#set up node list
+nodes = NodeList(prefs['Directories']['nodes_dir'])
 nodes.loadNodes()
-
-print(nodes)
-
-print("yay")
-
-# loader list
-loaders = []
 
 # TODO: set up adafruit ui if detected and enabled
 
-# scan games. We do this after loading the UIs. This way, we can signal progress (TODO) so the user isn't left in the dark.
-games_list = build_games_list(db, prefs)
-
 # Launch web UI
-app = UIWeb('Web UI', games_list, prefs)
+app = UIWeb('Web UI', games_list, nodes, prefs)
 app._games = games_list
 app.list_loaded = True
 t = Process(target=app.start)
@@ -66,7 +55,7 @@ t.start()
 # Main loop
 # Handles messaging between loaders, etc. and the main thread/UI instances
 
-
+#TODO: FUCK THIS THING
 while 1:
 	try:
 

@@ -3,6 +3,7 @@ import json
 import yaml
 import io
 import glob
+import binascii
 
 import GameDescriptor
 from Loader import LoadWorker
@@ -13,6 +14,7 @@ Organizational container for DIMM endpoints.
 class NodeDescriptor(yaml.YAMLObject):
 	# 0 = DIMM, 1 = API Slave. Future use.
 	node_type = 0
+	node_id = ""
 	nickname = ""
 	hostname = ""
 	ip = ""
@@ -22,7 +24,7 @@ class NodeDescriptor(yaml.YAMLObject):
 	controls = None
 	dimm_ram = None
 	game = None
-	_extension = None #TODO: for card reader emulators, VMU emulators, etc. will use multiprocessing. each node *should* only ever need one of these.
+	_extension = None #TODO: for card reader emulators, VMU emulators, etc. will use multiprocessing.
 	_loader = None
 
 	def __init__(self, hostname, port):
@@ -30,6 +32,8 @@ class NodeDescriptor(yaml.YAMLObject):
 		#TODO: Error check DNS resolution
 		self.ip = self._resolve_hostname(hostname) #automatically resolve hostnames if we can
 		self.port = port
+		self.node_id = binascii.crc32(self.hostname+self.ip+self.port)
+		mbus.subscribe
 
 	# Copy constructor
 	def __init__(self, other_obj):
@@ -65,9 +69,14 @@ class NodeDescriptor(yaml.YAMLObject):
 
 	def load(self, mq, gd):
 		#if endpoint is DIMM, do this.
-		return loadToDIMM(mq, gd)
+		return self.loadToDIMM(mq, gd)
 		#TODO: if endpoint is API slave, do something else. 
 		#Like send the rom file and any player data/patches over TCP.
+
+	def cb_terminate():
+		print("Received termination request, stopping and terminating loadworker")
+		self._loader.stop()
+		self._loader = None
 
 	def loadToDIMM(self, mq, gd):
 		#if not type(gd) is GameDescriptor:
@@ -111,8 +120,10 @@ class NodeDescriptor(yaml.YAMLObject):
 
 # Does what it says on the box.
 class NodeList():
-
+	_nodes_dir = None
 	_nodes = []
+	def __init__(self, nodesdir):
+		self._nodes_dir = nodesdir
 
 	def __len__(self):
 		return len(self._nodes)
@@ -131,8 +142,7 @@ class NodeList():
 		return len(self._nodes)
 
 	def loadNodes(self):
-		nodedir = 'nodes/'
-		nodefiles = glob.glob(nodedir+'*.yml')
+		nodefiles = glob.glob(self._nodes_dir+'/*.yml')
 		for file in nodefiles:
 			try:
 				with open(file) as ifs:
@@ -142,15 +152,14 @@ class NodeList():
 			except:
 				print("couldn't load nodes for some reason")
 
-	def saveNodes(self):
-		nodedir = 'nodes/'
+	def exportNodes(self):
 		for elem in self._nodes:
 			try:
 				# We have to do it this way because there's a loader object in there that spawns its own process.
 				# Can't cross our pickles, that'd be weird.
 				tmp = NodeDescriptor(elem)
 				
-				with open(nodedir+tmp.nickname+'.yml', 'w') as ofs:
+				with open(self._nodes_dir+tmp.nickname+'.yml', 'w') as ofs:
 					yaml.dump(tmp, ofs)
 			except Exception as ex:
 				print(ex)
