@@ -88,10 +88,13 @@ This would allow for very large deployments with great manageability, and enable
     +---------+                            +-----------------+                    | Web UI     |                  +-------------+
     | NetDIMM | <==[Straight-thru Cable]==>| API Slave RasPi | <~~[WiFi/Wired]~~~>|            |
     +---------+                            +-----------------+                    +------------+
+DONE
+----
+* Ditch the whole "install games to database" thing and just dump the gamelist out to YAML on the games partition
+
 Todo
 ----
  * MESSAGEBUS. JEBUS. WHY AM I PUTTING THIS OFF? IT WILL MAKE EVERYTHING SUPER COOL AND SMOOTH AND EVENT DRIVEN, AND ENABLE FUTURE GROWTH.
- * Ditch the whole "install games to database" thing and just dump the gamelist out to YAML on the games partition
  * Redo Web UI for event-based operation
  * Redo Web UI for multinode mode
  * Adafruit UI
