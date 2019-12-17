@@ -1,9 +1,8 @@
 ACNTBoot
 ========
-********WARNING: THIS MIGHT NOT WORK YET.********
+********WARNING: THIS DOES NOT WORK YET.********
 
-It might work. It might load games and stuff, and I try my best to make sure that it does with each commit.
-No guarantees though. Use at your own risk.
+It might work. It might load games and stuff, and I try my best to make sure that it does with each commit. Usually. It's broken right now though, in the name of great improvement.
 
 ACNTBoot is loosely based on NAOMIWeb, and started life as a fork of it.
 ### Github links:
@@ -29,7 +28,7 @@ Requirements
  	- Triforce
 
  * NetDIMM cartridge w/ security PIC (NULL PIC recommended, but other PICs may work)
- * Raspberry Pi 3 (2 may work but will not be supported)
+ * Raspberry Pi 3,4 (2 may work but will not be supported)
  * CAT5 Crossover Cable
 
 ### Software:
@@ -91,13 +90,15 @@ This would allow for very large deployments with great manageability, and enable
     +---------+                            +-----------------+                    +------------+
 DONE
 ----
-* Ditch the whole "install games to database" thing and just dump the gamelist out to YAML on the games partition
-
+ * Ditch the whole "install games to database" thing and just dump the gamelist out to YAML on the games partition
+ * Messagebus
+In Progress
+----
+ * Plug everything into the messagebus
+ * Redo Web UI for event-based operation
+ * Redo Web UI for multinode
 Todo
 ----
- * MESSAGEBUS. JEBUS. WHY AM I PUTTING THIS OFF? IT WILL MAKE EVERYTHING SUPER COOL AND SMOOTH AND EVENT DRIVEN, AND ENABLE FUTURE GROWTH.
- * Redo Web UI for event-based operation
- * Redo Web UI for multinode mode
  * Adafruit UI
  * GPIO Reset (Supported, but needs to get plugged in properly)
  * DHCP configuration of NetDIMM(s)
