@@ -8,8 +8,6 @@ import beaker.middleware
 from Database import ACNTBootDatabase
 from GameList import *
 
-from queues import *
-
 from ui_web_events import *
 from loader_events import *
 from mbus import *
@@ -31,7 +29,7 @@ class UIWeb():
         self._bottle.start()
 
 class UIWeb_Bottle(Bottle):
-    #TODO: The Web UI opening its own DB connection is not ideal.
+    #FIXME: The Web UI opening its own DB connection is not ideal. correct this, it's un-necessary.
     _db = None
     _games = None
     _nodes = None
@@ -81,15 +79,17 @@ class UIWeb_Bottle(Bottle):
 
 
     def cb_LoaderStatus(self, message: Node_LoaderStatusCodeMessage):
-        print("loader status recv'd: "+ str(message.payload) )
+        print(":D loader status recv'd: "+ str(message.payload) )
 
     def start(self):
         self._db = ACNTBootDatabase('db.sqlite')
         self.run(host='0.0.0.0', port=8000, debug=False)
 
     def serve_static(self, filepath):
-        if 'images/' in filepath and not os.path.isfile('static/'+filepath):
+        if 'images/games' in filepath and not os.path.isfile('static/'+filepath):
             return static_file('images/games/0.jpg', 'static')
+        elif 'images/systems' in filepath and not os.path.isfile('static/'+filepath):
+            return static_file('images/systems/0.jpg', 'static')
 
         return static_file(filepath, 'static')
 

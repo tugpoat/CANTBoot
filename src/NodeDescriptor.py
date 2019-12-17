@@ -32,8 +32,7 @@ class NodeDescriptor(yaml.YAMLObject):
 		#TODO: Error check DNS resolution
 		self.ip = self._resolve_hostname(hostname) #automatically resolve hostnames if we can
 		self.port = port
-		self.node_id = binascii.crc32(self.hostname+self.ip+self.port)
-		mbus.subscribe
+		self.node_id = binascii.crc32(self.hostname+self.ip+self.port) # we can probably use this to dynamically set up mbus subscribers
 
 	# Copy constructor
 	def __init__(self, other_obj):
@@ -67,9 +66,9 @@ class NodeDescriptor(yaml.YAMLObject):
 			"dimm_ram": self.dimm_ram,
 			"game": game})
 
-	def load(self, mq, gd):
+	def load(self, gd):
 		#if endpoint is DIMM, do this.
-		return self.loadToDIMM(mq, gd)
+		return self.loadToDIMM(gd)
 		#TODO: if endpoint is API slave, do something else. 
 		#Like send the rom file and any player data/patches over TCP.
 
@@ -78,7 +77,7 @@ class NodeDescriptor(yaml.YAMLObject):
 		self._loader.stop()
 		self._loader = None
 
-	def loadToDIMM(self, mq, gd):
+	def loadToDIMM(self, gd):
 		#if not type(gd) is GameDescriptor:
 		#	raise Exception('load failed, tried to load object of wrong type or invalid game descriptor object')
 
@@ -115,7 +114,7 @@ class NodeDescriptor(yaml.YAMLObject):
 		self.game = gd
 
 		# Let's make it do the thing
-		self._loader = LoadWorker(mq, gd.filepath, self.ip, self.port)
+		self._loader = LoadWorker(gd.filepath, self.ip, self.port)
 		self._loader.start()
 
 # Does what it says on the box.

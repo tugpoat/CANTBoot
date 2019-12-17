@@ -47,7 +47,7 @@ class LoadWorker(Process):
     abs_path: String, absolute path of ROM file
     host: String, IP Address of endpoint
     '''
-    def __init__(self, queue, abs_path, host, port):
+    def __init__(self, abs_path, host, port):
         super(LoadWorker, self).__init__()
         self.mq = queue
         self.path = abs_path
@@ -80,7 +80,7 @@ class LoadWorker(Process):
 
             self.uploadrom(game_path)
 
-            message = [3, ("%s : Booting " % (self.name, self.path, self.host))]
+            #message = [3, ("%s : Booting " % (self.name, self.path, self.host))]
             MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(3)))
 
             # restart the endpoint system, this will boot into the game we just sent
@@ -116,17 +116,10 @@ class LoadWorker(Process):
         '''
         while 1:
             try:
-                if not self.mq.empty():
-                    witem = ui_webq.get(False)
-                    if witem[0] == "die":
-                        self.mq.put([0, ("%s : Received termination request. Aborting keep-alive, disconnecting and returning to idle." % (self.name, self.path, self.host))])
-                        self._comm.disconnect()
-                        return
 
                 # set time limit to 10h. According to some reports, this does not work.
                 TIME_SetLimit(10*60*1000)
                 time.sleep(5)
             except Exception as ex:
                 #TODO: maybe check what the exception is and automatically determine whether or not to continue
-                message = [-1, ("%s : Keep-alive failed! Continuing to attempt anyway." % (self.name, self.path, self.host)), repr(ex)]
-                self.mq.put(message)
+                #message = [-1, ("%s : Keep-alive failed! Continuing to attempt anyway." % (self.name, self.path, self.host)), repr(ex)]
