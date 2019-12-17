@@ -92,11 +92,13 @@ DONE
 ----
  * Ditch the whole "install games to database" thing and just dump the gamelist out to YAML on the games partition
  * Messagebus
+
 In Progress
 ----
  * Plug everything into the messagebus
  * Redo Web UI for event-based operation
  * Redo Web UI for multinode
+
 Todo
 ----
  * Adafruit UI
