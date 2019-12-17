@@ -48,8 +48,7 @@ div.game div.col0 img {
 	height: auto;
 	max-width: 240px;
 }
-
-sa.edit-link {
+a.edit-link {
 	float: left;
 }
 
