@@ -122,9 +122,10 @@ class NetComm:
 	# upload a file into DIMM memory, and optionally encrypt for the given key.
 	# note that the re-encryption is obsoleted by just setting a zero-key, which
 	# is a magic to disable the decryption.
-	def DIMM_UploadFile(self, name, key = None):
+	def DIMM_UploadFile(self, name, key = None, progress_cb = None):
 		import zlib
 		crc = 0
+		f_sz = os.stat(name).st_size
 		a = open(name, "rb")
 		addr = 0
 		if key:
@@ -139,6 +140,14 @@ class NetComm:
 			DIMM_Upload(addr, data, 0)
 			crc = zlib.crc32(data, crc)
 			addr += len(data)
+
+			# -- smurph edit 2019/12/16
+			print(" " + addr + " / " + f_sz + " pct: " + ((addr / f_sz) * 100))
+
+			#Callback for percent progress
+			if callable(progress_cb):
+				progress_cb((addr / f_sz) * 100)
+
 		a.close()
 		crc = ~crc
 		DIMM_Upload(addr, "12345678".encode(), 1)

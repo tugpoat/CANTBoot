@@ -1,124 +1,107 @@
 from GameDescriptor import GameDescriptor
 import configparser
 import os
+import yaml
 
-#TODO: Extend List or something
 class GameList():
-	
-	def helloworld():
-		print('Hello World!')
+	_cfg_dir = ""
+	_games_dir = ""
+	_games = []
 
-def build_games_list(database, prefs, scan_fs=True):
-	games = []
+	def __init__(self, cfgdir, gamesdir):
+		self._cfg_dir = cfgdir
+		self._games_dir = gamesdir
 
-	games_directory = prefs['Games']['directory'] or 'games'
+		self.loadExisting()
 
-	# Get list of installed games from DB
-	installed_games = database.getInstalledGames()
-	
-	# Check to make sure all the games we think are installed actually are. if not, purge them from the DB.
-	# While we're at it, build the already installed games into our working game list.
-	print("Checking installed games")
+	def __len__(self):
+		return len(self._games)
 
-	for igame in installed_games:
-		filepath = games_directory + '/' + igame[2]
-		print("Checking " + igame[2])
-		if not os.path.isfile(filepath):
-			print(igame[2] + " no longer installed, purging from DB")
-			database.rmInstalledGameById(igame[0])
-			continue # process next item
+	def __iter__(self):
+		for elem in self._games:
+			yield elem
+			
+	def __getitem__(self, key):
+		return self._games[key]
 
-		game = GameDescriptor(filepath, prefs['Main']['skip_checksum'])
-		if not game.isValid():
-			#print("game not valid")
-			# TODO: Maybe spit out an error or something
-			# There are a number of reasons this might happen (filesystem unmounted etc)
-			continue
+	def append(self, game):
+		self._games.append(game)
 
-		# Skip checksumming if requested for faster startup time
-		if prefs['Main']['skip_checksum']:
-				game.file_checksum = igame[4]
+	def len(self):
+		return len(self._games)
 
-		if not prefs['Main']['skip_checksum'] and igame[4] != game.file_checksum:
-				print("Checksum error in " + filename + " expected " + installed_game[4] + " got " + game.file_checksum)
-				game.checksum_status = False
+	def loadExisting(self):
+		listfile = self._cfg_dir+"/gamelist.yml"
 
-		game.game_id 	= igame[1]
-		game.title		= igame[3]
-		game.attributes = database.getGameAttributes(igame[1])
+		if os.path.isfile(listfile):
+			try:
+				with open(listfile) as ifs:
+					self._games = yaml.load(ifs)
+			except Exception as ex:
+				print("couldn't load games for some reason" + repr(ex))
 
-		games.append(game)
+	def exportList(self):
+		if os.path.isfile(self._cfg_dir+'/gamelist.yml'): os.remove(self._cfg_dir+'/gamelist.yml')
 
-	# Clean up a little
-	installed_games = None
+		try:
+			# We have to do it this way because there's a loader object in there that spawns its own process.
+			# Can't cross our pickles, that'd be weird.
+			with open(self._cfg_dir+'/gamelist.yml', 'a+') as ofs:
+				yaml.dump(self._games, ofs)
+		except Exception as ex:
+			print(repr(ex))
 
-	#If we don't want to scan the games directory for new roms, then just sort and return what we have.
-	if not scan_fs:
-		games.sort(key = lambda games: games.title.lower())
-		return games
+	def verifyFiles(self):
+		#TODO: Run thru list and hash check everything.
+		print("sup")
 
-	print("Looking for new games")
+	def scanForNewGames(self, database):
+		#TODO
+		old_len = len(self._games)
+		#2. scan directory for files that aren't in the existing list
+		if os.path.isdir(self._games_dir):
+			for file in os.listdir(self._games_dir):
+				game_exists = False
+				for igame in self._games:
+					if igame.filename == file:
+						#just assume it's the same thing for now (a reasonable assumption), don't spend forever hashing everything ffs
+						game_exists = True
+						break
 
-	if os.path.isdir(games_directory):
-		for filename in os.listdir(games_directory):
-			filepath = games_directory + '/' + filename
+				if game_exists: continue
+				tgame = GameDescriptor(self._games_dir+"/"+file)
 
-			# See if this file is already installed as a game in our db.
-			# Just use the partial games list we generated in the previous step.
-			is_installed = False
+				if not tgame.isValid():
+					print("not valid or compatible rom file: ", file)
+					continue
 
-			'''
-			Loop through and check the filename against all our installed filenames.
-			No need for search algorithms, this list will never be large.
-			If we find a match, then the game is already installed and no further processing is necessary for this file.
-			'''
-			for igame in games:
-				if igame.filename == filename:
-					is_installed = True
-					break
+				identity = database.getGameInformation(tgame.rom_title)
 
-			if is_installed: continue
+				if identity:
 
-			'''
-			Since we have established that this rom is not yet installed, we need to do the following:
-			Instantiate a new GameDescriptor
-			Ensure it is a valid netboot file
-			Retrieve any information from the database that we can about it
-			Add the game and its related information (represented by the GameDescriptor object) to the list
-			'''
-			game = GameDescriptor(filepath)
+					# We know what it is. Let's fill in everything from the DB.
+					tgame.game_id = identity[0]
+					tgame.title = identity[1]
 
-			# If it's not a valid netboot file we don't care about it anymore
-			if not game.isValid():
-				continue
+					tgame.setSystem(database.getGameSystem(identity[0]))
+					tgame.attributes = database.getGameAttributes(identity[0])
+					tgame.setAttributes(database.getGameAttributes(identity[0]))
+					self.append(tgame)
+					print("\tAdded " + tgame.title)
+				else:
+					# We were unable to retrieve information about this game from the database. 
+					# Just fill in whatever we can and pass it along.
+					print("\tUnable to identify " + file)
+					tgame.game_id = 0
+					tgame.checksum_status = True
+					tgame.title = filename
+					tgame.attributes = []
+					tgame.setSystem(database.getSystemFromName(tgame.system_name.upper()))
+					self.append(tgame)
 
-			identity = database.getGameInformation(game.rom_title)
-
-			if identity:
-				# Game has information available in the DB, we have been able to identify it
-				installed_game = database.getInstalledGameByGameId(identity[0])
-
-				if not installed_game:
-					# If game is not installed, do so.
-					database.installGame(identity[0], filename, game.file_checksum)
-					installed_game = database.getInstalledGameByGameId(identity[0])
-
-				# TODO: at this point we should just fetch everything back from the DB and load it into a GameDescriptor on the back end.
-				game.game_id = identity[0]
-				game.title = identity[1]
-				game.attributes = database.getGameAttributes(installed_game[1])
-				games.append(game)
-				print("\tAdded " + game.title)
-			else:
-				# We were unable to retrieve information about this game from the database. 
-				# Just fill in whatever we can and pass it along.
-				print("\tUnable to identify " + filename)
-				game.game_id = 0
-				game.checksum_status = True
-				game.title = filename
-				game.attributes = []
-				games.append(game)
-
-	# Sort and return our built list of GameDescriptor objects
-	games.sort(key = lambda games: games.title.lower())
-	return games
+		if old_len != self.len():
+			tmplist = self._games
+			# Sort our list of GameDescriptor objects if it's changed at all
+			tmplist.sort(key = lambda tmplist: tmplist.title.lower())
+			self._games = tmplist
+			self.exportList()

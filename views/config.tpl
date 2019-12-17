@@ -11,9 +11,25 @@
 		<h2>Main</h2>
 		<div class="row container">
 			<div class="form-group">
+				<label class="col-sm-2 control-label">Enable MultiNode</label>
+				<div class="col-sm-3">
+					<input type="checkbox" class="form-control" name="multinode" {{multinode}} />
+				</div>
+			</div>
+		</div>
+		<div class="row container">
+			<div class="form-group">
 				<label class="col-sm-2 control-label">Skip checksum on startup for installed games</label>
 				<div class="col-sm-3">
 					<input type="checkbox" class="form-control" name="skip_checksum" {{skip_checksum}} />
+				</div>
+			</div>
+		</div>
+		<div class="row container">
+			<div class="form-group">
+				<label class="col-sm-2 control-label">Automatically netboot all nodes if previously configured on software startup</label>
+				<div class="col-sm-3">
+					<input type="checkbox" class="form-control" name="autoboot" {{autoboot}} />
 				</div>
 			</div>
 		</div>
