@@ -20,7 +20,7 @@ game: !!python/object:GameDescriptor.GameDescriptor
   game_id: 40
   rom_title: -IKARUGA-
   system_name: NAOMI
-  title: Ikaruga
+  title: Ikaruga but with a very long title for testing purposes
 hostname: 192.168.0.2
 ip: 192.168.0.2
 monitor: !!python/tuple [14, Horizontal]

@@ -9,7 +9,7 @@ div.game {
 }
 
 div.game div.col0 img {
-	width: 100%;
+
 	height: auto;
 	max-width: 120px;
 }
@@ -42,12 +42,13 @@ div.col1 div {
 	font-size: .75em;
 }
 
-@media only screen and (min-width: 400px) {
+@media only screen and (min-width: 420px) {
 div.game div.col0 img {
 	width: 100%;
 	height: auto;
 	max-width: 240px;
 }
+
 a.edit-link {
 	float: left;
 }
