@@ -141,6 +141,7 @@ class NetComm:
 			crc = zlib.crc32(data, crc)
 			addr += len(data)
 
+			# -- smurph edit 2019/12/16
 			print(" " + addr + " / " + f_sz + " pct: " + ((addr / f_sz) * 100))
 
 			#Callback for percent progress

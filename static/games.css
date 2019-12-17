@@ -1,0 +1,77 @@
+div.game {
+	text-align: left;
+	display: block;
+	margin-left: 2em;
+	margin-bottom: 1em;
+	padding-top:.6em;
+	padding-bottom: .6em;
+	max-width: 1140px;
+}
+
+div.game div.col0 img {
+	width: 100%;
+	height: auto;
+	max-width: 120px;
+}
+
+div.game div {
+	display:inline-block;
+	padding-right: 0px;
+}
+
+div.col1 {
+	vertical-align: middle;
+}
+
+div.col1 div {
+	display: block;
+	margin: 0.2em 0.2em;
+	text-align: left;
+	white-space: pre-wrap; /* css-3 */    
+    white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+    white-space: -pre-wrap; /* Opera 4-6 */    
+    white-space: -o-pre-wrap; /* Opera 7 */    
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
+}
+
+.fileinfo {
+	background-color: #BC6BC7;
+}
+
+.filename {
+	font-size: .75em;
+}
+
+@media only screen and (min-width: 400px) {
+div.game div.col0 img {
+	width: 100%;
+	height: auto;
+	max-width: 240px;
+}
+
+sa.edit-link {
+	float: left;
+}
+
+div.col1 a {
+	font-size: 2em;
+}
+
+#filters {
+	display: block;
+}
+#filters select{
+	display: inline;
+	width: 40%;
+}
+#add-filter {
+	width: 15%;
+}
+
+.filename {
+	font-size: 1em;
+}
+
+.hidden {
+	visibility: hidden;
+}

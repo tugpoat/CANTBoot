@@ -1,5 +1,5 @@
 % include('header.tpl', title='NetDIMM Loader')
-
+<link href="/static/games.css" rel="stylesheet" type="text/css" />
 <div class="container">
 	% include('navbar.tpl', activePage='games')
   	
@@ -40,7 +40,7 @@
 	<a class="edit-link" href="edit/{{game.file_checksum}}"><span class="glyphicon glyphicon-edit"></span></a>
 		<div class="label label-default game {{game.checksum_status}}">
 			<div class="col0">
-				<img src="/static/images/{{game.game_id}}.jpg" alt="game image">
+				<img src="/static/images/games/{{game.game_id}}.jpg" alt="game image">
 			</div>
 			<div class="col1">
 				<div><a class="game-link" href="load/0/{{game.file_checksum}}">{{game.title}}</a></div>

@@ -89,7 +89,7 @@ class UIWeb_Bottle(Bottle):
 
     def serve_static(self, filepath):
         if 'images/' in filepath and not os.path.isfile('static/'+filepath):
-            return static_file('images/0.jpg', 'static')
+            return static_file('images/games/0.jpg', 'static')
 
         return static_file(filepath, 'static')
 
