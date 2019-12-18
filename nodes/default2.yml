@@ -21,9 +21,10 @@ game: !!python/object:GameDescriptor.GameDescriptor
   rom_title: -IKARUGA-
   system_name: NAOMI
   title: Ikaruga
-hostname: 69.69.69.69
+node_id: fedcba321
+hostname: default2.local
 ip: 69.69.69.69
-monitor: !!python/tuple [15, Vertical]
+monitor: !!python/tuple [14, Horizontal]
 nickname: default2
 port: 10703
 system: !!python/tuple [2, NAOMI2]

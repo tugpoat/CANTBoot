@@ -62,6 +62,7 @@ class GameDescriptor:
 		except Exception:
 			#TODO Actually do something
 			return
+
 	def setSystem(self, system):
 		if type(system) is tuple:
 			self._system = (system[0], system[1])

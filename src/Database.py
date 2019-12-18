@@ -25,6 +25,24 @@ class ACNTBootDatabase:
 	def getAttributes(self):
 		return self._sqlite.execute("SELECT * FROM attributes").fetchall()
 
+	def getSystems(self):
+		return self._sqlite.execute("SELECT id, name from systems").fetchall()
+
+	def getControlTypes(self):
+		return self._sqlite.execute("SELECT id, value FROM attributes_values WHERE attribute_id=1").fetchall()
+
+	def getPlayers(self):
+		return self._sqlite.execute("SELECT id, value FROM attributes_values WHERE attribute_id=2").fetchall()
+
+	def getMonitorTypes(self):
+		return self._sqlite.execute("SELECT id, value FROM attributes_values WHERE attribute_id=3").fetchall()
+
+	def getDIMMResetValues(self):
+		return self._sqlite.execute("SELECT id, value FROM attributes_values WHERE attribute_id=4").fetchall()
+
+	def getDIMMRAMValues(self):
+		return self._sqlite.execute("SELECT id, value FROM attributes_values WHERE attribute_id=5").fetchall()
+
 	def getSystemFromName(self, name):
 		return self._sqlite.execute("SELECT * from systems where systems.name = ?", [name]).fetchone()
 		

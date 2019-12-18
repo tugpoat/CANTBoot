@@ -8,6 +8,9 @@ class GameList():
 	_games_dir = ""
 	_games = []
 
+	def __init__(self):
+		return
+
 	def __init__(self, cfgdir, gamesdir):
 		self._cfg_dir = cfgdir
 		self._games_dir = gamesdir
@@ -22,6 +25,13 @@ class GameList():
 			yield elem
 			
 	def __getitem__(self, key):
+		if type(key) is str:
+			#checksum/hash
+			for elem in self._games:
+				if elem.file_checksum == key: return elem
+
+			#FIXME: what happens if hash not found?
+
 		return self._games[key]
 
 	def append(self, game):

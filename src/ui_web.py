@@ -3,6 +3,7 @@ import configparser
 import signal
 import string
 import json
+import copy
 from bottle import Bottle, template, static_file, error, request, response, view
 import beaker.middleware
 from Database import ACNTBootDatabase
@@ -22,8 +23,8 @@ session_opts = {
 
 class UIWeb():
     _bottle = None
-    def __init__(self, name, gameslist, nodeslist, prefs):
-        self._bottle = UIWeb_Bottle(name, gameslist, nodeslist, prefs)
+    def __init__(self, name, db, gameslist, nodeslist, prefs):
+        self._bottle = UIWeb_Bottle(name, db, gameslist, nodeslist, prefs)
 
     def start(self):
         self._bottle.start()
@@ -54,13 +55,14 @@ class UIWeb_Bottle(Bottle):
         self.route('/gpio_reset', method="GET", callback=self.do_gpio_reset)
         MBus.add_handler(Node_LoaderStatusCodeMessage, self.cb_LoaderStatus)
 
-    def __init__(self, name, gameslist, nodelist, prefs):
+    def __init__(self, name, db, gameslist, nodelist, prefs):
         super(UIWeb_Bottle, self).__init__()
         self._beaker = beaker.middleware.SessionMiddleware(self, session_opts)
         self.name = name
         self._games = gameslist
         self._nodes = nodelist
         self._prefs = prefs
+        self._db = db
 
         #set up routes
         self.route('/', method="GET", callback=self.index)
@@ -69,9 +71,12 @@ class UIWeb_Bottle(Bottle):
         self.route('/config', method="POST", callback=self.do_appconfig)
         self.route('/edit/<fhash>', method="GET", callback=self.edit)
         self.route('/edit/<fhash>', method="POST", callback=self.do_edit)
-        self.route('/load/<node>/<fhash>', method="GET", callback=self.load)
+        self.route('/load/<node_id>/<fhash>', method="GET", callback=self.load)
 
         self.route('/nodes', method="GET", callback=self.nodes)
+        self.route('/games/<node_id>', method="GET", callback=self.gamechooser)
+
+        self.route('/nodes/<node_id>/edit', method="GET", callback=self.node_edit)
 
         self.route('/gpio_reset', method="GET", callback=self.do_gpio_reset)
 
@@ -82,7 +87,6 @@ class UIWeb_Bottle(Bottle):
         print(":D loader status recv'd: "+ str(message.payload) )
 
     def start(self):
-        self._db = ACNTBootDatabase('db.sqlite')
         self.run(host='0.0.0.0', port=8000, debug=False)
 
     def serve_static(self, filepath):
@@ -255,8 +259,34 @@ class UIWeb_Bottle(Bottle):
     def nodes(self):
         return template('nodes', nodes=self._nodes)
 
-    def load(self, node, fhash):
-        #TODO: load on target node
-        ui_webq.put(["LOAD", node, fhash])
+    def node_edit(self,node_id):
+        node = self._nodes[node_id]
+        systems = self._db.getSystems()
+        controls = self._db.getControlTypes()
+        players = self._db.getPlayers()
+        monitors = self._db.getMonitorTypes()
+        dimm_ram = self._db.getDIMMRAMValues()
+        return template('node_edit', node=node, systems=systems, controls=controls, players=players, monitors=monitors, dimm_ram=dimm_ram)
+
+    def do_node_edit(self, node_id):
+        print("hi :)")
+
+    def gamechooser(self, node_id):
+        node = self._nodes[node_id]
+        tmplist = []
+
+        for g in self._games:
+            if ((node.system[0] != g.getSystem()[0]) and not ((node.system[0] == 2 and int(g.getSystem()[0]) in {1,2,3}) or (node.system[0] == 2 and g.isNaomi2CV()))) or node.monitor[0] != g.getMonitor()[0] or node.dimm_ram[1].strip('MB') < g.getDIMMRAMReq()[1].strip('MB'):
+                continue
+            tmplist.append(copy.deepcopy(g))
+
+        return template('games', node=node, games=tmplist)
+
+
+    def load(self, node_id, fhash):
+        # Lookup game by hash
+        print('sending it')
+        MBus.handle(Node_UploadCommandMessage(payload=[node_id, fhash]))
+        print('sent it')
 
     #TODO: other routes
