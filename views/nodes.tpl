@@ -25,7 +25,7 @@
 				</div>
 			</div>
 			<div class="node-control">
-				<a class="edit-link" href="edit_node/{{node.node_id}}"><span class="glyphicon glyphicon-edit"></span></a>
+				<a class="edit-link" href="nodes/{{node.node_id}}/edit"><span class="glyphicon glyphicon-edit"></span></a>
 				<a class="launch-link" href="games/{{node.node_id}}"><span class="glyphicon glyphicon-play-circle"></span></a>
 			</div>
 		</div>

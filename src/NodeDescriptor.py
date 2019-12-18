@@ -8,9 +8,6 @@ import binascii
 import GameDescriptor
 from Loader import LoadWorker
 
-from loader_events import Node_UploadCommandMessage
-
-
 '''
 Organizational container for DIMM endpoints.
 '''
