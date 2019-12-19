@@ -8,8 +8,9 @@ $('.game').click(function(event)
 		type: 'get',
 		success: function(result)
 		{
-			var json = $.parseJSON(result)
-			$('#status').html(json.message);
+			window.location = '/';
+			//var json = $.parseJSON(result)
+			//$('#status').html(json.message);
 		}
 	});
 });
@@ -111,7 +112,7 @@ source.onmessage = function(event) {
 var node_status_evs = Array()
 
 function node_addEventSource(node_id, url) {
-	source new EventSource(url);
+	source = new EventSource(url);
 	source.onmessage = function(event) {
 		var json = $.parseJSON(event.data);
 		status = '';

@@ -33,6 +33,9 @@ class NodeList():
     def append(self, node):
         self._nodes.append(node)
 
+    def clear(self):
+        self._nodes.clear()
+
     def len(self):
         return len(self._nodes)
 
@@ -47,6 +50,11 @@ class NodeList():
                 self._nodes.append(node)
             except:
                 print("couldn't load nodes for some reason")
+
+        tmplist = self._nodes
+        # Sort our list of GameDescriptor objects if it's changed at all
+        tmplist.sort(key = lambda tmplist: tmplist.nickname.lower())
+        self._nodes = tmplist
 
 
     def exportNodes(self):

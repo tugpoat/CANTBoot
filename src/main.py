@@ -3,7 +3,7 @@ from asyncio import *
 import time
 import typing as t
 import configparser
-
+import copy
 
 from Database import ACNTBootDatabase
 from NodeDescriptor import NodeDescriptor
@@ -38,6 +38,10 @@ games_list.scanForNewGames(db)
 # set up node list
 nodes = NodeList(prefs['Directories']['nodes_dir'])
 nodes.loadNodes()
+if prefs['Main']['multinode'] == 'False':
+	n = copy.deepcopy(nodes[0])
+	nodes.clear()
+	nodes.append(n)
 
 # Set up event handlers
 #FIXME: probably should break these out into their own module(s))
@@ -55,7 +59,6 @@ def handle_SaveConfigToDisk(message: SaveConfigToDisk):
 
 MBus.add_handler(Node_UploadCommandMessage, handle_Node_UploadCommandMessage)
 MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
-
 
 
 # Set up adafruit ui if detected and enabled

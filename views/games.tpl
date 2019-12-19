@@ -6,7 +6,7 @@
 	% if defined('games'):
 	<h4>Choose a game to play</h4>
 	% for game in games:
-	<a class="edit-link" href="edit/{{game.file_checksum}}"><span class="glyphicon glyphicon-edit"></span></a>
+	<!-- <a class="edit-link" href="edit/{{game.file_checksum}}"><span class="glyphicon glyphicon-edit"></span></a> -->
 		<div class="label label-default game {{game.checksum_status}}">
 			<div class="col0">
 				<img src="/static/images/games/{{game.game_id}}.jpg" alt="game image">

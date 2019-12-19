@@ -31,7 +31,7 @@
 			</div>
 		</div>
 		<script type="text/javascript">
-		   node_addEventSource({{node.node_id}}, "/nodes/status/{{node.node_id}}")
+		   //node_addEventSource("{{node.node_id}}", "/nodes/status/{{node.node_id}}");
 		</script>
 		
 	% end

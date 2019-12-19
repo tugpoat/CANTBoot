@@ -95,10 +95,7 @@ class UIWeb_Bottle(Bottle):
         return static_file(filepath, 'static')
 
     def index(self):
-        if self._prefs['Main']['multinode'] == 'True': 
             return self.nodes()
-        else:
-            return self.games()
 
     def games(self):
         #FIXME
@@ -243,13 +240,13 @@ class UIWeb_Bottle(Bottle):
         return
 
     def edit(self, fhash):
-        return "boners"
+        return "todo"
         g = None
         #FIXME: REDO THIS
         return template('edit', filename=g.filename, game_title=g.title, hashid=fhash, games_list=gamelist)
 
     def do_edit(self, fhash):
-        return "boners"
+        return "todo"
         #FIXME: REDO THIS
         return template('edit', filename=g.filename, game_title=g.title, hashid=fhash, games_list=gamelist, did_edit=True)
 
