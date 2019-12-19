@@ -43,15 +43,6 @@
 		</div>
 		
 		<h2>Network</h2>
-		<div class="row container">
-			<h3>Endpoint (DIMM)</h3>
-			<div class="form-group">
-				<label class="col-sm-2 control-label">IP Address</label>
-				<div class="col-sm-3">
-					<input type="text" class="form-control" name="dimm_ip" value="{{dimm_ip}}" placeholder="IP Address" />
-				</div>
-			</div>
-		</div>
 		
 		<div class="row container">
 			<h3>eth0</h3>

@@ -108,7 +108,7 @@ class UIWeb_Bottle(Bottle):
             return template('index', list_loaded=self.list_loaded)
 
     def do_gpio_reset(self):
-        print("help")
+        return "todo"
 #        MBus.bus.publish("gpio.reset", "1")
         #ui_webq.put(["gpio", "reset"])
 
@@ -140,8 +140,6 @@ class UIWeb_Bottle(Bottle):
         eth0_ip         =   self._prefs['Network']['eth0_ip']       or '192.168.0.1'
         eth0_netmask    =   self._prefs['Network']['eth0_netmask']  or '255.255.255.0'
 
-        dimm_ip         =   self._prefs['Network']['dimm_ip']       or '192.168.0.2'
-
         wlan0_mode      =   self._prefs['Network']['wlan0_mode']    or 'AP'
         wlan0_ip        =   self._prefs['Network']['wlan0_ip']      or '10.0.0.1'
         wlan0_netmask   =   self._prefs['Network']['wlan0_netmask'] or '255.255.255.0'
@@ -151,7 +149,7 @@ class UIWeb_Bottle(Bottle):
         games_directory =   self._prefs['Games']['directory']       or 'games'
 
         #render
-        return template('config', multinode=multinode, skip_checksum=skip_checksum, autoboot=autoboot, gpio_reset=gpio_reset, eth0_ip=eth0_ip, eth0_netmask=eth0_netmask, wlan0_mode=wlan0_mode, wlan0_ip=wlan0_ip, wlan0_ssid=wlan0_ssid, wlan0_psk=wlan0_psk, wlan0_netmask=wlan0_netmask, dimm_ip=dimm_ip, games_directory=games_directory)
+        return template('config', multinode=multinode, skip_checksum=skip_checksum, autoboot=autoboot, gpio_reset=gpio_reset, eth0_ip=eth0_ip, eth0_netmask=eth0_netmask, wlan0_mode=wlan0_mode, wlan0_ip=wlan0_ip, wlan0_ssid=wlan0_ssid, wlan0_psk=wlan0_psk, wlan0_netmask=wlan0_netmask, games_directory=games_directory)
         
     def do_appconfig(self):
         multinode       = request.forms.get('multinode')
@@ -186,8 +184,6 @@ class UIWeb_Bottle(Bottle):
         self._prefs['Main']['gpio_reset']         =     gpio_reset
 
         #TODO: sanity checking on string values
-
-        self._prefs['Network']['dimm_ip']         =     dimm_ip         =   request.forms.get('dimm_ip')
 
         self._prefs['Network']['eth0_ip']         =     eth0_ip         =   request.forms.get('eth0_ip')
         self._prefs['Network']['eth0_netmask']    =     eth0_netmask    =   request.forms.get('eth0_netmask')
@@ -233,7 +229,7 @@ class UIWeb_Bottle(Bottle):
         else:
             gpio_reset = ''
 
-        return template('config', did_config=True, multinode=multinode, skip_checksum=skip_checksum, autoboot=autoboot, gpio_reset=gpio_reset, eth0_ip=eth0_ip, eth0_netmask=eth0_netmask, wlan0_mode=wlan0_mode, wlan0_ip=wlan0_ip, wlan0_ssid=wlan0_ssid, wlan0_psk=wlan0_psk, wlan0_netmask=wlan0_netmask, dimm_ip=dimm_ip, games_directory=games_directory)
+        return template('config', did_config=True, multinode=multinode, skip_checksum=skip_checksum, autoboot=autoboot, gpio_reset=gpio_reset, eth0_ip=eth0_ip, eth0_netmask=eth0_netmask, wlan0_mode=wlan0_mode, wlan0_ip=wlan0_ip, wlan0_ssid=wlan0_ssid, wlan0_psk=wlan0_psk, wlan0_netmask=wlan0_netmask, games_directory=games_directory)
 
     def apply_appconfig(self):
         #TODO: yell at the main thread to reconfigure the network
