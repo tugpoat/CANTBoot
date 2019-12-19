@@ -4,14 +4,16 @@ import signal
 import string
 import json
 import copy
+from ast import literal_eval as make_tuple
+
 from bottle import Bottle, template, static_file, error, request, response, view
 import beaker.middleware
 from Database import ACNTBootDatabase
 from GameList import *
 
-from ui_web_events import *
-from loader_events import *
 from mbus import *
+from main_events import SaveConfigToDisk
+from Loader import LoaderStatusEnum, LoaderStatus, Node_UploadCommandMessage
 
 
 session_opts = {
@@ -53,7 +55,6 @@ class UIWeb_Bottle(Bottle):
         self.route('/load/<node>/<fhash>', method="GET", callback=self.load)
 
         self.route('/gpio_reset', method="GET", callback=self.do_gpio_reset)
-        MBus.add_handler(Node_LoaderStatusCodeMessage, self.cb_LoaderStatus)
 
     def __init__(self, name, db, gameslist, nodelist, prefs):
         super(UIWeb_Bottle, self).__init__()
@@ -69,22 +70,18 @@ class UIWeb_Bottle(Bottle):
         self.route('/static/<filepath:path>', method="GET", callback=self.serve_static)
         self.route('/config', method="GET", callback=self.appconfig)
         self.route('/config', method="POST", callback=self.do_appconfig)
-        self.route('/edit/<fhash>', method="GET", callback=self.edit)
-        self.route('/edit/<fhash>', method="POST", callback=self.do_edit)
         self.route('/load/<node_id>/<fhash>', method="GET", callback=self.load)
 
-        self.route('/nodes', method="GET", callback=self.nodes)
         self.route('/games/<node_id>', method="GET", callback=self.gamechooser)
+        self.route('/games/edit/<fhash>', method="GET", callback=self.edit)
+        self.route('/games/edit/<fhash>', method="POST", callback=self.do_edit)
 
-        self.route('/nodes/<node_id>/edit', method="GET", callback=self.node_edit)
+        self.route('/nodes', method="GET", callback=self.nodes)
+        self.route('/nodes/edit/<node_id>', method="GET", callback=self.node_edit)
+        self.route('/nodes/edit/<node_id>', method="POST", callback=self.do_node_edit)
+        self.route('/nodes/status', method="GET", callback=self.node_status)
 
         self.route('/gpio_reset', method="GET", callback=self.do_gpio_reset)
-
-        MBus.add_handler(Node_LoaderStatusCodeMessage, self.cb_LoaderStatus)
-
-
-    def cb_LoaderStatus(self, message: Node_LoaderStatusCodeMessage):
-        print(":D loader status recv'd: "+ str(message.payload) )
 
     def start(self):
         self.run(host='0.0.0.0', port=8000, debug=False)
@@ -269,7 +266,12 @@ class UIWeb_Bottle(Bottle):
         return template('node_edit', node=node, systems=systems, controls=controls, players=players, monitors=monitors, dimm_ram=dimm_ram)
 
     def do_node_edit(self, node_id):
-        print("hi :)")
+        self._nodes[node_id].system = make_tuple(request.forms.get('system'))
+        self._nodes[node_id].controls = make_tuple(request.forms.get('control-type'))
+        self._nodes[node_id].monitor = make_tuple(request.forms.get('monitor-type'))
+        self._nodes[node_id].dimm_ram = make_tuple(request.forms.get('dimm-ram'))
+        MBus.handle(SaveConfigToDisk())
+        return self.node_edit(node_id)
 
     def gamechooser(self, node_id):
         node = self._nodes[node_id]
@@ -284,9 +286,21 @@ class UIWeb_Bottle(Bottle):
 
 
     def load(self, node_id, fhash):
-        # Lookup game by hash
-        print('sending it')
+        #Yell at main to tell the node to load the game
         MBus.handle(Node_UploadCommandMessage(payload=[node_id, fhash]))
-        print('sent it')
+
+    #FIXME
+    def node_status(self):
+        status_obj = []
+
+        for n in self._nodes:
+            print("ssss " + self._nodes[n.node_id].loader_state)
+            print(vars(n))
+            n_status = n.loader_state
+            print("status " + n.loader_state)
+            if n.loader_state == LoaderStatusEnum.UPLOADING: n_status += ("%s%", n.loader_uploadpct)
+            status_obj.append([['node_id', n.node_id], ['node_status', n_status]])
+
+        return json.dumps(status_obj)
 
     #TODO: other routes

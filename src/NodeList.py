@@ -4,6 +4,7 @@ import yaml
 import io
 import glob
 import binascii
+from NodeDescriptor import NodeDescriptor
 
 # Does what it says on the box.
 class NodeList():
@@ -41,6 +42,7 @@ class NodeList():
             try:
                 with open(file) as ifs:
                     node = yaml.load(ifs)
+                    node.setupHandlers() #Constructor isn't called here so we need  to manually tell it to set up event handlers
 
                 self._nodes.append(node)
             except:
@@ -53,8 +55,8 @@ class NodeList():
                 # We have to do it this way because there's a loader object in there that spawns its own process.
                 # Can't cross our pickles, that'd be weird.
                 tmp = NodeDescriptor(elem)
-                
-                with open(self._nodes_dir+tmp.nickname+'.yml', 'w') as ofs:
+                print ("exporting to " + self._nodes_dir+"/"+tmp.nickname+'.yml')
+                with open(self._nodes_dir+"/"+tmp.nickname+'.yml', 'w') as ofs:
                     yaml.dump(tmp, ofs)
             except Exception as ex:
                 print(ex)

@@ -4,28 +4,13 @@ import json
 import configparser
 from multiprocessing import Manager, Process, Queue
 from mbus import *
+
 from NodeDescriptor import *
 from GameDescriptor import *
+
 from NetComm import *
 
 from loader_events import *
-
-
-'''
-STATUS CODES
--1 error
-0 unused
-1 connecting
-2 uploading
-3 booting
-4 keep-alive
-
-RETURN CODES
-0 success
-1 error
-'''
-
-
 
 '''
 The actual loader. Attached to a NodeDescriptor in practical use, and runs as its own process.
@@ -61,38 +46,39 @@ class LoadWorker(Process):
 	It is invoked with LoadWorker.start() and runs until terminated.
 	'''
 	def run(self):
+		print("running LoadWorker for " + self.host)
 		filename = self.path[:(len(self.path) - self.path.rfind(os.pathsep))]
 
 		# Open a connection to endpoint and notify the main thread that we are doing so.
 		try:
-			MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(1)))
+			MBus.handle(Node_LoaderStatusMessage(payload=LoaderStatus(self.name, 1)))
 			self._comm.connect(self.host, self.port)
 		except Exception as ex:
-			MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(-1)))
+			MBus.handle(Node_LoaderStatusMessage(payload=LoaderStatus(self.name, -1)))
 			#print(("%s : connection to %s failed! exiting." % (self.name, self.host)))
 			return 1
 
 		# We have successfully connected to the endpoint. Let's shove our rom file down its throat.
 		try:
-			MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(2)))
+			MBus.handle(Node_LoaderStatusMessage(payload=LoaderStatus(self.name, 2)))
 
 			self.uploadrom(game_path)
 
 			#message = [3, ("%s : Booting " % (self.name, self.path, self.host))]
-			MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(3)))
+			MBus.handle(Node_LoaderStatusMessage(payload=LoaderStatus(self.name, 3)))
 
 			# restart the endpoint system, this will boot into the game we just sent
 			self._comm.HOST_Restart()
 
 		except Exception as ex:
 			MBus.handle(Node_LoaderExceptionMessage(payload=("%s : Error booting game on hardware! ex: %s" % (self.name, self.path, self.host, repr(ex)))))
-			MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(0)))
+			MBus.handle(Node_LoaderStatusMessage(payload=LoaderStatus(self.name, self.node_id, 0)))
 			return 1
 
 		self._active = True
 
 		message = [4, ("%s : Entering Keep-alive loop. " % (self.name))]
-		MBus.handle(Node_LoaderStatusCodeMessage(payload=LoaderStatus(4)))
+		MBus.handle(Node_LoaderStatusMessage(payload=LoaderStatus(self.name, 4)))
 		keepalive()
 
 	def uploadrom(self, rom_path):
@@ -106,6 +92,7 @@ class LoadWorker(Process):
 	def upload_pct_callback(percent_complete):
 		#TODO: deliver this number to UI and/or main thread via messagebus
 		print("upload cb: " + percent_complete + "%")
+		MBus.handle(Node_LoaderUploadPctMessage(payload=percent_complete))
 
 	def keepalive(self):
 		'''
@@ -114,7 +101,6 @@ class LoadWorker(Process):
 		'''
 		while 1:
 			try:
-
 				# set time limit to 10h. According to some reports, this does not work.
 				TIME_SetLimit(10*60*1000)
 				time.sleep(5)

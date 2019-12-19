@@ -11,9 +11,9 @@
 		<div class="row container">
 			<div class="form-group">
 				<label class="col-sm-2 control-label">System</label>
-				<select class="form-control" id="system-select name="system">
+				<select class="form-control" id="system-select" name="system">
 				% for elem in systems:
-					<option value="{{elem[0]}}" {{"selected" if node.system[0] == elem[0] else ""}}>{{elem[1]}}</option>
+					<option value="{{elem}}" {{"selected" if node.system[0] == elem[0] else ""}}>{{elem[1]}}</option>
 				% end
 				</select>
 			</div>
@@ -24,7 +24,7 @@
 				<label class="col-sm-2 control-label">Monitor</label>
 				<select class="form-control" id="monitor-type-select" name="monitor-type">
 				% for elem in monitors:
-					<option value="{{elem[0]}}" {{"selected" if node.monitor[0] == elem[0] else ""}}>{{elem[1]}}</option>
+					<option value="{{elem}}" {{"selected" if node.monitor[0] == elem[0] else ""}}>{{elem[1]}}</option>
 				% end
 				</select>
 			</div>
@@ -33,9 +33,9 @@
 		<div class="row container">
 			<div class="form-group">
 				<label class="col-sm-2 control-label">Controls</label>
-				<select class="form-control" id="controls" name="control-type">
+				<select class="form-control" id="control-type-select" name="control-type">
 				% for elem in controls:
-					<option value="{{elem[0]}}" {{"selected" if node.controls[0] == elem[0] else ""}}>{{elem[1]}}</option>
+					<option value="{{elem}}" {{"selected" if node.controls[0] == elem[0] else ""}}>{{elem[1]}}</option>
 				% end
 				</select>
 			</div>
@@ -44,9 +44,9 @@
 		<div class="row container">
 			<div class="form-group">
 				<label class="col-sm-2 control-label">DIMM RAM</label>
-				<select class="form-control filter-group" id="filter-group" name="dimm_ram">
+				<select class="form-control filter-group" id="dimm-ram-select" name="dimm-ram">
 				% for elem in dimm_ram:
-					<option value="{{elem[0]}}" {{"selected" if node.dimm_ram[0] == elem[0] else ""}}>{{elem[1]}}</option>
+					<option value="{{elem}}" {{"selected" if node.dimm_ram[0] == elem[0] else ""}}>{{elem[1]}}</option>
 				% end
 				</select>
 			</div>

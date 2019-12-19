@@ -86,14 +86,43 @@ $('#rescan-games').click(function(event) {
 });
 
 //Status bar
-/*
+
 var source = new EventSource("/status");
 source.onmessage = function(event) {
 	var json = $.parseJSON(event.data);
-	if (json.status != 0) {
-		$('#status').addClass('error');
-	} else
-		$('#status').removeClass('error');
-	$("#status").html(json.message);
+
+	for(var i = 0; i < json.length; i++) {
+	    var obj = json[i];
+
+	    console.log(obj.id);
+	    status = '';
+		if (obj.loaderstate != '') {
+			status += json.loaderstate + "\n";
+		}
+		if (obj.uploadpct != 0) {
+			status += ' uploading: ' + json.uploadpct + "%\n" ;
+		}
+
+		$("#"+obj.node_id+"> .node-status").html(status);
+	}
 };
-*/
+
+//Node Status
+var node_status_evs = Array()
+
+function node_addEventSource(node_id, url) {
+	source new EventSource(url);
+	source.onmessage = function(event) {
+		var json = $.parseJSON(event.data);
+		status = '';
+		if (json.loaderstate != '') {
+			status += json.loaderstate + "\n";
+		}
+		if (json.uploadpct != 0) {
+			status += ' uploading: ' + json.uploadpct + "%\n" ;
+		}
+
+		$("#"+node_id+"> .node-status").html(status);
+	};
+	node_status_evs.push(source);
+};

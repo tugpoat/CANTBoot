@@ -3,11 +3,11 @@
 
 import os
 
-def remount_root_rw():
-	os.system("sudo mount -o remount,rw /")
+def remount_rw(mountpoint):
+	os.system("sudo mount -o remount,rw %s", mountpoint)
 
-def remount_root_ro():
-	os.system("sudo mount -o remount,ro /")
+def remount_ro(mountpoint):
+	os.system("sudo mount -o remount,ro %s", mountpoint)
 
 def reboot_system():
 	os.system("sudo reboot")

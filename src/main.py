@@ -1,7 +1,9 @@
 from multiprocessing import Manager, Process
 from asyncio import *
 import time
+import typing as t
 import configparser
+
 
 from Database import ACNTBootDatabase
 from NodeDescriptor import NodeDescriptor
@@ -10,7 +12,8 @@ from GameDescriptor import GameDescriptor
 from GameList import *
 
 from mbus import *
-from loader_events import *
+from main_events import *
+from Loader import Node_LoaderStatusMessage, Node_LoaderUploadPctMessage, Node_UploadCommandMessage
 
 from ui_web import UIWeb
 
@@ -20,6 +23,8 @@ prefs = configparser.ConfigParser()
 prefs_file = open(PREFS_FILE, 'r')
 prefs.read_file(prefs_file)
 prefs_file.close()
+
+debug = bool(prefs['Main']['debug'])
 
 #TODO: if config file/directory does not exist, copy a default from the read-only partition to the SD card.
 
@@ -37,14 +42,19 @@ nodes.loadNodes()
 # Set up event handlers
 #FIXME: probably should break these out into their own module(s))
 
-def cb_uploadcmd(message: Node_UploadCommandMessage):
-	print("got it :)")
-
+def handle_Node_UploadCommandMessage(message: Node_UploadCommandMessage):
 	print(message.payload[0])
 	print(message.payload[1])
 	nodes[message.payload[0]].load(games_list[message.payload[1]])
 
-MBus.add_handler(Node_UploadCommandMessage, cb_uploadcmd)
+def handle_SaveConfigToDisk(message: SaveConfigToDisk):
+	if not debug: remount_rw(prefs['Directories']['cfg_part'])
+	nodes.exportNodes()
+	games_list.exportList()
+	if not debug: remount_ro(prefs['Directories']['cfg_part'])
+
+MBus.add_handler(Node_UploadCommandMessage, handle_Node_UploadCommandMessage)
+MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
 
 
 
