@@ -278,7 +278,7 @@ class UIWeb_Bottle(Bottle):
         tmplist = []
 
         for g in self._games:
-            if ((node.system[0] != g.getSystem()[0]) and not ((node.system[0] == 2 and int(g.getSystem()[0]) in {1,2,3}) or (node.system[0] == 2 and g.isNaomi2CV()))) or node.monitor[0] != g.getMonitor()[0] or node.dimm_ram[1].strip('MB') < g.getDIMMRAMReq()[1].strip('MB'):
+            if not node.validateGameDescriptor(g):
                 continue
             tmplist.append(copy.deepcopy(g))
 

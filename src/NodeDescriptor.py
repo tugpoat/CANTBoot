@@ -100,33 +100,36 @@ class NodeDescriptor(yaml.YAMLObject):
         self._loader.stop()
         self._loader = None
 
-    def validateGameDescriptor(self, gd, strict = False):
+    def validateGameDescriptor(self, gd, strict = True):
         bootable = True
-        if (self.system[0] != gd.getSystem()[0]) and not ((self.system[0] == 2 and int(gd.getSystem()[0]) in {1,2,3}) or (self.system[0] == 2 and gd.isNaomi2CV())) :
-            # You dun goofed.
-            print("Wrong system. Game wants " + gd.getSystem()[1] + " but this node is a " + self.system[1])
-            bootable = False
-        else:
-            print("system ok")
+        try:
+            if (self.system[0] != gd.getSystem()[0]) and not ((self.system[0] == 2 and int(gd.getSystem()[0]) in {1,2,3}) or (self.system[0] == 2 and gd.isNaomi2CV())) :
+                # You dun goofed.
+                print("Wrong system. Game wants " + gd.getSystem()[1] + " but this node is a " + self.system[1])
+                bootable = False
+            else:
+                print("system ok")
 
-        if self.monitor[0] != gd.getMonitor()[0]:
-            print('Wrong monitor type. Game wants ' + gd.getMonitor()[1] + " but node has " + self.monitor[1])
-            if strict: bootable = False
-        else:
-            print("monitor ok")
+            if self.monitor[0] != gd.getMonitor()[0]:
+                print('Wrong monitor type. Game wants ' + gd.getMonitor()[1] + " but node has " + self.monitor[1])
+                if strict: bootable = False
+            else:
+                print("monitor ok")
 
-        if self.controls[0] != gd.getControls()[0]:
-            #FIXME: do in-depth logic of control schemes
-            print('Wrong control scheme, game wants ' + gd.getControls()[1] + " but this node has " + self.controls[1])
-            if strict: bootable = False
-        else:
-            print("controls ok")
+            if self.controls[0] != gd.getControls()[0]:
+                #FIXME: do in-depth logic of control schemes
+                print('Wrong control scheme, game wants ' + gd.getControls()[1] + " but this node has " + self.controls[1])
+                #if strict: bootable = False
+            else:
+                print("controls ok")
 
-        if self.dimm_ram[1].strip('MB') < gd.getDIMMRAMReq()[1].strip('MB'):
-            print('Not enough RAM in NetDIMM node to load game, ' + gd.getDIMMRAMReq()[1] + "required")
-            bootable = False
-        else:
-            print("DIMM RAM ok")
+            if self.dimm_ram[1].strip('MB') < gd.getDIMMRAMReq()[1].strip('MB'):
+                print('Not enough RAM in NetDIMM node to load game, ' + gd.getDIMMRAMReq()[1] + "required")
+                bootable = False
+            else:
+                print("DIMM RAM ok")
+        except Exception as ex:
+            print(vars(gd))
 
         return bootable
 
