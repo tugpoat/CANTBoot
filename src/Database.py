@@ -1,4 +1,5 @@
 import sqlite3
+import enum
 
 '''
 SQLite3 abstraction for database functionality needed by the application.

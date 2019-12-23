@@ -81,7 +81,7 @@ class GameList():
 				if game_exists: continue
 				tgame = GameDescriptor(self._games_dir+"/"+file)
 
-				if not tgame.isValid():
+				if not tgame.isValid:
 					print("not valid or compatible rom file: ", file)
 					continue
 

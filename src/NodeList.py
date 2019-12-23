@@ -4,14 +4,12 @@ import yaml
 import io
 import glob
 import binascii
+import copy
 from NodeDescriptor import NodeDescriptor
 
 # Does what it says on the box.
 class NodeList():
-    _nodes_dir = None
     _nodes = []
-    def __init__(self, nodesdir):
-        self._nodes_dir = nodesdir
 
     def __len__(self):
         return len(self._nodes)
@@ -21,14 +19,13 @@ class NodeList():
             yield elem
             
     def __getitem__(self, key):
-        if type(key) is str:
-            #node id
-            for elem in self._nodes:
-                if elem.node_id == key: return elem
+        #node id
+        for elem in self._nodes:
+            if str(elem.node_id) == str(key): return elem
 
             #FIXME: what happens if id not found?
-
-        return self._nodes[key]
+        if type(key) is int:
+            return self._nodes[key]
 
     def append(self, node):
         self._nodes.append(node)
@@ -39,32 +36,32 @@ class NodeList():
     def len(self):
         return len(self._nodes)
 
-    def loadNodes(self):
-        nodefiles = glob.glob(self._nodes_dir+'/*.yml')
+    def loadNodes(self, nodes_dir: str):
+        nodefiles = glob.glob(nodes_dir+'/*.yml')
+        tmplist = []
         for file in nodefiles:
             try:
                 with open(file) as ifs:
                     node = yaml.load(ifs)
-                    node.setupHandlers() #Constructor isn't called here so we need  to manually tell it to set up event handlers
+                tmplist.append(node)
+            except Exception as ex:
+                print("couldn't load nodes for some reason" + repr(ex))
 
-                self._nodes.append(node)
-            except:
-                print("couldn't load nodes for some reason")
-
-        tmplist = self._nodes
-        # Sort our list of GameDescriptor objects if it's changed at all
+        # Make sure we sort everything all nicely
         tmplist.sort(key = lambda tmplist: tmplist.nickname.lower())
         self._nodes = tmplist
+        for elem in self._nodes:
+            elem.setup()
 
 
-    def exportNodes(self):
+    def exportNodes(self, nodes_dir: str):
         for elem in self._nodes:
             try:
                 # We have to do it this way because there's a loader object in there that spawns its own process.
                 # Can't cross our pickles, that'd be weird.
                 tmp = NodeDescriptor(elem)
-                print ("exporting to " + self._nodes_dir+"/"+tmp.nickname+'.yml')
-                with open(self._nodes_dir+"/"+tmp.nickname+'.yml', 'w') as ofs:
+                print ("exporting to " + nodes_dir+"/"+tmp.nickname+'.yml')
+                with open(nodes_dir+"/"+tmp.nickname+'.yml', 'w') as ofs:
                     yaml.dump(tmp, ofs)
             except Exception as ex:
                 print(ex)

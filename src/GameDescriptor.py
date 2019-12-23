@@ -19,7 +19,7 @@ class GameDescriptor:
 	# Things from DB
 	game_id = None
 	title = None
-	attributes = []
+	attributes = [] # TODO: is this even needed?
 
 	_system = None
 	_control = None
@@ -27,8 +27,11 @@ class GameDescriptor:
 	_monitor = None
 	_dimm_ram = None
 
-	def __init__(self, filepath, skip_checksum = False):
+	def __init__(self, filepath: str, skip_checksum: bool = False):
 
+		# Python was being weird about having constructors 
+		# with the same function signatures because python is all loosely typed and stuff.
+		# The solution? hack it until it works (not really, just make the constructor do double duty).
 		if type(filepath) is GameDescriptor:
 			self.filename = filepath.filename
 			self.filepath = filepath.filepath
@@ -63,29 +66,38 @@ class GameDescriptor:
 			#TODO Actually do something
 			return
 
-	def setSystem(self, system):
+	def setSystem(self, system: tuple):
 		if type(system) is tuple:
 			self._system = (system[0], system[1])
 
-	def getSystem(self):
+	@property
+	def getSystem(self) -> tuple:
 		return self._system
 
-	def getControls(self):
+	@property
+	def getControls(self) -> tuple:
 		return self._control
 
 	def getMaxPlayers(self):
 		return self._max_players
 
-	def getMonitor(self):
+	@property
+	def getMonitor(self) -> tuple:
 		return self._monitor
 
-	def getDIMMRAMReq(self):
+	@property
+	def getDIMMRAMReq(self) -> tuple:
 		return self._dimm_ram
 
-	def isNaomi2CV(self):
-		return self._naomi2_cv
+	@property
+	def getDIMMRAMReqMB(self) -> int:
+		return int(self._dimm_ram[1].strip('MB'))
 
-	def setAttributes(self, attributes):
+	@property
+	def isNaomi2CV(self) -> bool:
+		return self._naomi2_cv
+	'''
+	def setAttributes(self, attributes: list):
 		# Example of valid attributes param:
 		# [(7, 'Control', 'Normal'), (11, 'Players', '2'), (14, 'Monitor', 'Horizontal'), (18, 'DIMM Reset', 'Testing'), (20, 'DIMM RAM', '256MB')]
 		self.attributes = attributes
@@ -99,9 +111,10 @@ class GameDescriptor:
 				self._monitor = (a[0], a[2])
 			if a[1] == 'DIMM RAM':
 				self._dimm_ram = (a[0], a[2])
+	'''
 
-
-	def __file_get_title(self):
+	@property
+	def __file_get_title(self) -> str:
 		'Get game title from rom file.'
 		try:
 			fp = open(self.filepath, 'rb')
@@ -126,7 +139,8 @@ class GameDescriptor:
 			print(repl(ex))
 			# TODO: thing
 
-	def __file_get_target_system(self):
+	@property
+	def __file_get_target_system(self) -> str:
 		'Get the system that this game is meant to run on from the header'
 		try:
 			fp = open(self.filepath, 'rb')
@@ -148,7 +162,8 @@ class GameDescriptor:
 			# TODO: the thing
 			return False
 
-	def __checksum(self):
+	@property
+	def __checksum(self) -> str:
 		try:
 			m = hashlib.md5()
 			with open(self.filepath, 'rb') as fh:
@@ -163,11 +178,15 @@ class GameDescriptor:
 			# TODO: Better error checking
 			return False
 
-	def __hash__(self):
+	# Used for identifying this particular game to various parts of the program. way faster than checksumming the whole damn file.
+	@property
+	def __hash__(self) -> str:
 		return hash((self.name, self.filepath, self.size)) & 0xffffffff
 
-	def isValid(self):
+	@property
+	def isValid(self) -> bool:
 		return (self.system_name in ['NAOMI', 'NAOMI2', 'CHIHIRO', 'TRIFORCE'])
 
-	def serialize(self):
+	@property
+	def serialize(self) -> str:
 		return json.dumps({"file_name": self.filename, "file_path": self.filepath, "file_checksum": self.file_checksum, "rom_title": self.rom_title, "game_id": self.game_id, "title": self.title, "attributes": json.dumps(self.attributes)})

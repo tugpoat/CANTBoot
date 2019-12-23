@@ -11,9 +11,12 @@ import beaker.middleware
 from Database import ACNTBootDatabase
 from GameList import *
 
+from globals import *
+
 from mbus import *
 from main_events import SaveConfigToDisk
-from Loader import LoaderStatusEnum, LoaderStatus, Node_UploadCommandMessage
+from loader_events import *
+from Loader import Loader
 
 
 session_opts = {
@@ -82,6 +85,15 @@ class UIWeb_Bottle(Bottle):
         self.route('/nodes/status', method="GET", callback=self.node_status)
 
         self.route('/gpio_reset', method="GET", callback=self.do_gpio_reset)
+
+        MBus.add_handler(Node_LoaderStatusMessage, self.handle_LoaderStatusMessage)
+
+    def handle_LoaderStatusMessage(self, message: Node_LoaderStatusMessage):
+        #OK what the heck is going on?
+        #It has the old address assigned to the variable, it updates it, it confirms it updates it, and then when we access this in UIWeb_Bottle, it's fucked.
+        print(id(message.payload[1]))
+        print("ui setting status for %s at %s to %s", message.payload[0], id(self._nodes[message.payload[0]]._loader_state), message.payload[1])
+        self._nodes[message.payload[0]].loader_state = message.payload[1]
 
     def start(self):
         self.run(host='0.0.0.0', port=8000, debug=False)
@@ -285,13 +297,14 @@ class UIWeb_Bottle(Bottle):
     #FIXME
     def node_status(self):
         status_obj = []
-
+        print('nm', id(nodeman.nodes['e7b7d426547ff42c3d46c7d5f566cde0']._loader_state))
+        print('nm', id(nodeman.nodes['8fa801137105de04f7747b06e5bc519e']._loader_state))
+        print ('nodeslist', id(self._nodes['e7b7d426547ff42c3d46c7d5f566cde0']._loader_state))
         for n in self._nodes:
-            print("ssss " + self._nodes[n.node_id].loader_state)
+            print('n', id(n._loader_state))
             print(vars(n))
-            n_status = n.loader_state
-            print("status " + n.loader_state)
-            if n.loader_state == LoaderStatusEnum.UPLOADING: n_status += ("%s%", n.loader_uploadpct)
+            n_status = str(n.loader_state)
+            if n.loader_state == Loader.STATUS_UPLOADING: n_status += ("%s%", n.loader_uploadpct)
             status_obj.append([['node_id', n.node_id], ['node_status', n_status]])
 
         return json.dumps(status_obj)
