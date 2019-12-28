@@ -6,16 +6,38 @@ import configparser
 import copy
 import logging
 
-from globals import *
-
 from GameDescriptor import GameDescriptor
 from GameList import *
+from NodeManager import *
+from Database import ACNTBootDatabase
 
 from mbus import *
 from main_events import *
 from Loader import Node_LoaderStatusMessage, Node_LoaderUploadPctMessage, Node_UploadCommandMessage
 
 from ui_web import UIWeb
+
+logger = logging.getLogger("main")
+
+PREFS_FILE="settings.cfg"
+prefs = configparser.ConfigParser()
+prefs_file = open(PREFS_FILE, 'r')
+prefs.read_file(prefs_file)
+prefs_file.close()
+
+cfg_debug = bool(prefs['Main']['debug'])
+
+#TODO: if config file/directory does not exist, copy a default from the read-only partition to the SD card.
+
+# set up database
+db = ACNTBootDatabase('db.sqlite')
+
+# set up game list
+games_list = GameList(prefs['Directories']['cfg_dir'], prefs['Directories']['games_dir'])
+games_list.scanForNewGames(db)
+
+# set up node list
+nodeman = NodeManager()
 
 nodeman.loadNodesFromDisk(prefs['Directories']['nodes_dir'])
 

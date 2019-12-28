@@ -11,8 +11,6 @@ import beaker.middleware
 from Database import ACNTBootDatabase
 from GameList import *
 
-from globals import *
-
 from mbus import *
 from main_events import SaveConfigToDisk
 from loader_events import *
@@ -86,7 +84,7 @@ class UIWeb_Bottle(Bottle):
 
         self.route('/gpio_reset', method="GET", callback=self.do_gpio_reset)
 
-        MBus.add_handler(Node_LoaderStatusMessage, self.handle_LoaderStatusMessage)
+        #MBus.add_handler(Node_LoaderStatusMessage, self.handle_LoaderStatusMessage)
 
     def handle_LoaderStatusMessage(self, message: Node_LoaderStatusMessage):
         #OK what the heck is going on?
@@ -297,13 +295,8 @@ class UIWeb_Bottle(Bottle):
     #FIXME
     def node_status(self):
         status_obj = []
-        print('nm', id(nodeman.nodes['e7b7d426547ff42c3d46c7d5f566cde0']._loader_state))
-        print('nm', id(nodeman.nodes['8fa801137105de04f7747b06e5bc519e']._loader_state))
-        print ('nodeslist', id(self._nodes['e7b7d426547ff42c3d46c7d5f566cde0']._loader_state))
         for n in self._nodes:
-            print('n', id(n._loader_state))
-            print(vars(n))
-            n_status = str(n.loader_state)
+            n_status = str(n._loader_state)
             if n.loader_state == Loader.STATUS_UPLOADING: n_status += ("%s%", n.loader_uploadpct)
             status_obj.append([['node_id', n.node_id], ['node_status', n_status]])
 

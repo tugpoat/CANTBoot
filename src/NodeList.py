@@ -5,7 +5,7 @@ import io
 import glob
 import binascii
 import copy
-from NodeDescriptor import NodeDescriptor
+from yloader import *
 
 # Does what it says on the box.
 class NodeList():
@@ -20,12 +20,17 @@ class NodeList():
             
     def __getitem__(self, key):
         #node id
-        for elem in self._nodes:
-            if str(elem.node_id) == str(key): return elem
+        if type(key) is str:
+            for elem in self._nodes:
+                if str(elem.node_id) == str(key): 
+                    return elem
 
-            #FIXME: what happens if id not found?
+        #FIXME: what happens if id not found?
+        
         if type(key) is int:
             return self._nodes[key]
+
+        print('help!')
 
     def append(self, node):
         self._nodes.append(node)
@@ -42,7 +47,7 @@ class NodeList():
         for file in nodefiles:
             try:
                 with open(file) as ifs:
-                    node = yaml.load(ifs)
+                    node = yaml.load(ifs, Loader=YLoader)
                 tmplist.append(node)
             except Exception as ex:
                 print("couldn't load nodes for some reason" + repr(ex))

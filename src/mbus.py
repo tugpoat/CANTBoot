@@ -4,7 +4,6 @@ from pymessagebus.middleware.logger import get_logger_middleware
 
 logger = logging.getLogger("message_bus")
 logging.basicConfig(level=logging.DEBUG)
-logging.debug('This will get logged')
 logging_middleware = get_logger_middleware(logger)
 
 #FIXME: can probably just dump this in main.py

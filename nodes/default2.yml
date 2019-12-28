@@ -1,18 +1,48 @@
 !!python/object:NodeDescriptor.NodeDescriptor
-controls: !!python/tuple [24, 1L6B]
-dimm_ram: !!python/tuple [21, 512MB]
+_loader_state: waiting
+controls: !!python/tuple
+- 24
+- 1L6B
+dimm_ram: !!python/tuple
+- 21
+- 512MB
 game: !!python/object:GameDescriptor.GameDescriptor
-  _control: !!python/tuple [9, Vertical]
-  _dimm_ram: !!python/tuple [20, 256MB]
-  _max_players: !!python/tuple [11, '2']
-  _monitor: !!python/tuple [15, Vertical]
-  _system: !!python/tuple [1, NAOMI]
+  _control: !!python/tuple
+  - 9
+  - Vertical
+  _dimm_ram: !!python/tuple
+  - 20
+  - 256MB
+  _max_players: !!python/tuple
+  - 11
+  - '2'
+  _monitor: !!python/tuple
+  - 15
+  - Vertical
+  _system: !!python/tuple
+  - 1
+  - NAOMI
   attributes:
-  - !!python/tuple [9, Control, Vertical]
-  - !!python/tuple [11, Players, '2']
-  - !!python/tuple [15, Monitor, Vertical]
-  - !!python/tuple [18, DIMM Reset, Testing]
-  - !!python/tuple [20, DIMM RAM, 256MB]
+  - !!python/tuple
+    - 9
+    - Control
+    - Vertical
+  - !!python/tuple
+    - 11
+    - Players
+    - '2'
+  - !!python/tuple
+    - 15
+    - Monitor
+    - Vertical
+  - !!python/tuple
+    - 18
+    - DIMM Reset
+    - Testing
+  - !!python/tuple
+    - 20
+    - DIMM RAM
+    - 256MB
   file_checksum: 13f006b79e89bd3722cd783c12adb837
   file_size: 33554432
   filename: Ikaruga_v3.bin
@@ -21,10 +51,14 @@ game: !!python/object:GameDescriptor.GameDescriptor
   rom_title: -IKARUGA-
   system_name: NAOMI
   title: Ikaruga
-node_id: fedcba321
 hostname: default2.local
 ip: 69.69.69.69
-monitor: !!python/tuple [14, Horizontal]
+monitor: !!python/tuple
+- 14
+- Horizontal
 nickname: default2
+node_id: 3836005393
 port: 10703
-system: !!python/tuple [2, NAOMI2]
+system: !!python/tuple
+- 2
+- NAOMI2

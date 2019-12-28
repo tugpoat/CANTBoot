@@ -1,17 +1,18 @@
-from GameDescriptor import GameDescriptor
+from GameDescriptor import *
 import configparser
 import os
 import yaml
+from yloader import *
 
 class GameList():
 	_cfg_dir = ""
 	_games_dir = ""
 	_games = []
 
-	def __init__(self):
-		return
+	def __init__(self, cfgdir: str = None, gamesdir: str = None):
+		if type(cfgdir) is None:
+			pass
 
-	def __init__(self, cfgdir, gamesdir):
 		self._cfg_dir = cfgdir
 		self._games_dir = gamesdir
 
@@ -46,7 +47,7 @@ class GameList():
 		if os.path.isfile(listfile):
 			try:
 				with open(listfile) as ifs:
-					self._games = yaml.load(ifs)
+					self._games = yaml.load(ifs, Loader=YLoader)
 			except Exception as ex:
 				print("couldn't load games for some reason" + repr(ex))
 
@@ -66,9 +67,8 @@ class GameList():
 		print("sup")
 
 	def scanForNewGames(self, database):
-		#TODO
 		old_len = len(self._games)
-		#2. scan directory for files that aren't in the existing list
+		#scan directory for files that aren't in the existing list
 		if os.path.isdir(self._games_dir):
 			for file in os.listdir(self._games_dir):
 				game_exists = False

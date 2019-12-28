@@ -6,9 +6,6 @@ import logging
 from multiprocessing import Manager, Process, Queue
 from mbus import *
 
-from NodeDescriptor import *
-from GameDescriptor import *
-
 from NetComm import *
 
 from loader_events import *
@@ -21,6 +18,9 @@ The actual loader. Attached to a NodeDescriptor in practical use, and runs as it
 TODO: run a ping against the NetDIMM. if it breaks, then restart the netboot cycle once reachable to maintain the desired state. 
 This will effectively give us single-game functionality without compromise.
 '''
+
+#FIXME: STATUS MESSAGING IS A RESULT OF SOME MESSED UP IPC. 
+#PYTHON BROKE IT I GUESS, IDK. TURN THIS INTO A SINGLE THREADED DOOHICKEY
 class Loader(Process):
 	STATUS_BOOT_FAILED = "boot_failed"
 	STATUS_UPLOAD_FAILED = "upload_failed"
@@ -67,10 +67,10 @@ class Loader(Process):
 
 		# Open a connection to endpoint and notify the main thread that we are doing so.
 		try:
-			MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATUS_CONNECTING]))
+			#MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATUS_CONNECTING]))
 			self._comm.connect(self.host, self.port)
 		except Exception as ex:
-			MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATUS_CONNECTION_FAILED]))
+			#MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATUS_CONNECTION_FAILED]))
 			#print(("%s : connection to %s failed! exiting." % (self.name, self.host)))
 			return 1
 

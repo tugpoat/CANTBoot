@@ -24,7 +24,6 @@ class NodeManager():
 		#It has the old address assigned to the variable, it updates it, it confirms it updates it, and then when we access this in UIWeb_Bottle, it's fucked.
 		self.__logger.debug("setting status for %s at %s to %s", message.payload[0], id(self.nodes[message.payload[0]]._loader_state), message.payload[1])
 		self.nodes[message.payload[0]].loader_state = message.payload[1]
-		self.__logger.debug("new addr " + str(id(self.nodes[message.payload[0]]._loader_state)))
 
 	def handle_LoaderUploadPctMessage(self, message: Node_LoaderUploadPctMessage):
 		if message.payload[0] == self.node_id:

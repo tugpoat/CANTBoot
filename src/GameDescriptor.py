@@ -2,8 +2,12 @@ import io
 import os
 import hashlib
 import json
+import yaml
 
-class GameDescriptor:
+class GameDescriptor(yaml.YAMLObject):
+	yaml_loader = yaml.SafeLoader
+	yaml_tag = u'tag:yaml.org,2002:python/object:GameDescriptor.GameDescriptor'
+
 	# Things from ROM file
 	filename = None
 	filepath = None
@@ -55,14 +59,15 @@ class GameDescriptor:
 		try:
 			# Open the file up and get all the info we need from the header data
 			self.file_size = os.stat(filepath).st_size
-			self.system_name = self.__file_get_target_system()
-			self.rom_title = self.__file_get_title()
+			self.system_name = self.__file_get_target_system
+			self.rom_title = self.__file_get_title
 
 			# Checksum the file if we want to do that
 			if not skip_checksum:
-				self.file_checksum = self.__checksum()
+				self.file_checksum = self.__checksum
 
-		except Exception:
+		except Exception as ex:
+			print('failed to construct GameDescriptor'+repr(ex))
 			#TODO Actually do something
 			return
 
@@ -96,7 +101,7 @@ class GameDescriptor:
 	@property
 	def isNaomi2CV(self) -> bool:
 		return self._naomi2_cv
-	'''
+	
 	def setAttributes(self, attributes: list):
 		# Example of valid attributes param:
 		# [(7, 'Control', 'Normal'), (11, 'Players', '2'), (14, 'Monitor', 'Horizontal'), (18, 'DIMM Reset', 'Testing'), (20, 'DIMM RAM', '256MB')]
@@ -111,7 +116,7 @@ class GameDescriptor:
 				self._monitor = (a[0], a[2])
 			if a[1] == 'DIMM RAM':
 				self._dimm_ram = (a[0], a[2])
-	'''
+	
 
 	@property
 	def __file_get_title(self) -> str:
@@ -136,7 +141,7 @@ class GameDescriptor:
 			fp.close()
 			return title
 		except Exception as ex:
-			print(repl(ex))
+			print('gettitle failed'+repl(ex))
 			# TODO: thing
 
 	@property
