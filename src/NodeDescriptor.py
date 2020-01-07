@@ -59,7 +59,6 @@ class NodeDescriptor(yaml.YAMLObject):
 			self.port = port
 
 		self.node_id = hash((self.hostname, self.ip, self.port)) & 0xffffffff
-		self.loader_state = Loader.STATUS_WAITING
 
 		pass
 
@@ -67,16 +66,6 @@ class NodeDescriptor(yaml.YAMLObject):
 	def setup(self):
 		#self.ip = self._resolve_hostname(hostname) #automatically resolve hostnames if we can
 		self.node_id = hashlib.md5((self.hostname+self.ip+str(self.port)).encode()).hexdigest()
-		self.loader_state = Loader.STATUS_WAITING
-
-	@property
-	def loader_state(self):
-		return self._loader_state
-
-	@loader_state.setter
-	def loader_state(self, value: str):
-		self._loader_state = value
-		#print("setting ", str(value), " ", id(self._loader_state))
 
 	#If we have an active loader
 	def is_active(self):

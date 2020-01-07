@@ -21,17 +21,32 @@ This will effectively give us single-game functionality without compromise.
 
 #FIXME: STATUS MESSAGING IS A RESULT OF SOME MESSED UP IPC. 
 #PYTHON BROKE IT I GUESS, IDK. TURN THIS INTO A SINGLE THREADED DOOHICKEY
-class Loader(Process):
-	STATUS_BOOT_FAILED = "boot_failed"
-	STATUS_UPLOAD_FAILED = "upload_failed"
-	STATUS_CONNECTION_LOST = "connection_lost"
-	STATUS_CONNECTION_FAILED = "connection_failed"
-	STATUS_EXITED = "exited"
-	STATUS_WAITING = "waiting"
-	STATUS_CONNECTING = "connecting"
-	STATUS_UPLOADING = "uploading"
-	STATUS_BOOTING = "booting"
-	STATUS_KEEP_ALIVE = "keepalive"
+class LoaderStates(Enum):
+	BOOT_FAILED = -4
+	TRANSFER_FAILED = -3
+	CONNECTION_LOST = -2
+	CONNECTION_FAILED = -1
+	EXITED = 0
+	WAITING = 1
+	CONNECTING = 2
+	TRANSFERRING = 3
+	BOOTING = 4
+	KEEPALIVE = 5
+
+class Loader:
+
+	states = {
+		LoaderStates.BOOT_FAILED : "boot_failed",
+		LoaderStates.TRANSFER_FAILED : "transfer_failed",
+		LoaderStates.CONNECTION_LOST : "connection_lost",
+		LoaderStates.CONNECTION_FAILED: "connection_failed",
+		LoaderStates.EXITED : "exited",
+		LoaderStates.WAITING : "waiting",
+		LoaderStates.CONNECTING : "connecting",
+		LoaderStates.TRANSFERRING : "transferring",
+		LoaderStates.BOOTING : "booting",
+		LoaderStates.KEEPALIVE : "keepalive"
+	}
 
 	path = None
 	host = None
@@ -52,10 +67,45 @@ class Loader(Process):
 		self.host: str = host
 		self.port: int = port
 		self._comm = NetComm()
+		self._state = LoaderStates.STATE_WAITING
+
+	@property
+	def state(self) -> str:
+		return self._state
+
+	@state.setter
+	def state(self, value : str):
+		self._state = value
 
 	@property	
 	def is_active(self) -> bool:
 		return self._active
+
+	def tick(self):
+		print("tick!")
+		func = self.states.get(LoaderStates, lambda: "INVALID")
+		print(func())
+
+	def exited(self):
+		return "exited"
+
+	def waiting(self):
+		return "waiting"
+
+	def connecting(self):
+		filename = self.path[:(len(self.path) - self.path.rfind(os.pathsep))]
+
+		# Open a connection to endpoint and notify the main thread that we are doing so.
+		try:
+			#MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATE_CONNECTING]))
+			self._comm.connect(self.host, self.port)
+		except Exception as ex:
+			#MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATE_CONNECTION_FAILED]))
+			#print(("%s : connection to %s failed! exiting." % (self.name, self.host)))
+			self.state = LoaderStates.CONNECTION_FAILED
+
+	def connection_failed(self):
+		return "connection_failed"
 
 	'''
 	This is the function that does the actual work.
@@ -67,33 +117,33 @@ class Loader(Process):
 
 		# Open a connection to endpoint and notify the main thread that we are doing so.
 		try:
-			#MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATUS_CONNECTING]))
+			#MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATE_CONNECTING]))
 			self._comm.connect(self.host, self.port)
 		except Exception as ex:
-			#MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATUS_CONNECTION_FAILED]))
+			#MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATE_CONNECTION_FAILED]))
 			#print(("%s : connection to %s failed! exiting." % (self.name, self.host)))
 			return 1
 
 		# We have successfully connected to the endpoint. Let's shove our rom file down its throat.
 		try:
-			MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATUS_UPLOADING]))
+			MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATE_UPLOADING]))
 
 			self.uploadrom(game_path)
 
 			#message = [3, ("%s : Booting " % (self.name, self.path, self.host))]
-			MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATUS_BOOTING]))
+			MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATE_BOOTING]))
 
 			# restart the endpoint system, this will boot into the game we just sent
 			self._comm.HOST_Restart()
 
 		except Exception as ex:
 			MBus.handle(Node_LoaderExceptionMessage(payload=("%s : Error booting game on hardware! ex: %s" % (self.name, self.path, self.host, repr(ex)))))
-			MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.node_id, self.STATUS_EXITED]))
+			MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.node_id, self.STATE_EXITED]))
 			return 1
 
 		self._active = True
 
-		MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATUS_KEEPALIVE]))
+		MBus.handle(Node_LoaderStatusMessage(payload=[self.name, self.STATE_KEEPALIVE]))
 		keepalive()
 
 	def uploadrom(self, rom_path: str):
