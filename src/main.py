@@ -1,5 +1,4 @@
-from multiprocessing import Manager, Process
-from asyncio import *
+import threading
 import time
 import typing as t
 import configparser
@@ -13,11 +12,12 @@ from Database import ACNTBootDatabase
 
 from mbus import *
 from main_events import *
-from Loader import Node_LoaderStatusMessage, Node_LoaderUploadPctMessage, Node_UploadCommandMessage
+from Loader import *
 
-from ui_web import UIWeb
+from ui_web import UIWeb_Bottle
 
 logger = logging.getLogger("main")
+logger.debug("init logger")
 
 PREFS_FILE="settings.cfg"
 prefs = configparser.ConfigParser()
@@ -37,17 +37,20 @@ games_list = GameList(prefs['Directories']['cfg_dir'], prefs['Directories']['gam
 games_list.scanForNewGames(db)
 
 # set up node list
-nodeman = NodeManager()
-
+nodeman = NodeManager(bool(prefs['Main']['autoboot']))
 nodeman.loadNodesFromDisk(prefs['Directories']['nodes_dir'])
 
 # Set up event handlers
 #FIXME: probably should break these out into their own module(s))
 
 
-def handle_Node_UploadCommandMessage(message: Node_UploadCommandMessage):
+def handle_Node_SetGameCommandMessage(message: Node_UploadCommandMessage):
 	logger.debug("handling uploadcommandmessage %s %s", message.payload[0], message.payload[1])
-	nodeman.nodes[message.payload[0]].load(games_list[message.payload[1]])
+	nodeman.setgame(message.payload[0], games_list[message.payload[1]])
+
+def handle_Node_LaunchGameCommandMessage(message: Node_LaunchGameCommandMessage):
+	logger.debug("running configured game on %s", message.payload)
+	nodeman.launchgame(message.payload)
 
 def handle_SaveConfigToDisk(message: SaveConfigToDisk):
 	if not cfg_debug: remount_rw(prefs['Directories']['cfg_part'])
@@ -55,7 +58,8 @@ def handle_SaveConfigToDisk(message: SaveConfigToDisk):
 	games_list.exportList()
 	if not cfg_debug: remount_ro(prefs['Directories']['cfg_part'])
 
-MBus.add_handler(Node_UploadCommandMessage, handle_Node_UploadCommandMessage)
+MBus.add_handler(Node_SetGameCommandMessage, handle_Node_SetGameCommandMessage)
+MBus.add_handler(Node_LaunchGameCommandMessage, handle_Node_LaunchGameCommandMessage)
 MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
 
 
@@ -65,11 +69,12 @@ if prefs['Main']['adafruit_ui'] == 'True':
 
 # Launch web UI if enabled
 if prefs['Main']['web_ui'] == 'True':
-	app = UIWeb('Web UI', db, games_list, nodeman.nodes, prefs)
-	app._games = games_list
-	app.list_loaded = True
-	t = Process(target=app.start)
-	t.start()
+	wapp = UIWeb_Bottle('Web UI', games_list, nodeman, prefs)
+	t = threading.Thread(target=wapp.start).start()
+
+while 1:
+	nodeman.tickLoaders()
+	time.sleep(1)
 
 # FIXME: THE WHOLE THING IS BROKEN RIGHT NOW
 # ALREADY GOT A MESSAGEBUS IN THOUGH, JUST NEED TO DEFINE AND HOOK EVERYTHING UP.

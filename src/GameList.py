@@ -32,8 +32,11 @@ class GameList():
 				if elem.file_checksum == key: return elem
 
 			#FIXME: what happens if hash not found?
+		if type(key) is int:
+			return self._games[key]
 
-		return self._games[key]
+		print("help! computer")
+		return
 
 	def append(self, game):
 		self._games.append(game)

@@ -26,13 +26,11 @@
 				</div>
 			</div>
 			<div class="node-control">
-				<a class="edit-link" href="nodes/edit/{{node.node_id}}"><span class="glyphicon glyphicon-edit"></span></a>
-				<a class="launch-link" href="games/{{node.node_id}}"><span class="glyphicon glyphicon-play-circle"></span></a>
+				<a class="edit-link" href="/nodes/edit/{{node.node_id}}"><span class="glyphicon glyphicon-edit"></span></a>
+				<a class="select-game-link" href="/games/{{node.node_id}}"><span class="glyphicon glyphicon glyphicon-list-alt"></span></a>
+				<a class="launch-link" href="/launch/{{node.node_id}}"><span class="glyphicon glyphicon-play-circle"></span></a>
 			</div>
 		</div>
-		<script type="text/javascript">
-		   //node_addEventSource("{{node.node_id}}", "/nodes/status/{{node.node_id}}");
-		</script>
 		
 	% end
 	% end

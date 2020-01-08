@@ -27,7 +27,7 @@
 		</div>
 		<div class="row container">
 			<div class="form-group">
-				<label class="col-sm-2 control-label">Automatically netboot all nodes if previously configured on software startup</label>
+				<label class="col-sm-2 control-label">Automatically netboot all nodes on software startup if previously configured</label>
 				<div class="col-sm-3">
 					<input type="checkbox" class="form-control" name="autoboot" {{autoboot}} />
 				</div>

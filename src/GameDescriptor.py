@@ -33,9 +33,7 @@ class GameDescriptor(yaml.YAMLObject):
 
 	def __init__(self, filepath: str, skip_checksum: bool = False):
 
-		# Python was being weird about having constructors 
-		# with the same function signatures because python is all loosely typed and stuff.
-		# The solution? hack it until it works (not really, just make the constructor do double duty).
+		# Python doesn't support constructor overloading, let's do some weird hacky stuff.
 		if type(filepath) is GameDescriptor:
 			self.filename = filepath.filename
 			self.filepath = filepath.filepath

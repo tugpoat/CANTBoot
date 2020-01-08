@@ -3,7 +3,7 @@
 <div class="container">
 	% include('navbar.tpl', activePage='nodes')
 
-	% if defined('did_edit'):
+	% if defined('did_edit') and did_edit==True:
 	<div class="alert alert-success"><span class="glyphicon glyphicon-ok"></span> Saved changes!</div>
 	%end
 

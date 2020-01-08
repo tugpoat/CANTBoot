@@ -1,5 +1,4 @@
 !!python/object:NodeDescriptor.NodeDescriptor
-_loader_state: waiting
 controls: !!python/tuple
 - 25
 - 2L12B
@@ -14,8 +13,8 @@ game: !!python/object:GameDescriptor.GameDescriptor
   - 20
   - 256MB
   _max_players: !!python/tuple
-  - 11
-  - '2'
+  - 10
+  - '1'
   _monitor: !!python/tuple
   - 15
   - Vertical
@@ -28,9 +27,9 @@ game: !!python/object:GameDescriptor.GameDescriptor
     - Control
     - Vertical
   - !!python/tuple
-    - 11
+    - 10
     - Players
-    - '2'
+    - '1'
   - !!python/tuple
     - 15
     - Monitor
@@ -43,22 +42,22 @@ game: !!python/object:GameDescriptor.GameDescriptor
     - 20
     - DIMM RAM
     - 256MB
-  file_checksum: 13f006b79e89bd3722cd783c12adb837
-  file_size: 33554432
-  filename: Ikaruga_v3.bin
-  filepath: games/Ikaruga_v3.bin
-  game_id: 40
-  rom_title: -IKARUGA-
+  file_checksum: 09338511b5f281aac639c77e4ce3d841
+  file_size: 125009920
+  filename: TriggerHeartExelica_v6.bin
+  filepath: games/TriggerHeartExelica_v6.bin
+  game_id: 106
+  rom_title: TRIGGERHEART EXELICA
   system_name: NAOMI
-  title: Ikaruga but with a very long title for testing purposes
+  title: Triggerheart Exelica
 hostname: default.local
 ip: 192.168.0.2
 monitor: !!python/tuple
 - 15
 - Vertical
 nickname: default
-node_id: 4190127781
+node_id: e7b7d426547ff42c3d46c7d5f566cde0
 port: 10703
 system: !!python/tuple
-- 2
-- NAOMI2
+- 1
+- NAOMI

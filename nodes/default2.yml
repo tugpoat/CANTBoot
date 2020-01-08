@@ -1,5 +1,4 @@
 !!python/object:NodeDescriptor.NodeDescriptor
-_loader_state: waiting
 controls: !!python/tuple
 - 24
 - 1L6B
@@ -57,7 +56,7 @@ monitor: !!python/tuple
 - 14
 - Horizontal
 nickname: default2
-node_id: 3836005393
+node_id: 8fa801137105de04f7747b06e5bc519e
 port: 10703
 system: !!python/tuple
 - 2
