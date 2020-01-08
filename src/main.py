@@ -44,7 +44,7 @@ nodeman.loadNodesFromDisk(prefs['Directories']['nodes_dir'])
 #FIXME: probably should break these out into their own module(s))
 
 
-def handle_Node_SetGameCommandMessage(message: Node_UploadCommandMessage):
+def handle_Node_SetGameCommandMessage(message: Node_SetGameCommandMessage):
 	logger.debug("handling uploadcommandmessage %s %s", message.payload[0], message.payload[1])
 	nodeman.setgame(message.payload[0], games_list[message.payload[1]])
 
