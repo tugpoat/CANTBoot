@@ -27,10 +27,12 @@ class NodeManager():
 		tloader = Loader(self.nodes[n].node_id, self.nodes[n].game.filepath, self.nodes[n].ip, self.nodes[n].port)
 		self._loaders.append(tloader)
 
-	def launchgame(self, node_id : str):
+	def launchgame(self, node_id : str) -> bool:
 		#DO EET NOW
-		if self.nodes[node_id]:
-			self._loaders[node_id].state = LoaderState.CONNECTING
+		if self._loaders[node_id]:
+			return self._loaders[node_id].bootGame()
+
+		return False
 
 	def getLoaderState(self, node_id : str):
 		if len(self._loaders) > 0:

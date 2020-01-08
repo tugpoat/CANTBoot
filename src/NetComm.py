@@ -16,6 +16,7 @@ from Crypto.Cipher import DES
 # - it *should* work on naomi and chihiro, but due to lack of hardware, i didn't try.
 class NetComm:
 	s = None
+	_is_connected = -1
 
 	#print("connecting...")
 	#s.settimeout(5)
@@ -23,13 +24,26 @@ class NetComm:
 	#print("ok!")
 
 	def connect(self, ip, port):
+		if self.is_connected:
+			self.disconnect()
+
 		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.s.settimeout(20)
-		self.s.connect((ip, port))
+		self._is_connected = self.s.connect((ip, port))
+
+		return self.is_connected
 
 	def disconnect(self):
 		self.s.close()
 		self.s = None
+
+	@property
+	def is_connected(self) -> bool:
+		if self._is_connected == 0:
+			return True
+
+		return False
+
 
 	# a function to receive a number of bytes with hard blocking
 	def readsocket(self, n):

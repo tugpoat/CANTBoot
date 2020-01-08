@@ -4,6 +4,14 @@ import json
 import configparser
 import logging
 import typing as t
+
+import os
+
+on_raspi=False
+if "raspberrypi" in os.uname():
+	on_raspi=True
+	import RPi.GPIO as GPIO
+
 from enum import Enum
 from mbus import *
 
@@ -20,11 +28,12 @@ class LoaderState(Enum):
 	PATCHING_FAILED = -1
 	EXITED = 0
 	WAITING = 1
-	PATCHING = 2
 	CONNECTING = 3
-	TRANSFERRING = 4
-	BOOTING = 5
-	KEEPALIVE = 6
+	CONNECTED = 4
+	PATCHING = 5
+	TRANSFERRING = 6
+	BOOTING = 7
+	KEEPALIVE = 8
 
 '''
 Container class for State messages, so that the node we're associated with can be looked up
@@ -64,9 +73,11 @@ class Loader:
 	host = None
 	port = None
 	_comm = None
-	_active = False
 	_tick = 0
 	_wait_tick = 0
+
+	_do_boot = False
+	_do_keepalive = False
 
 	_patches = []
 
@@ -108,7 +119,7 @@ class Loader:
 		if self.last_state != value:
 			try:
 				self.last_state = self.state
-				self.__logger.debug("set last state to " + str(self.state))
+				self.__logger.debug("set " + self.node_id + " last state to " + str(self.state))
 			except:
 				pass
 
@@ -131,12 +142,52 @@ class Loader:
 		self._rom_path = value
 
 	@property	
-	def is_active(self) -> bool:
-		return self._active
+	def enableGPIOReset(self) -> bool:
+		return self._enableGPIOReset
+
+	@enableGPIOReset.setter
+	def enableGPIOReset(self, value : bool):
+		self._enableGPIOReset = value
+
+	def bootGame(self) -> bool:
+		self._do_boot = True
+		self._do_keepalive = False
+
+		ret = False
+
+		# TODO: I don't think either of these functions will actually cause a disconnect, so we should be good to go
+		# Although there probably isn't any harm in just creating a new connection.
+		# Should investigate it through testing.
+		if on_raspi and self.enableGPIOReset:
+			self.doGPIOReset()
+			ret = True
+		elif self._comm.is_connected:
+			self.doDIMMReset()
+			ret = True
+
+		self.state = LoaderState.CONNECTING
+		return ret
+
+	def doDIMMReset(self):
+		if self._comm.is_connected:
+			self._comm.HOST_Restart()
+
+	def doGPIOReset(self):
+		if on_raspi:
+			GPIO.setmode(GPIO.BOARD)
+			GPIO.setup(40, GPIO.OUT)
+			GPIO.output(40,1)
+			time.sleep(0.4)
+			GPIO.output(40,0)
 
 	def tick(self):
 		self._tick = time.time()
 		func = self.states.get(self.state, lambda: INVALID)
+
+		#If we're not waiting, let's make sure our times stay in sync
+		if self.state != LoaderState.WAITING:
+			self._wait_tick = self._tick
+
 		func(self)
 
 		#each state should only run once as each one will update the state machine (except keepalive)
@@ -166,21 +217,31 @@ class Loader:
 		return
 
 	def patching(self):
-		return1
+		return
 
 	def waiting(self):
 		#Wait 5 seconds between connection attempts
-		if int(self._tick - self._wait_tick) > 5:
+		if int(self._tick - self._wait_tick) > 2:
 			self.__logger.debug(str(self._tick) + " " + str(self._wait_tick) + " " + str(self._tick - self._wait_tick))
 			self.state = LoaderState.CONNECTING
 
 	def connecting(self):
 		# Open a connection to endpoint
 		try:
-			self._comm.connect(self.host, self.port)
+			if not self._comm.connect(self.host, self.port):
+				self.state = LoaderState.CONNECTION_FAILED
+				return
+
+			if self._do_boot:
+				self.state = LoaderState.TRANSFERRING
+			elif self._do_keepalive:
+				self.state = LoaderState.KEEPALIVE
+
 		except Exception as ex:
 			self.state = LoaderState.CONNECTION_FAILED
 
+	def connected(self):
+		return
 
 	def transferring(self):
 		#Display "Now Loading..." on screen
@@ -192,13 +253,14 @@ class Loader:
 		# uploads file. Also sets "dimm information" (file length and crc32)
 		self._comm.DIMM_UploadFile(rom_path, None, upload_pct_callback)
 
-		self.state = LoaderState.BOOTING
+		if self._do_boot:
+			self.state = LoaderState.BOOTING
 
 	def booting(self):
 		# restart the endpoint system, this will boot into the game we just sent
 		self._comm.HOST_Restart()
-
 		self.state = LoaderState.KEEPALIVE
+		self._do_boot = False # Finished booting. we don't want to reboot into the game automatically if we lose connection
 
 	def keepalive(self):
 		if int(self._tick - self._last_tick) < 5:
@@ -206,8 +268,9 @@ class Loader:
 				# set time limit to 10h. According to some reports, this does not work.
 				TIME_SetLimit(10*60*1000)
 			except Exception as ex:
+				self._do_keepalive = True # return to keepalive if we lose connection
 				#We lost our connection. Return to waiting state and attempt again once the DIMM is reachable.
-				self.states = LoaderState.WAITING
+				self.states = LoaderState.CONNECTION_LOST
 
 	#Additional translation for functions
 	states = {
