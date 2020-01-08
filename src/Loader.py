@@ -96,6 +96,7 @@ class Loader:
 		self._comm = NetComm()
 		self._tick = time.time()
 		self._wait_tick = time.time()
+		self.enableGPIOReset = True
 		self.last_state = LoaderState.WAITING # doesn't matter what this is on init as long as it's different from self.state
 		self.state = LoaderState.EXITED # This should be EXITED so it doesn't automatically try and load games unless we tell it to
 
