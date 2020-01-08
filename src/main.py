@@ -58,6 +58,12 @@ def handle_SaveConfigToDisk(message: SaveConfigToDisk):
 	games_list.exportList()
 	if not cfg_debug: remount_ro(prefs['Directories']['cfg_part'])
 
+#TODO: Raise this when we boot a new game
+def handle_SaveNodesToDisk(message: SaveNodesToDisk):
+	if not cfg_debug: remount_rw(prefs['Directories']['cfg_part'])
+	nodeman.saveNodesToDisk(prefs['Directories']['nodes_dir'])
+	if not cfg_debug: remount_ro(prefs['Directories']['cfg_part'])
+
 MBus.add_handler(Node_SetGameCommandMessage, handle_Node_SetGameCommandMessage)
 MBus.add_handler(Node_LaunchGameCommandMessage, handle_Node_LaunchGameCommandMessage)
 MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)

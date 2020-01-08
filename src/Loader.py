@@ -165,7 +165,9 @@ class Loader:
 			self.doDIMMReset()
 			ret = True
 
-		self.state = LoaderState.CONNECTING
+		# This state has a built-in 2 second delay to reconnect.
+		# Should be enough time for the system to get started enough for us to work with it.
+		self.state = LoaderState.WAITING
 		return ret
 
 	def doDIMMReset(self):
@@ -173,6 +175,7 @@ class Loader:
 			self._comm.HOST_Restart()
 
 	def doGPIOReset(self):
+		# No sense in doing anything if we're not running on something that supports the RPi GPIO lib
 		if on_raspi:
 			GPIO.setmode(GPIO.BOARD)
 			GPIO.setup(40, GPIO.OUT)
