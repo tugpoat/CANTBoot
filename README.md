@@ -1,8 +1,8 @@
 ACNTBoot
 ========
-********WARNING: THIS DOES NOT WORK YET.********
+********WARNING: THIS MAY OR MAY NOT WORK.
 
-It might work. It might load games and stuff, and I try my best to make sure that it does with each commit. Usually. It's broken right now though, in the name of great improvement.
+It should work and load games and stuff, and I try my best to make sure that it does with each commit.
 
 ACNTBoot is loosely based on NAOMIWeb, and started life as a fork of it.
 ### Github links:
@@ -34,13 +34,12 @@ Requirements
 ### Software:
  * Raspbian -- Other Linux distros should work, but haven't been rubberstamped (Works fine on my gentoo-based laptop minus GPIO functionality).
  * Python 3.6+ with:
- 	-asyncio
  	-bottle
-  	-hashlib
+  -hashlib
  	-json
- 	-multiprocessing
+  -pymessagebus
  	-sqlite3
-	-pymessagebus
+  -threads
  * NetDIMM-compatible game images (these are usually .bin files; you're on your own to find these!)
 
 Software Setup (TODO)
@@ -92,22 +91,23 @@ DONE
 ----
  * Ditch the whole "install games to database" thing and just dump the gamelist out to YAML on the games partition
  * Messagebus
-
-In Progress
-----
  * Plug everything into the messagebus
  * Redo Web UI for event-based operation
  * Redo Web UI for multinode
+ * GPIO Reset
+
+In Progress
+----
+  * Redo Web UI for multinode (add/delete functionality)
 
 Todo
 ----
  * Adafruit UI
- * GPIO Reset (Supported, but needs to get plugged in properly)
  * DHCP configuration of NetDIMM(s)
  * Interface for Network Configuration (WiFi SSID, PSK, IP, DNS options, etc.)
  * Interface for System Settings/Commands (Power off, Reboot, Manual GPIO Reset, etc.)
  * Card emulation
- * Live binary patching of ROMs, in RAM. (Useful for preservation of original game data and updatability).
+ * Live/in-place binary patching of ROMs
  * API Master/Slave modes for large networks
  * Catch exit signals and close everything properly
  * Unit tests and E2E tests
