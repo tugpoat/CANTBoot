@@ -99,10 +99,10 @@ DONE
 In Progress
 ----
   * Redo Web UI for multinode (add/delete functionality)
-
+  * Adafruit UI
+  
 Todo
 ----
- * Adafruit UI
  * DHCP configuration of NetDIMM(s)
  * Interface for Network Configuration (WiFi SSID, PSK, IP, DNS options, etc.)
  * Interface for System Settings/Commands (Power off, Reboot, Manual GPIO Reset, etc.)

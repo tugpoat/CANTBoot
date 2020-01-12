@@ -2,7 +2,7 @@ from pymessagebus import *
 import logging
 from pymessagebus.middleware.logger import get_logger_middleware
 
-logger = logging.getLogger("message_bus")
+logger = logging.getLogger("MBus")
 logging.basicConfig(level=logging.INFO)
 logging_middleware = get_logger_middleware(logger)
 

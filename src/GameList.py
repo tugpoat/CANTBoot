@@ -1,8 +1,13 @@
 from GameDescriptor import *
 import configparser
 import os
+import typing as t
 import yaml
 from yloader import *
+from mbus import *
+
+class GameList_ScanEventMessage(t.NamedTuple):
+	payload: str
 
 class GameList():
 	_cfg_dir = ""
@@ -89,6 +94,8 @@ class GameList():
 					self.__logger.error("not valid or compatible rom file: ", file)
 					continue
 
+				MBus.handle(GameList_ScanEventMessage(payload=file))
+
 				identity = database.getGameInformation(tgame.rom_title)
 
 				if identity:
@@ -119,3 +126,5 @@ class GameList():
 			tmplist.sort(key = lambda tmplist: tmplist.title.lower())
 			self._games = tmplist
 			self.exportList()
+
+		MBus.handle(GameList_ScanEventMessage(payload="donelol"))

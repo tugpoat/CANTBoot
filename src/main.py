@@ -4,6 +4,7 @@ import typing as t
 import configparser
 import copy
 import logging
+import os
 
 from GameDescriptor import GameDescriptor
 from GameList import *
@@ -34,10 +35,23 @@ db = ACNTBootDatabase('db.sqlite')
 
 # set up game list
 games_list = GameList(prefs['Directories']['cfg_dir'], prefs['Directories']['games_dir'])
+
+# Set up adafruit ui if detected and enabled
+if prefs['Main']['adafruit_ui'] == 'True' and "raspberrypi" in os.uname():
+	from ui_adafruit import UI_Adafruit
+	adafapp = UI_Adafruit(prefs, games_list)
+	t = threading.Thread(target=adafapp.run)
+
 games_list.scanForNewGames(db)
 
 # set up node list
 nodeman = NodeManager(bool(prefs['Main']['autoboot']))
+
+# Launch web UI if enabled
+if prefs['Main']['web_ui'] == 'True':
+	wapp = UIWeb_Bottle('Web UI', games_list, nodeman, prefs)
+	t = threading.Thread(target=wapp.start).start()
+
 nodeman.loadNodesFromDisk(prefs['Directories']['nodes_dir'])
 
 # Set up event handlers
@@ -69,16 +83,6 @@ def handle_SaveConfigToDisk(message: SaveConfigToDisk):
 MBus.add_handler(Node_SetGameCommandMessage, handle_Node_SetGameCommandMessage)
 MBus.add_handler(Node_LaunchGameCommandMessage, handle_Node_LaunchGameCommandMessage)
 MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
-
-
-# Set up adafruit ui if detected and enabled
-if prefs['Main']['adafruit_ui'] == 'True':
-	logger.error('todo: adafruit ui')
-
-# Launch web UI if enabled
-if prefs['Main']['web_ui'] == 'True':
-	wapp = UIWeb_Bottle('Web UI', games_list, nodeman, prefs)
-	t = threading.Thread(target=wapp.start).start()
 
 while 1:
 	nodeman.tickLoaders()
