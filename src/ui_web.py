@@ -105,7 +105,12 @@ class UIWeb_Bottle(Bottle):
 		filter_values = []
 		filters = []
 		if len(self._games) > 0:
-			return template('index', list_loaded=self.list_loaded, games=self._games, filter_groups=filter_groups, filter_values=filter_values, activefilters=filters)
+			return template('index', 
+				list_loaded=self.list_loaded,
+				games=self._games,
+				filter_groups=filter_groups,
+				filter_values=filter_values,
+				activefilters=filters)
 		else:
 			return template('index', list_loaded=self.list_loaded)
 
@@ -118,11 +123,6 @@ class UIWeb_Bottle(Bottle):
 		return
 
 	def appconfig(self):
-		if self._prefs['Main']['multinode'] == 'True':
-			multinode = 'checked'
-		else:
-			multinode = ''
-
 		if self._prefs['Main']['skip_checksum'] == 'True':
 			skip_checksum = 'checked'
 		else:
@@ -149,21 +149,24 @@ class UIWeb_Bottle(Bottle):
 		wlan0_psk       =   self._prefs['Network']['wlan0_psk']     or 'segarocks'
 
 		games_directory =   self._prefs['Games']['directory']       or 'games'
-
 		#render
-		return template('config', multinode=multinode, skip_checksum=skip_checksum, autoboot=autoboot, gpio_reset=gpio_reset, eth0_ip=eth0_ip, eth0_netmask=eth0_netmask, wlan0_mode=wlan0_mode, wlan0_ip=wlan0_ip, wlan0_ssid=wlan0_ssid, wlan0_psk=wlan0_psk, wlan0_netmask=wlan0_netmask, games_directory=games_directory)
+		return template('config',
+			skip_checksum=skip_checksum,
+			autoboot=autoboot,
+			gpio_reset=gpio_reset,
+			eth0_ip=eth0_ip,
+			eth0_netmask=eth0_netmask,
+			wlan0_mode=wlan0_mode,
+			wlan0_ip=wlan0_ip,
+			wlan0_ssid=wlan0_ssid,
+			wlan0_psk=wlan0_psk,
+			wlan0_netmask=wlan0_netmask,
+			games_directory=games_directory)
 		
 	def do_appconfig(self):
-		multinode       = request.forms.get('multinode')
 		skip_checksum   = request.forms.get('skip_checksum')
 		autoboot        = request.forms.get('autoboot')
 		gpio_reset      = request.forms.get('gpio_reset')
-
-
-		if multinode == 'on':
-			multinode= 'True'
-		else:
-			multinode = 'False'
 
 		if skip_checksum == 'on':
 			skip_checksum = 'True'
@@ -180,7 +183,6 @@ class UIWeb_Bottle(Bottle):
 		else:
 			gpio_reset = 'False'
 
-		self._prefs['Main']['multinode']          =     multinode
 		self._prefs['Main']['skip_checksum']      =     skip_checksum
 		self._prefs['Main']['autoboot']           =     autoboot
 		self._prefs['Main']['gpio_reset']         =     gpio_reset
@@ -210,11 +212,6 @@ class UIWeb_Bottle(Bottle):
 		with open('settings.cfg', 'w') as prefs_file:
 			self._prefs.write(prefs_file)
 
-		#rework this thing for html
-		if multinode == 'True':
-			multinode = 'checked'
-		else:
-			multinode = ''
 
 		if skip_checksum == 'True':
 			skip_checksum = 'checked'
@@ -231,7 +228,19 @@ class UIWeb_Bottle(Bottle):
 		else:
 			gpio_reset = ''
 
-		return template('config', did_config=True, multinode=multinode, skip_checksum=skip_checksum, autoboot=autoboot, gpio_reset=gpio_reset, eth0_ip=eth0_ip, eth0_netmask=eth0_netmask, wlan0_mode=wlan0_mode, wlan0_ip=wlan0_ip, wlan0_ssid=wlan0_ssid, wlan0_psk=wlan0_psk, wlan0_netmask=wlan0_netmask, games_directory=games_directory)
+		return template('config',
+			did_config=True,
+			skip_checksum=skip_checksum,
+			autoboot=autoboot,
+			gpio_reset=gpio_reset,
+			eth0_ip=eth0_ip,
+			eth0_netmask=eth0_netmask,
+			wlan0_mode=wlan0_mode,
+			wlan0_ip=wlan0_ip,
+			wlan0_ssid=wlan0_ssid,
+			wlan0_psk=wlan0_psk,
+			wlan0_netmask=wlan0_netmask,
+			games_directory=games_directory)
 
 	def apply_appconfig(self):
 		#TODO: yell at the main thread to reconfigure the network
@@ -241,7 +250,8 @@ class UIWeb_Bottle(Bottle):
 		return "todo"
 		g = None
 		#FIXME: REDO THIS
-		return template('edit', filename=g.filename, game_title=g.title, hashid=fhash, games_list=gamelist)
+		return template('edit', filename=g.filename,
+			game_title=g.title, hashid=fhash, games_list=gamelist)
 
 	def do_edit(self, fhash):
 		return "todo"
