@@ -88,7 +88,7 @@ class Loader:
 	host: String, IP Address of endpoint
 	'''
 	def __init__(self, node_id : str, abs_path: str, host: str, port: int):
-		self.__logger = logging.getLogger("loader")
+		self.__logger = logging.getLogger("Loader " + str(id(self)))
 		self.node_id: str = node_id
 		self.rom_path: str = abs_path
 		self.host: str = host
@@ -160,15 +160,17 @@ class Loader:
 		# Although there probably isn't any harm in just creating a new connection.
 		# Should investigate it through testing.
 		if on_raspi and self.enableGPIOReset:
+			self.__logger.info("doing GPIO Reset")
 			self.doGPIOReset()
 			ret = True
 		elif self._comm.is_connected:
+			self.__logger.info("doing NetDIMM Reset")
 			self.doDIMMReset()
 			ret = True
 
 		# This state has a built-in 2 second delay to reconnect.
 		# Should be enough time for the system to get started enough for us to work with it.
-		self.state = LoaderState.WAITING
+		self.state = LoaderState.CONNECTING
 		return ret
 
 	def doDIMMReset(self):
@@ -186,20 +188,24 @@ class Loader:
 
 	def tick(self):
 		self._tick = time.time()
-		func = self.states.get(self.state, lambda: INVALID)
-
+		try:
+			_func = self.states.get(self.state, lambda self: self.INVALID)
+			_func(self)
+		except:
+			pass
 		#If we're not waiting, let's make sure our times stay in sync
-		if self.state != LoaderState.WAITING:
+		if self.state != LoaderState.WAITING and self.state != LoaderState.KEEPALIVE:
 			self._wait_tick = self._tick
-
-		func(self)
 
 		#each state should only run once as each one will update the state machine (except keepalive)
 
-	def upload_pct_callback(percent_complete):
+	def INVALID(self):
+		pass
+
+	def upload_pct_callback(self, percent_complete):
 		#TODO: deliver this number to UI and/or main thread via messagebus
-		self.__logger.debug("upload cb: " + percent_complete + "%")
-		MBus.handle(Node_LoaderUploadPctMessage(payload=percent_complete))
+		self.__logger.debug("upload cb: " + str(percent_complete) + "%")
+		MBus.handle(Node_LoaderUploadPctMessage(payload=[self.node_id, str(percent_complete)]))
 
 	def boot_failed(self):
 		return
@@ -224,7 +230,7 @@ class Loader:
 		return
 
 	def waiting(self):
-		#Wait 5 seconds between connection attempts
+		#Wait 2 seconds between connection attempts
 		if int(self._tick - self._wait_tick) > 2:
 			self.__logger.debug(str(self._tick) + " " + str(self._wait_tick) + " " + str(self._tick - self._wait_tick))
 			self.state = LoaderState.CONNECTING
@@ -240,22 +246,32 @@ class Loader:
 				self.state = LoaderState.TRANSFERRING
 			elif self._do_keepalive:
 				self.state = LoaderState.KEEPALIVE
+			else: self.state = LoaderState.CONNECTED
 
 		except Exception as ex:
+			self.__logger.error(repr(ex))
 			self.state = LoaderState.CONNECTION_FAILED
 
 	def connected(self):
+		self.__logger.info("Connected")
 		return
 
 	def transferring(self):
-		#Display "Now Loading..." on screen
-		self._comm.HOST_SetMode(0, 1)
+		try:
+			#Display "Now Loading..." on screen
+			self._comm.HOST_SetMode(0, 1)
 
-		# disable encryption by setting magic zero-key
-		self._comm.SECURITY_SetKeycode("\x00" * 8)
+			# disable encryption by setting magic zero-key
+			self._comm.SECURITY_SetKeycode("\x00" * 8)
 
-		# uploads file. Also sets "dimm information" (file length and crc32)
-		self._comm.DIMM_UploadFile(rom_path, None, upload_pct_callback)
+			self.__logger.info("Uploading " + self.rom_path)
+			# uploads file. Also sets "dimm information" (file length and crc32)
+			self._comm.DIMM_UploadFile(self.rom_path, None, self.upload_pct_callback)
+		except Exception as ex:
+			self.__logger.error(repr(ex))
+			#self.__logger.debug("Connection timed out or something. reconnecting.")
+			self.state = LoaderState.CONNECTING
+			return
 
 		if self._do_boot:
 			self.state = LoaderState.BOOTING
@@ -267,14 +283,18 @@ class Loader:
 		self._do_boot = False # Finished booting. we don't want to reboot into the game automatically if we lose connection
 
 	def keepalive(self):
-		if int(self._tick - self._last_tick) < 5:
+		if int(self._tick - self._wait_tick) > 10:
 			try:
 				# set time limit to 10h. According to some reports, this does not work.
-				TIME_SetLimit(10*60*1000)
+				self._comm.TIME_SetLimit(10*60*1000)
+				self.__logger.info("Sent keepalive!")
+				self._wait_tick = self._tick
 			except Exception as ex:
 				self._do_keepalive = True # return to keepalive if we lose connection
 				#We lost our connection. Return to waiting state and attempt again once the DIMM is reachable.
 				self.states = LoaderState.CONNECTION_LOST
+
+		return
 
 	#Additional translation for functions
 	states = {
@@ -313,10 +333,20 @@ class LoaderList():
 			return self._loaders[key]
 
 		#FIXME: what happens if id not found?
-		print('help!')
+		print('help! computer')
 
-	def append(self, node):
-		self._loaders.append(node)
+	def __setitem__(self, key, item : Loader):
+		#node id
+		if type(key) is str:
+			for index,elem in enumerate(self._loaders):
+				if str(elem.node_id) == str(key): 
+					self._loaders[index] = item
+
+		if type(key) is int:
+			self._loaders[key] = item
+
+	def append(self, loader):
+		self._loaders.append(loader)
 
 	def clear(self):
 		self._loaders.clear()

@@ -65,7 +65,7 @@ class NodeList():
 				# We have to do it this way because there's a loader object in there that spawns its own process.
 				# Can't cross our pickles, that'd be weird.
 				tmp = NodeDescriptor(elem)
-				print ("exporting to " + nodes_dir+"/"+tmp.nickname+'.yml')
+				#print ("exporting to " + nodes_dir+"/"+tmp.nickname+'.yml')
 				with open(nodes_dir+"/"+tmp.nickname+'.yml', 'w') as ofs:
 					yaml.dump(tmp, ofs)
 			except Exception as ex:

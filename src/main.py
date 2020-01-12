@@ -45,18 +45,20 @@ nodeman.loadNodesFromDisk(prefs['Directories']['nodes_dir'])
 
 
 def handle_Node_SetGameCommandMessage(message: Node_SetGameCommandMessage):
-	logger.debug("handling uploadcommandmessage %s %s", message.payload[0], message.payload[1])
+	logger.debug("handling SegGameCommandMessage %s %s", message.payload[0], message.payload[1])
 	nodeman.setgame(message.payload[0], games_list[message.payload[1]])
 
 def handle_Node_LaunchGameCommandMessage(message: Node_LaunchGameCommandMessage):
-	logger.debug("running configured game on %s", message.payload)
+	logger.info("running configured game on %s", message.payload)
 	nodeman.launchgame(message.payload)
 
 def handle_SaveConfigToDisk(message: SaveConfigToDisk):
+	logger.info("Saving configuration to disk...")
 	if not cfg_debug: remount_rw(prefs['Directories']['cfg_part'])
 	nodeman.saveNodesToDisk(prefs['Directories']['nodes_dir'])
 	games_list.exportList()
 	if not cfg_debug: remount_ro(prefs['Directories']['cfg_part'])
+	logger.info("Done saving configuration to disk")
 
 #TODO: Raise this when we boot a new game
 #def handle_SaveNodesToDisk(message: SaveNodesToDisk):
@@ -71,7 +73,7 @@ MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
 
 # Set up adafruit ui if detected and enabled
 if prefs['Main']['adafruit_ui'] == 'True':
-	print('todo: adafruit ui')
+	logger.error('todo: adafruit ui')
 
 # Launch web UI if enabled
 if prefs['Main']['web_ui'] == 'True':
@@ -80,7 +82,7 @@ if prefs['Main']['web_ui'] == 'True':
 
 while 1:
 	nodeman.tickLoaders()
-	time.sleep(1)
+	time.sleep(0.01)
 
 # FIXME: THE WHOLE THING IS BROKEN RIGHT NOW
 # ALREADY GOT A MESSAGEBUS IN THOUGH, JUST NEED TO DEFINE AND HOOK EVERYTHING UP.

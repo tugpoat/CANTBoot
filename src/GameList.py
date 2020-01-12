@@ -13,6 +13,7 @@ class GameList():
 		if type(cfgdir) is None:
 			pass
 
+		self.__logger = logging.getLogger("GameList")
 		self._cfg_dir = cfgdir
 		self._games_dir = gamesdir
 
@@ -52,7 +53,7 @@ class GameList():
 				with open(listfile) as ifs:
 					self._games = yaml.load(ifs, Loader=YLoader)
 			except Exception as ex:
-				print("couldn't load games for some reason" + repr(ex))
+				self.__logger.error("couldn't load games for some reason" + repr(ex))
 
 	def exportList(self):
 		if os.path.isfile(self._cfg_dir+'/gamelist.yml'): os.remove(self._cfg_dir+'/gamelist.yml')
@@ -63,7 +64,7 @@ class GameList():
 			with open(self._cfg_dir+'/gamelist.yml', 'a+') as ofs:
 				yaml.dump(self._games, ofs)
 		except Exception as ex:
-			print(repr(ex))
+			self.__logger.error(repr(ex))
 
 	def verifyFiles(self):
 		#TODO: Run thru list and hash check everything.
@@ -85,7 +86,7 @@ class GameList():
 				tgame = GameDescriptor(self._games_dir+"/"+file)
 
 				if not tgame.isValid:
-					print("not valid or compatible rom file: ", file)
+					self.__logger.error("not valid or compatible rom file: ", file)
 					continue
 
 				identity = database.getGameInformation(tgame.rom_title)
@@ -100,7 +101,7 @@ class GameList():
 					tgame.attributes = database.getGameAttributes(identity[0])
 					tgame.setAttributes(database.getGameAttributes(identity[0]))
 					self.append(tgame)
-					print("\tAdded " + tgame.title)
+					self.__logger.info("\tAdded " + tgame.title)
 				else:
 					# We were unable to retrieve information about this game from the database. 
 					# Just fill in whatever we can and pass it along.

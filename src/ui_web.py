@@ -86,7 +86,7 @@ class UIWeb_Bottle(Bottle):
 
 	def start(self):
 		self._db = ACNTBootDatabase('db.sqlite')
-		self.run(host='0.0.0.0', port=8000, debug=False)
+		self.run(host='0.0.0.0', port=8000, debug=False, quiet=True)
 
 	def serve_static(self, filepath):
 		if 'images/games' in filepath and not os.path.isfile('static/'+filepath):
@@ -296,7 +296,7 @@ class UIWeb_Bottle(Bottle):
 		sobj = []
 		for n in self._nodeman.nodes:
 			n_state = str(self._nodeman.getLoaderState(n.node_id))
-			if n_state == LoaderState.TRANSFERRING: n_status += ("%s%", n.loader_uploadpct)
+			if n_state == str(LoaderState.TRANSFERRING): n_state += " " + str(n.loader_uploadpct) + "%"
 			sobj.append({'node_id': n.node_id, 'node_state': n_state})
 
 		ret = 'data: ' + json.dumps({'nodes': sobj}) + "\n\n"

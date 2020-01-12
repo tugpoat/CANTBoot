@@ -7,57 +7,57 @@ dimm_ram: !!python/tuple
 - 256MB
 game: !!python/object:GameDescriptor.GameDescriptor
   _control: !!python/tuple
-  - 9
-  - Vertical
+  - 7
+  - Normal
   _dimm_ram: !!python/tuple
   - 20
   - 256MB
   _max_players: !!python/tuple
-  - 10
-  - '1'
+  - 11
+  - '2'
   _monitor: !!python/tuple
-  - 15
-  - Vertical
+  - 14
+  - Horizontal
   _system: !!python/tuple
   - 1
   - NAOMI
   attributes:
   - !!python/tuple
-    - 9
+    - 7
     - Control
-    - Vertical
+    - Normal
   - !!python/tuple
-    - 10
+    - 11
     - Players
-    - '1'
+    - '2'
   - !!python/tuple
-    - 15
+    - 14
     - Monitor
-    - Vertical
+    - Horizontal
   - !!python/tuple
-    - 18
+    - 16
     - DIMM Reset
-    - Testing
+    - 'Yes'
   - !!python/tuple
     - 20
     - DIMM RAM
     - 256MB
-  file_checksum: 09338511b5f281aac639c77e4ce3d841
-  file_size: 125009920
-  filename: TriggerHeartExelica_v6.bin
-  filepath: games/TriggerHeartExelica_v6.bin
-  game_id: 106
-  rom_title: TRIGGERHEART EXELICA
+  file_checksum: 83aa92c94a26c7c6ea3bfbded1d86605
+  file_size: 125829120
+  filename: epr-23062a_hack.bin
+  filepath: games/epr-23062a_hack.bin
+  game_id: 53
+  rom_title: MARVEL VS CAPCOM2  JAPAN
   system_name: NAOMI
-  title: Triggerheart Exelica
+  title: Marvel vs. Capcom 2
 hostname: default.local
 ip: 192.168.0.2
 monitor: !!python/tuple
-- 15
-- Vertical
+- 14
+- Horizontal
 nickname: default
 node_id: e7b7d426547ff42c3d46c7d5f566cde0
 port: 10703
 system: !!python/tuple
-- 1
-- NAOMI
+- 2
+- NAOMI2

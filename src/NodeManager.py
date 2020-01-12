@@ -3,6 +3,7 @@ from NodeList import NodeList
 from NodeDescriptor import NodeDescriptor
 from GameDescriptor import GameDescriptor
 from Loader import *
+from main_events import *
 import traceback
 
 class NodeManager():
@@ -11,7 +12,7 @@ class NodeManager():
 
 	def __init__(self, autoboot=False):
 		self._autoboot = autoboot
-		self.__logger = logging.getLogger("NodeManager")
+		self.__logger = logging.getLogger("NodeManager " + str(id(self)))
 		self.nodes = NodeList()
 		self._loaders = LoaderList()
 		MBus.add_handler(Node_LoaderUploadPctMessage, self.handle_LoaderUploadPctMessage)
@@ -19,17 +20,27 @@ class NodeManager():
 	def setgame(self, n: str, gd : GameDescriptor):
 		node = self.nodes[n]
 		if not self.validateGameDescriptor(node, gd):
-			self.__logger.debug("Won't boot " + self.nodes[n].game.filename + " on " + self.nodes[n].node_id)
+			self.__logger.error("Won't boot " + self.nodes[n].game.filename + " on " + self.nodes[n].node_id)
 			return
-
+		
+		self.__logger.debug(self.nodes[n].game.filepath)
 		self.nodes[n].game = gd
 
-		tloader = Loader(self.nodes[n].node_id, self.nodes[n].game.filepath, self.nodes[n].ip, self.nodes[n].port)
-		self._loaders.append(tloader)
+		MBus.handle(message=SaveConfigToDisk())
+
+		self.__logger.debug(self.nodes[n].game.filepath)
+
+		if self._loaders[n]:
+			self.__logger.debug("updating loader")
+			self._loaders[n] = Loader(self.nodes[n].node_id, self.nodes[n].game.filepath, self.nodes[n].ip, self.nodes[n].port)
+		else:
+			tloader = Loader(self.nodes[n].node_id, self.nodes[n].game.filepath, self.nodes[n].ip, self.nodes[n].port)
+			self._loaders.append(tloader)
 
 	def launchgame(self, node_id : str) -> bool:
 		#DO EET NOW
 		if self._loaders[node_id]:
+			self.__logger.debug("Booting game")
 			return self._loaders[node_id].bootGame()
 
 		return False
@@ -56,7 +67,7 @@ class NodeManager():
 			# If anyone's going to be messing with this they're gonna be gutting it anyways.
 			if (nd.system[0] != gd.getSystem[0]) and not ((nd.system[0] == 2 and int(gd.getSystem[0]) in {1,2,3}) or (nd.system[0] == 2 and gd.isNaomi2CV)) :
 				# You dun goofed.
-				self.__logger.debug("Wrong system. Game wants " + gd.getSystem[1] + " but this node is a " + nd.system[1])
+				self.__logger.debug("Checking game " + gd.filename + " against node " + nd.nickname + " : Wrong system. Game wants " + gd.getSystem[1] + " but this node is a " + nd.system[1])
 				bootable = False
 			#else:
 				#nd.__logger.debug("system ok")
@@ -80,9 +91,7 @@ class NodeManager():
 			#else:
 				#self.__logger.debug("DIMM RAM ok")
 		except Exception as ex:
-			traceback.print_exc()
-			print(repr(ex))
-			print(vars(gd))
+			self.__logger.error(repr(ex) + traceback.print_exc())
 
 		return bootable
 
@@ -102,5 +111,5 @@ class NodeManager():
 		self.nodes.exportNodes(nodes_dir)
 
 	def handle_LoaderUploadPctMessage(self, message: Node_LoaderUploadPctMessage):
-		if message.payload[0] == self.node_id:
-			self.loader_uploadpct = message.payload[1] #I don't know why this isn't setting on my python but it's blocking me and I'm going to look at it with fresh eyes later
+		self.nodes[message.payload[0]].loader_uploadpct = message.payload[1]
+		#	self.loader_uploadpct = message.payload[1] #I don't know why this isn't setting on my python but it's blocking me and I'm going to look at it with fresh eyes later
