@@ -73,9 +73,9 @@ class UIWeb_Bottle(Bottle):
 		self.route('/load/<node_id>/<fhash>', method="GET", callback=self.load)
 		self.route('/launch/<node_id>', method="GET", callback=self.launch)
 
-		self.route('/games/<node_id>', method="GET", callback=self.gamechooser)
-		self.route('/games/edit/<fhash>', method="GET", callback=self.edit)
-		self.route('/games/edit/<fhash>', method="POST", callback=self.do_edit)
+		self.route('/games/<node_id>', method="GET", callback=self.games)
+		self.route('/games/edit/<fhash>', method="GET", callback=self.game_edit)
+		self.route('/games/edit/<fhash>', method="POST", callback=self.game_do_edit)
 
 		self.route('/nodes', method="GET", callback=self.nodes)
 		self.route('/nodes/edit/<node_id>', method="GET", callback=self.node_edit)
@@ -99,20 +99,25 @@ class UIWeb_Bottle(Bottle):
 	def index(self):
 			return self.nodes()
 
-	def games(self):
-		#FIXME
-		filter_groups = self._db.getAttributes()
-		filter_values = []
-		filters = []
-		if len(self._games) > 0:
-			return template('index', 
-				list_loaded=self.list_loaded,
-				games=self._games,
-				filter_groups=filter_groups,
-				filter_values=filter_values,
-				activefilters=filters)
-		else:
-			return template('index', list_loaded=self.list_loaded)
+	def games(self, node_id : str):
+		node = self._nodeman.nodes[node_id]
+		tmplist = []
+
+		for g in self._games:
+			if not self._nodeman.validateGameDescriptor(node, g):
+				continue
+			tmplist.append(copy.deepcopy(g))
+
+		return template('games', node=node, games=tmplist)
+
+	def game_edit(self, fhash : str):
+		outgames = self._db.getGameList()
+		cur_game = self._games[fhash]
+
+		return template('game_edit', hashid=fhash, filename=cur_game.filename, game_title=cur_game.title, games_list=outgames)
+
+	def game_do_edit(self, fhash : str):
+		pass
 
 	def do_gpio_reset(self):
 		return "todo"
@@ -246,18 +251,6 @@ class UIWeb_Bottle(Bottle):
 		#TODO: yell at the main thread to reconfigure the network
 		return
 
-	def edit(self, fhash):
-		return "todo"
-		g = None
-		#FIXME: REDO THIS
-		return template('edit', filename=g.filename,
-			game_title=g.title, hashid=fhash, games_list=gamelist)
-
-	def do_edit(self, fhash):
-		return "todo"
-		#FIXME: REDO THIS
-		return template('edit', filename=g.filename, game_title=g.title, hashid=fhash, games_list=gamelist, did_edit=True)
-
 	def nodes(self):
 		return template('nodes', nodes=self._nodeman.nodes)
 
@@ -277,17 +270,6 @@ class UIWeb_Bottle(Bottle):
 		self._nodeman.nodes[node_id].dimm_ram = make_tuple(request.forms.get('dimm-ram'))
 		MBus.handle(SaveConfigToDisk())
 		return self.node_edit(node_id, True)
-
-	def gamechooser(self, node_id):
-		node = self._nodeman.nodes[node_id]
-		tmplist = []
-
-		for g in self._games:
-			if not self._nodeman.validateGameDescriptor(node, g):
-				continue
-			tmplist.append(copy.deepcopy(g))
-
-		return template('games', node=node, games=tmplist)
 
 
 	def load(self, node_id, fhash):

@@ -160,11 +160,11 @@ class Loader:
 		# Although there probably isn't any harm in just creating a new connection.
 		# Should investigate it through testing.
 		if on_raspi and self.enableGPIOReset:
-			self.__logger.info("doing GPIO Reset")
+			self.__logger.info("GPIO Reset")
 			self.doGPIOReset()
 			ret = True
 		elif self._comm.is_connected:
-			self.__logger.info("doing NetDIMM Reset")
+			self.__logger.info("NetDIMM Reset")
 			self.doDIMMReset()
 			ret = True
 
@@ -214,6 +214,7 @@ class Loader:
 		return
 
 	def connection_lost(self):
+		self.state = LoaderState.WAITING
 		return
 
 	def connection_failed(self):
@@ -246,7 +247,8 @@ class Loader:
 				self.state = LoaderState.TRANSFERRING
 			elif self._do_keepalive:
 				self.state = LoaderState.KEEPALIVE
-			else: self.state = LoaderState.CONNECTED
+			else:
+				self.state = LoaderState.CONNECTED
 
 		except Exception as ex:
 			self.__logger.error(repr(ex))
@@ -322,7 +324,7 @@ class LoaderList():
 		for elem in self._loaders:
 			yield elem
 			
-	def __getitem__(self, key):
+	def __getitem__(self, key) -> Loader:
 		#node id
 		if type(key) is str:
 			for elem in self._loaders:
