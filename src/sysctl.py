@@ -86,3 +86,6 @@ def write_ifconfig(prefs):
 
 	outfile.writelines(data)
 	outfile.close()
+
+def write_iwconfig(prefs):
+	pass

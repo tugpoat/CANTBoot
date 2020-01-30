@@ -71,13 +71,3 @@ class NodeDescriptor(yaml.YAMLObject):
 
 	def _resolve_hostname(self, hostname):
 		return socket.gethostbyname(hostname)
-
-	def serialize(self):
-		return json.dumps({"hostname": self.hostname, 
-			"ip": self.ip,
-			"port": self.port,
-			"system": self.system,
-			"monitor": self.monitor,
-			"controls": self.controls,
-			"dimm_ram": self.dimm_ram,
-			"game": game})

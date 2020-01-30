@@ -66,6 +66,9 @@ class UIWeb_Bottle(Bottle):
 
 		#set up routes
 		self.route('/', method="GET", callback=self.index)
+
+		self.route('/api/setmode/slave', method="GET")
+		
 		self.route('/static/<filepath:path>', method="GET", callback=self.serve_static)
 		self.route('/config', method="GET", callback=self.appconfig)
 		self.route('/config', method="POST", callback=self.do_appconfig)
@@ -117,6 +120,7 @@ class UIWeb_Bottle(Bottle):
 		return template('game_edit', hashid=fhash, filename=cur_game.filename, game_title=cur_game.title, games_list=outgames)
 
 	def game_do_edit(self, fhash : str):
+		new_id = request.forms.get('value')
 		pass
 
 	def do_gpio_reset(self):

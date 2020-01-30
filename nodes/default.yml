@@ -58,6 +58,7 @@ monitor: !!python/tuple
 nickname: default
 node_id: e7b7d426547ff42c3d46c7d5f566cde0
 port: 10703
+node_type: 0
 system: !!python/tuple
 - 2
 - NAOMI2
