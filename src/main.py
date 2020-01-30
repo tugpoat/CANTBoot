@@ -34,7 +34,7 @@ cfg_debug = bool(prefs['Main']['debug'])
 cfg_api = bool(prefs['Main']['api_mode_enable'])
 cfg_api_mode = str(prefs['Main']['api_mode'])
 
-
+#TODO if api slave skip all the following and call a different thingy
 
 def handle_Node_SetGameCommandMessage(message: Node_SetGameCommandMessage):
 	logger.debug("handling SetGameCommandMessage %s %s", message.payload[0], message.payload[1])
@@ -63,35 +63,35 @@ def handle_SaveConfigToDisk(message: SaveConfigToDisk):
 	logger.info("Done saving configuration to disk")
 
 
-def main_slave:
-	logger.info('nope.')
+#MAIN SHITS
+
+nodeman = NodeManager()
+games_list = GameList()
+
+# set up database
+db = ACNTBootDatabase('db.sqlite')
+
+# set up game list
+games_list = GameList(prefs['Directories']['cfg_dir'], prefs['Directories']['games_dir'])
+
+# Set up adafruit ui if detected and enabled
+if prefs['Main']['adafruit_ui'] == 'True' and "raspberrypi" in os.uname():
+	from ui_adafruit import UI_Adafruit
+	adafapp = UI_Adafruit(prefs, games_list)
+	t = threading.Thread(target=adafapp.run)
+
+games_list.scanForNewGames(db)
+
+# set up node list
+nodeman = NodeManager(bool(prefs['Main']['autoboot']))
 
 
-def main_master:
-	# set up database
-	db = ACNTBootDatabase('db.sqlite')
+# Launch web UI if enabled
+if prefs['Main']['web_ui'] == 'True':
+	wapp = UIWeb_Bottle('Web UI', games_list, nodeman, prefs)
+	t = threading.Thread(target=wapp.start).start()
 
-	# set up game list
-	games_list = GameList(prefs['Directories']['cfg_dir'], prefs['Directories']['games_dir'])
-
-	# Set up adafruit ui if detected and enabled
-	if prefs['Main']['adafruit_ui'] == 'True' and "raspberrypi" in os.uname():
-		from ui_adafruit import UI_Adafruit
-		adafapp = UI_Adafruit(prefs, games_list)
-		t = threading.Thread(target=adafapp.run)
-
-	games_list.scanForNewGames(db)
-
-
-	# set up node list
-	nodeman = NodeManager(bool(prefs['Main']['autoboot']))
-
-	# Launch web UI if enabled
-	if prefs['Main']['web_ui'] == 'True':
-		wapp = UIWeb_Bottle('Web UI', games_list, nodeman, prefs)
-		t = threading.Thread(target=wapp.start).start()
-
-	nodeman.loadNodesFromDisk(prefs['Directories']['nodes_dir'])
+nodeman.loadNodesFromDisk(prefs['Directories']['nodes_dir'])
 
 	# Set up event handlers
 	#FIXME: probably should break these out into their own module(s))
@@ -102,15 +102,10 @@ def main_master:
 	#	nodeman.saveNodesToDisk(prefs['Directories']['nodes_dir'])
 	#	if not cfg_debug: remount_ro(prefs['Directories']['cfg_part'])
 
-	MBus.add_handler(Node_SetGameCommandMessage, handle_Node_SetGameCommandMessage)
-	MBus.add_handler(Node_LaunchGameCommandMessage, handle_Node_LaunchGameCommandMessage)
-	MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
+MBus.add_handler(Node_SetGameCommandMessage, handle_Node_SetGameCommandMessage)
+MBus.add_handler(Node_LaunchGameCommandMessage, handle_Node_LaunchGameCommandMessage)
+MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
 
-	while 1:
-		nodeman.tickLoaders()
-		time.sleep(0.01)
-
-if api_mode == 'slave'
-	main_slave()
-else
-	main_master()
+while 1:
+	nodeman.tickLoaders()
+	time.sleep(0.01)
