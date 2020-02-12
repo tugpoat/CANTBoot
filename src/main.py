@@ -64,34 +64,35 @@ def handle_SaveConfigToDisk(message: SaveConfigToDisk):
 
 
 #MAIN SHITS
-
-nodeman = NodeManager()
-games_list = GameList()
-
-# set up database
-db = ACNTBootDatabase('db.sqlite')
-
-# set up game list
-games_list = GameList(prefs['Directories']['cfg_dir'], prefs['Directories']['games_dir'])
-
-# Set up adafruit ui if detected and enabled
-if prefs['Main']['adafruit_ui'] == 'True' and "raspberrypi" in os.uname():
-	from ui_adafruit import UI_Adafruit
-	adafapp = UI_Adafruit(prefs, games_list)
-	t = threading.Thread(target=adafapp.run)
-
-games_list.scanForNewGames(db)
-
 # set up node list
 nodeman = NodeManager(bool(prefs['Main']['autoboot']))
-
-
-# Launch web UI if enabled
-if prefs['Main']['web_ui'] == 'True':
-	wapp = UIWeb_Bottle('Web UI', games_list, nodeman, prefs)
-	t = threading.Thread(target=wapp.start).start()
-
 nodeman.loadNodesFromDisk(prefs['Directories']['nodes_dir'])
+
+if cfg_api_mode != 'slave':
+	games_list = GameList()
+
+	# set up database
+	db = ACNTBootDatabase('db.sqlite')
+
+	# set up game list
+	games_list = GameList(prefs['Directories']['cfg_dir'], prefs['Directories']['games_dir'])
+
+	# Set up adafruit ui if detected and enabled
+	if prefs['Main']['adafruit_ui'] == 'True' and "raspberrypi" in os.uname():
+		from ui_adafruit import UI_Adafruit
+		adafapp = UI_Adafruit(prefs, games_list)
+		t = threading.Thread(target=adafapp.run)
+
+	games_list.scanForNewGames(db)
+
+	# Launch web UI if enabled
+	if prefs['Main']['web_ui'] == 'True':
+		wapp = UIWeb_Bottle('Web UI', games_list, nodeman, prefs)
+		t = threading.Thread(target=wapp.start).start()
+else:
+	from ui_api import UIAPI
+	wapp = UIAPI()
+	t = threading.Thread(target=wapp.start).start()
 
 	# Set up event handlers
 	#FIXME: probably should break these out into their own module(s))
