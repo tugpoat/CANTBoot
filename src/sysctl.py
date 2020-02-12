@@ -3,10 +3,10 @@
 
 import os
 
-def remount_rw(mountpoint):
+def remount_rw(mountpoint : str):
 	os.system("sudo mount -o remount,rw %s", mountpoint)
 
-def remount_ro(mountpoint):
+def remount_ro(mountpoint : str):
 	os.system("sudo mount -o remount,ro %s", mountpoint)
 
 def reboot_system():
@@ -15,7 +15,7 @@ def reboot_system():
 def shutdown_system():
 	os.system("sudo shutdown -h now")
 
-def set_ifconfig(iface, ip, mask):
+def set_ifconfig(iface : str, ip : str, mask : str):
 	os.system("sudo ifconfig ? ? netmask ?", [iface, ip, mask])
 
 def disable_sshd():
@@ -27,26 +27,26 @@ def enable_sshd():
 	os.system("sudo service ssh start")
 
 def disable_dnsmasq():
-	os.system("sudo service dnsmasq disable")
 	os.system("sudo service dnsmasq stop")
+	os.system("sudo service dnsmasq disable")
 
 def enable_dnsmasq():
 	os.system("sudo service dnsmasq enable")
 	os.system("sudo service dnsmasq start")
 
 def disable_hostapd():
-	os.system("sudo service hostapd disable")
 	os.system("sudo service hostapd stop")
+	os.system("sudo service hostapd disable")
 
 def enable_hostapd():
 	os.system("sudo service hostapd enable")
 	os.system("sudo service hostapd start")
 
-def get_ifstate(iface):
+def get_ifstate(iface : str):
 	#get output from ifconfig to check up on live configuration data/state
 	os.system("ifconfig "+iface)
 
-def get_wlanstate(iface):
+def get_wlanstate(iface : str):
 	#get output from iwconfig to check up on live state
 	os.sytem("sudo iwconfig "+iface)
 
@@ -55,7 +55,7 @@ def write_ifconfig(prefs):
 		data=defaultconf.readlines()
 		defaultconf.close()
 
-	data.append("#-----Managed by CANTBoot, don't touch")
+	data.append("#-----Managed by ACNTBoot, don't touch")
 	data.append("auto lo")
 	data.append("iface lo inet loopback")
 

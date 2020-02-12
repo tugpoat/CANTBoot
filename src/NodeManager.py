@@ -10,7 +10,7 @@ class NodeManager():
 	nodes = None
 	_autoboot = False
 
-	def __init__(self, autoboot=False, api_master=False):
+	def __init__(self, autoboot=False : bool, api_master=False : bool):
 		self._autoboot = autoboot
 		self.__logger = logging.getLogger("NodeManager " + str(id(self)))
 		self.nodes = NodeList()
@@ -58,7 +58,7 @@ class NodeManager():
 
 		return False
 
-	def getLoaderState(self, node_id : str):
+	def getLoaderState(self, node_id : str) -> str:
 		if len(self._loaders) > 0:
 			return self._loaders[node_id].state
 
@@ -69,7 +69,7 @@ class NodeManager():
 			for l in self._loaders:
 				l.tick()
 
-	def validateGameDescriptor(self, nd : NodeDescriptor, gd : GameDescriptor, strict = True):
+	def validateGameDescriptor(self, nd : NodeDescriptor, gd : GameDescriptor, strict = True) -> bool:
 		bootable = True
 		try:
 			# If the systems don't match up,

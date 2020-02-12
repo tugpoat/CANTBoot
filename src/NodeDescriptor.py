@@ -66,7 +66,7 @@ class NodeDescriptor(yaml.YAMLObject):
 		self.node_id = hashlib.md5((self.hostname+self.ip+str(self.port)).encode()).hexdigest()
 
 	#If we have an active loader
-	def is_active(self):
+	def is_active(self) -> bool:
 		return type(loader) is Loader and loader.is_active()
 
 	def _resolve_hostname(self, hostname):

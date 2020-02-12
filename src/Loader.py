@@ -115,7 +115,6 @@ class Loader:
 		self.rom_path: str = abs_path
 		self.host: str = host
 		self.port: int = port
-		self._comm = NetComm()
 		self._tick = time.time()
 		self._wait_tick = time.time()
 		self.enableGPIOReset = True
@@ -144,7 +143,6 @@ class DIMMLoader(Loader):
 
 	path = None
 
-	_comm = None
 	_tick = 0
 	_wait_tick = 0
 
@@ -165,14 +163,13 @@ class DIMMLoader(Loader):
 		self.rom_path: str = abs_path
 		self.host: str = host
 		self.port: int = port
-		self._comm = NetComm()
 		self._tick = time.time()
 		self._wait_tick = time.time()
 		self.enableGPIOReset = True
 		self.last_state = LoaderState.WAITING # doesn't matter what this is on init as long as it's different from self._state
 		self._state = LoaderState.EXITED # This should be EXITED so it doesn't automatically try and load games unless we tell it to
 
-	@property	
+	@property
 	def enableGPIOReset(self) -> bool:
 		return self._enableGPIOReset
 
@@ -217,14 +214,14 @@ class DIMMLoader(Loader):
 		return self._is_connected
 
 	# a function to receive a number of bytes with hard blocking
-	def readsocket(self, n):
+	def readsocket(self, n) -> bytes:
 		res = "".encode()
 		while len(res) < n:
 			res += self._s.recv(n - len(res))
 		return res
 
 	# Peeks 16 bytes from Host (gamecube) memory
-	def HOST_Read16(self, addr):
+	def HOST_Read16(self, addr) -> bytes:
 		self._s.send(struct.pack("<II", 0xf0000004, addr))
 		data = readsocket(0x20)
 		res = ""
@@ -233,7 +230,7 @@ class DIMMLoader(Loader):
 		return res
 
 	# same, but 4 bytes.
-	def HOST_Read4(self, addr, type = 0):
+	def HOST_Read4(self, addr, type = 0) -> bytes:
 		self._s.send(struct.pack("<III", 0x10000008, addr, type))
 		return self._s.recv(0xc)[8:]
 
@@ -244,11 +241,11 @@ class DIMMLoader(Loader):
 		self._s.send(struct.pack("<I", 0x0A000000))
 
 	# Read a number of bytes (up to 32k) from DIMM memory (i.e. where the game is). Probably doesn't work for NAND-based games.
-	def DIMM_Read(self, addr, size):
+	def DIMM_Read(self, addr, size) -> bytes:
 		self._s.send(struct.pack("<III", 0x05000008, addr, size))
 		return self.readsocket(size + 0xE)[0xE:]
 
-	def DIMM_GetInformation(self):
+	def DIMM_GetInformation(self) -> bytes:
 		self._s.send(struct.pack("<I", 0x18000000))
 		return self.readsocket(0x10)
 
@@ -259,11 +256,11 @@ class DIMMLoader(Loader):
 	def DIMM_Upload(self, addr, data, mark):
 		self._s.send(struct.pack("<IIIH", 0x04800000 | (len(data) + 0xA) | (mark << 16), 0, addr, 0) + data)
 
-	def NETFIRM_GetInformation(self):
+	def NETFIRM_GetInformation(self) -> bytes:
 		self._s.send(struct.pack("<I", 0x1e000000))
 		return s.recv(0x404)
 
-	def CONTROL_Read(self, addr):
+	def CONTROL_Read(self, addr) -> bytes:
 		self._s.send(struct.pack("<II", 0xf2000004, addr))
 		return s.recv(0xC)
 
@@ -271,7 +268,7 @@ class DIMMLoader(Loader):
 		assert len(data) == 8
 		self._s.send(struct.pack("<I", 0x7F000008) + data.encode())
 
-	def HOST_SetMode(self, v_and, v_or):
+	def HOST_SetMode(self, v_and, v_or) -> bytes:
 		self._s.send(struct.pack("<II", 0x07000004, (v_and << 8) | v_or))
 		return self.readsocket(0x8)
 
@@ -424,12 +421,15 @@ class DIMMLoader(Loader):
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	'''
 
+	'''
+	Queue up a binpatch for application during loading
+	'''
 	def addPatch(self, patchdata : str):
 		tmpl = []
 		keys = []
 		for line in open(path, 'r'):
 
-			# If its a comment we don't care
+			# If it's a comment we don't care
 			if line[0:] == '#':
 				continue
 			# Split the line into target address, search bytes, and replace bytes
@@ -457,7 +457,7 @@ class DIMMLoader(Loader):
 			self._logger.info("GPIO Reset")
 			self.doGPIOReset()
 			ret = True
-		elif self._comm.is_connected:
+		elif self.is_connected:
 			self._logger.info("NetDIMM Reset")
 			self.doDIMMReset()
 			ret = True
@@ -468,8 +468,8 @@ class DIMMLoader(Loader):
 		return ret
 
 	def doDIMMReset(self):
-		if self._comm.is_connected:
-			self._comm.HOST_Restart()
+		if self.is_connected:
+			self.HOST_Restart()
 
 	def doGPIOReset(self):
 		# No sense in doing anything if we're not running on something that supports the RPi GPIO lib
@@ -539,7 +539,7 @@ class DIMMLoader(Loader):
 	def connecting(self):
 		# Open a connection to endpoint
 		try:
-			if not self._comm.connect(self.host, self.port):
+			if not self.connect(self.host, self.port):
 				self._state = LoaderState.CONNECTION_FAILED
 				return
 
@@ -561,14 +561,14 @@ class DIMMLoader(Loader):
 	def transferring(self):
 		try:
 			#Display "Now Loading..." on screen
-			self._comm.HOST_SetMode(0, 1)
+			self.HOST_SetMode(0, 1)
 
 			# disable encryption by setting magic zero-key
-			self._comm.SECURITY_SetKeycode("\x00" * 8)
+			self.SECURITY_SetKeycode("\x00" * 8)
 
 			self._logger.info("Uploading " + self.rom_path)
 			# uploads file. Also sets "dimm information" (file length and crc32)
-			self._comm.DIMM_UploadFile(self.rom_path, None, self.upload_pct_callback)
+			self.DIMM_UploadFile(self.rom_path, None, self.upload_pct_callback)
 		except Exception as ex:
 			self._logger.error(repr(ex))
 			#self._logger.debug("Connection timed out or something. reconnecting.")
@@ -580,7 +580,7 @@ class DIMMLoader(Loader):
 
 	def booting(self):
 		# restart the endpoint system, this will boot into the game we just sent
-		self._comm.HOST_Restart()
+		self.HOST_Restart()
 		self._state = LoaderState.KEEPALIVE
 		self._do_boot = False # Finished booting. we don't want to reboot into the game automatically if we lose connection
 
@@ -588,7 +588,7 @@ class DIMMLoader(Loader):
 		if int(self._tick - self._wait_tick) > 10:
 			try:
 				# set time limit to 10h. According to some reports, this does not work.
-				self._comm.TIME_SetLimit(10*60*1000)
+				self.TIME_SetLimit(10*60*1000)
 				self._logger.info("Sent keepalive!")
 				self._wait_tick = self._tick
 			except Exception as ex:
@@ -653,5 +653,5 @@ class LoaderList():
 	def clear(self):
 		self._loaders.clear()
 
-	def len(self):
+	def len(self) -> int:
 		return len(self._loaders)
