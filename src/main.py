@@ -90,6 +90,7 @@ if cfg_api_mode != 'slave':
 		wapp = UIWeb_Bottle('Web UI', games_list, nodeman, prefs)
 		t = threading.Thread(target=wapp.start).start()
 else:
+	#All we need if we're running as an API Slave node is the NodeManager and the API Receiver
 	from ui_api import UIAPI
 	wapp = UIAPI()
 	t = threading.Thread(target=wapp.start).start()

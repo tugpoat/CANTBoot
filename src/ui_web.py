@@ -81,6 +81,7 @@ class UIWeb_Bottle(Bottle):
 		self.route('/games/edit/<fhash>', method="POST", callback=self.game_do_edit)
 
 		self.route('/nodes', method="GET", callback=self.nodes)
+		self.route('/nodes/add', method="GET", callback=self.node_add)
 		self.route('/nodes/edit/<node_id>', method="GET", callback=self.node_edit)
 		self.route('/nodes/edit/<node_id>', method="POST", callback=self.do_node_edit)
 		self.route('/nodes/status', method="GET", callback=self.node_status)

@@ -22,7 +22,6 @@ session_opts = {
 }
 
 class UIAPI(Bottle):
-	#FIXME: The Web UI opening its own DB connection is not ideal. correct this, it's un-necessary.
 	_prefs = None
 	_bottle = None
 	_beaker = None
