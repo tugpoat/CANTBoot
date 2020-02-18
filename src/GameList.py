@@ -47,7 +47,7 @@ class GameList():
 	def append(self, game):
 		self._games.append(game)
 
-	def len(self):
+	def len(self) -> int:
 		return len(self._games)
 
 	def loadExisting(self):

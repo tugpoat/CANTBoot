@@ -35,12 +35,12 @@ class UI_Adafruit(Thread):
 
 		# Let the user know that we're doing things
 		self._lcd.begin(16, 2)
-		self._lcd.message("CANTBoot Loading\n    Hold up.")
+		self._lcd.message("ACNTBoot Loading\n    Hold up.")
 
 		if prefs['Main']['multinode'] == 'True':
 			self._lcd.clear()
 			#TODO: Maybe display Node information in the future when running as API slave?
-			self._lcd.message("MultiNode\nEnabled. No LCD.")
+			self._lcd.message("WARN: LCD only\nboots first node")
 			return
 
 		self._mode ="games" #set for games list by default
@@ -105,6 +105,10 @@ class UI_Adafruit(Thread):
 		return
 
 	def cb_menu_games_select(self):
+		#Yell at main thread to set game
+		MBus.handle(Node_SetGameCommandMessage(payload=['0', selection.file_checksum]))
+		#Yell at main to run the game on the node
+		MBus.handle(Node_LaunchGameCommandMessage(payload='0'))
 		return
 
 	# THE MEAT(tm)
@@ -131,6 +135,10 @@ class UI_Adafruit(Thread):
 				if lcd.buttonPressed(lcd.DOWN):
 					if self._mode == "games":
 						self.cb_menu_games_dn()
+
+				if lcd.buttonPressed(lcd.SELECT):
+					if self._mode == "games":
+						self.cb_menu_games_select();
 
 			sleep(0.1)
 

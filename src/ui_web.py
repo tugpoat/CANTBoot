@@ -66,6 +66,9 @@ class UIWeb_Bottle(Bottle):
 
 		#set up routes
 		self.route('/', method="GET", callback=self.index)
+
+		self.route('/api/setmode/slave', method="GET")
+		
 		self.route('/static/<filepath:path>', method="GET", callback=self.serve_static)
 		self.route('/config', method="GET", callback=self.appconfig)
 		self.route('/config', method="POST", callback=self.do_appconfig)
@@ -78,6 +81,8 @@ class UIWeb_Bottle(Bottle):
 		self.route('/games/edit/<fhash>', method="POST", callback=self.game_do_edit)
 
 		self.route('/nodes', method="GET", callback=self.nodes)
+		self.route('/nodes/add', method="GET", callback=self.node_add)
+		self.route('/nodes/add', method="POST", callback=self.do_node_add)
 		self.route('/nodes/edit/<node_id>', method="GET", callback=self.node_edit)
 		self.route('/nodes/edit/<node_id>', method="POST", callback=self.do_node_edit)
 		self.route('/nodes/status', method="GET", callback=self.node_status)
@@ -86,7 +91,7 @@ class UIWeb_Bottle(Bottle):
 
 	def start(self):
 		self._db = ACNTBootDatabase('db.sqlite')
-		self.run(host='0.0.0.0', port=8000, debug=False, quiet=True)
+		self.run(host='0.0.0.0', port=8000, debug=True, quiet=False)
 
 	def serve_static(self, filepath):
 		if 'images/games' in filepath and not os.path.isfile('static/'+filepath):
@@ -117,6 +122,7 @@ class UIWeb_Bottle(Bottle):
 		return template('game_edit', hashid=fhash, filename=cur_game.filename, game_title=cur_game.title, games_list=outgames)
 
 	def game_do_edit(self, fhash : str):
+		new_id = request.forms.get('value')
 		pass
 
 	def do_gpio_reset(self):
@@ -254,6 +260,37 @@ class UIWeb_Bottle(Bottle):
 	def nodes(self):
 		return template('nodes', nodes=self._nodeman.nodes)
 
+	def node_add(self):
+		node = NodeDescriptor('localhost', 10703)
+
+		systems = self._db.getSystems()
+		controls = self._db.getControlTypes()
+		players = self._db.getPlayers()
+		monitors = self._db.getMonitorTypes()
+		dimm_ram = self._db.getDIMMRAMValues()
+
+		node.system = systems[0]
+		node.controls = controls[0]
+		node.players = players[0]
+		node.monitor = monitors[0]
+		node.dimm_ram = dimm_ram[0]
+		return template('node_edit', did_edit=False, node=node, systems=systems, controls=controls, players=players, monitors=monitors, dimm_ram=dimm_ram)
+
+	def do_node_add(self):
+		#Node doesn't exist, add it
+		tnode = NodeDescriptor(str(request.forms.get('node_ip')), str(request.forms.get('node_port')))
+		print('dicks')
+		tnode.nickname = str(request.forms.get('nickname'))
+		tnode.system = make_tuple(request.forms.get('system'))
+		tnode.controls = make_tuple(request.forms.get('control-type'))
+		tnode.monitor = make_tuple(request.forms.get('monitor-type'))
+		tnode.dimm_ram = make_tuple(request.forms.get('dimm-ram'))
+		print('penis')
+
+		self._nodeman.nodes.append(tnode)
+		print('huh')
+		return template('nodes', nodes=self._nodeman.nodes)
+
 	def node_edit(self,node_id, did_edit=False):
 		node = self._nodeman.nodes[node_id]
 		systems = self._db.getSystems()
@@ -264,12 +301,21 @@ class UIWeb_Bottle(Bottle):
 		return template('node_edit', did_edit=did_edit, node=node, systems=systems, controls=controls, players=players, monitors=monitors, dimm_ram=dimm_ram)
 
 	def do_node_edit(self, node_id):
-		self._nodeman.nodes[node_id].system = make_tuple(request.forms.get('system'))
-		self._nodeman.nodes[node_id].controls = make_tuple(request.forms.get('control-type'))
-		self._nodeman.nodes[node_id].monitor = make_tuple(request.forms.get('monitor-type'))
-		self._nodeman.nodes[node_id].dimm_ram = make_tuple(request.forms.get('dimm-ram'))
-		MBus.handle(SaveConfigToDisk())
-		return self.node_edit(node_id, True)
+		#Node exists, edit it
+		if self._nodeman.nodes[node_id]:
+			if request.forms.get('delete_node') == 'on':
+				self._nodeman.nodes.pop(node_id)
+			else:
+				self._nodeman.nodes[node_id].nickname = str(request.forms.get('nickname'))
+				self._nodeman.nodes[node_id].system = make_tuple(request.forms.get('system'))
+				self._nodeman.nodes[node_id].controls = make_tuple(request.forms.get('control-type'))
+				self._nodeman.nodes[node_id].monitor = make_tuple(request.forms.get('monitor-type'))
+				self._nodeman.nodes[node_id].dimm_ram = make_tuple(request.forms.get('dimm-ram'))
+				MBus.handle(SaveConfigToDisk())
+				return self.node_edit(node_id, True)
+
+		#kick em back to the index
+		return self.nodes()
 
 
 	def load(self, node_id, fhash):

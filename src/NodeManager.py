@@ -10,31 +10,44 @@ class NodeManager():
 	nodes = None
 	_autoboot = False
 
-	def __init__(self, autoboot=False):
+	def __init__(self, autoboot : bool = False , api_master : bool = False):
 		self._autoboot = autoboot
 		self.__logger = logging.getLogger("NodeManager " + str(id(self)))
 		self.nodes = NodeList()
 		self._loaders = LoaderList()
+
 		MBus.add_handler(Node_LoaderUploadPctMessage, self.handle_LoaderUploadPctMessage)
 
 	def setgame(self, n: str, gd : GameDescriptor):
 		node = self.nodes[n]
-		if not self.validateGameDescriptor(node, gd):
-			self.__logger.error("Won't boot " + self.nodes[n].game.filename + " on " + self.nodes[n].node_id)
-			return
-		
-		self.__logger.debug(self.nodes[n].game.filepath)
-		self.nodes[n].game = gd
+		loader_class = Loader
 
+		# Valid for this endpoint?
+		if not self.validateGameDescriptor(node, gd):
+			self.__logger.error("Won't boot " + gd.filename + " on " + self.nodes[n].node_id)
+			return
+			
+		self.nodes[n].game = gd
+		self.__logger.debug(self.nodes[n].game.filepath)
+
+		# Sync config to disk
 		MBus.handle(message=SaveConfigToDisk())
 
 		self.__logger.debug(self.nodes[n].game.filepath)
 
+		#Determine what our endpoint should be and use the appropriate loader
+		if node.node_type == 0:
+			loader_class = DIMMLoader
+		elif node.node_type == 1:
+			loader_class = APILoader
+
+		# If there is already a loader for this node, recreate the existing instance
 		if self._loaders[n]:
 			self.__logger.debug("updating loader")
-			self._loaders[n] = Loader(self.nodes[n].node_id, self.nodes[n].game.filepath, self.nodes[n].ip, self.nodes[n].port)
+			self._loaders[n] = loader_class(self.nodes[n].node_id, self.nodes[n].game.filepath, self.nodes[n].ip, self.nodes[n].port)
 		else:
-			tloader = Loader(self.nodes[n].node_id, self.nodes[n].game.filepath, self.nodes[n].ip, self.nodes[n].port)
+			# Add a new loader instance
+			tloader = loader_class(self.nodes[n].node_id, self.nodes[n].game.filepath, self.nodes[n].ip, self.nodes[n].port)
 			self._loaders.append(tloader)
 
 	def launchgame(self, node_id : str) -> bool:
@@ -45,8 +58,8 @@ class NodeManager():
 
 		return False
 
-	def getLoaderState(self, node_id : str):
-		if len(self._loaders) > 0:
+	def getLoaderState(self, node_id : str) -> str:
+		if len(self._loaders) > 0 and self._loaders[node_id]:
 			return self._loaders[node_id].state
 
 		return ""
@@ -56,7 +69,7 @@ class NodeManager():
 			for l in self._loaders:
 				l.tick()
 
-	def validateGameDescriptor(self, nd : NodeDescriptor, gd : GameDescriptor, strict = True):
+	def validateGameDescriptor(self, nd : NodeDescriptor, gd : GameDescriptor, strict = True) -> bool:
 		bootable = True
 		try:
 			# If the systems don't match up,
@@ -100,9 +113,14 @@ class NodeManager():
 		self.nodes.loadNodes(nodes_dir)
 
 		for n in self.nodes:
-			tloader = Loader(n.node_id, n.game.filepath, n.ip, n.port)
-			if self._autoboot:
-				tloader.state = LoaderState.WAITING
+			#if there's no game associated with this node yet then don't attempt to create a loader yet
+			if n.game:
+				if n.node_type == 0:
+					tloader = DIMMLoader(n.node_id, n.game.filepath, n.ip, n.port)
+				elif n.node_type == 1:
+					tloader = APILoader(n.node_id, n.game.filepath, n.ip, n.port)
+				if self._autoboot:
+					tloader.state = LoaderState.WAITING
 	
 			self._loaders.append(tloader)
 

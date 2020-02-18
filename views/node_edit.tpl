@@ -73,6 +73,13 @@
 		
 		<div class="row container">
 			<div class="col-md-2">
+				<label class="col-sm-2 control-label">Delete this node</label>
+				<input type="checkbox" class="form-control" name="delete_node" />
+			</div>
+		</div>
+
+		<div class="row container">
+			<div class="col-md-2">
 				<button type="submit" class="btn btn-default">Save</button>
 			</div>
 		</div>
