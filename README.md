@@ -52,6 +52,8 @@ NOTE: You can use a straight through or crossover cable on a RasPi 3 or 4. The p
 
 ### Single DIMM:
 
+                         [ GPIO Reset ] -------
+                                              |
     +---------+                         +--------------+
     | NetDIMM | <====[cat5/6+rj45]====> | Raspberry Pi |
     +---------+                         +--------------+
@@ -86,6 +88,8 @@ NOTE: You can use a straight through or crossover cable on a RasPi 3 or 4. The p
 ### API Master/Slave mode (IN PROGRESS):
 This would allow for very large deployments with great manageability, and enable one to just toss a RasPi into a cabinet, hook up another one elsewhere and never have to go into the cabinet to mess with it. Could live patch and then transfer games over wifi to the slave node and boot from there. Also, this would enable every node to be able to GPIO reset.
 
+                      [ GPIO Reset ] -------
+                                           |
     +---------+                    +-----------------+              +-------------+
     | NetDIMM | <==[cat5/6+rj45]==>| API Slave RasPi | <~~[WiFi]~~~>|             |
     +---------+                    +-----------------+              | API Master  |
@@ -93,8 +97,8 @@ This would allow for very large deployments with great manageability, and enable
     +---------+                    +-----------------+              | Web UI      |
     | NetDIMM | <==[cat5/6+rj45]==>| API Slave RasPi | <~~[WiFi]~~~>|             |
     +---------+                    +-----------------+              +-------------+
-                                                                          /\
-                                                                          ||
+                                           |                              /\
+                      [ GPIO Reset ] -------                              ||
                                                                     [ WiFi/Wired ]
                                                                           ||
                                                                           \/
