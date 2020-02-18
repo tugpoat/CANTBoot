@@ -8,6 +8,7 @@ import copy
 from yloader import *
 
 # Does what it says on the box.
+#the algorithms in here are kinda gross but like.... these will never be dealing with crazy huge data sets so whatever
 class NodeList():
 	_nodes = []
 
@@ -34,6 +35,13 @@ class NodeList():
 
 	def append(self, node):
 		self._nodes.append(node)
+
+	def pop(self, key: str):
+		for lk,elem in self._nodes:
+				if str(elem.node_id) == str(key):
+					self._nodes.pop(lk)
+					return
+					
 
 	def clear(self):
 		self._nodes.clear()

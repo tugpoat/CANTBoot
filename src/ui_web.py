@@ -303,13 +303,19 @@ class UIWeb_Bottle(Bottle):
 	def do_node_edit(self, node_id):
 		#Node exists, edit it
 		if self._nodeman.nodes[node_id]:
-			self._nodeman.nodes[node_id].nickname = str(request.forms.get('nickname'))
-			self._nodeman.nodes[node_id].system = make_tuple(request.forms.get('system'))
-			self._nodeman.nodes[node_id].controls = make_tuple(request.forms.get('control-type'))
-			self._nodeman.nodes[node_id].monitor = make_tuple(request.forms.get('monitor-type'))
-			self._nodeman.nodes[node_id].dimm_ram = make_tuple(request.forms.get('dimm-ram'))
-			MBus.handle(SaveConfigToDisk())
-			return self.node_edit(node_id, True)
+			if request.forms.get('delete_node') == 'on':
+				self._nodeman.nodes.pop(node_id)
+			else:
+				self._nodeman.nodes[node_id].nickname = str(request.forms.get('nickname'))
+				self._nodeman.nodes[node_id].system = make_tuple(request.forms.get('system'))
+				self._nodeman.nodes[node_id].controls = make_tuple(request.forms.get('control-type'))
+				self._nodeman.nodes[node_id].monitor = make_tuple(request.forms.get('monitor-type'))
+				self._nodeman.nodes[node_id].dimm_ram = make_tuple(request.forms.get('dimm-ram'))
+				MBus.handle(SaveConfigToDisk())
+				return self.node_edit(node_id, True)
+
+		#kick em back to the index
+		return self.nodes()
 
 
 	def load(self, node_id, fhash):

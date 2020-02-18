@@ -87,6 +87,7 @@ This would allow for very large deployments with great manageability, and enable
     +---------+                            +-----------------+                    | Web UI     |                  +-------------+
     | NetDIMM | <==[Straight-thru Cable]==>| API Slave RasPi | <~~[WiFi/Wired]~~~>|            |
     +---------+                            +-----------------+                    +------------+
+
 DONE
 ----
  * Ditch the whole "install games to database" thing and just dump the gamelist out to YAML on the games partition
@@ -95,20 +96,25 @@ DONE
  * Redo Web UI for event-based operation
  * Redo Web UI for multinode
  * GPIO Reset
+ * Redo Web UI for multinode (add/delete functionality)
 
 In Progress
 ----
-  * Redo Web UI for multinode (add/delete functionality)
   * Adafruit UI
-  
+  * Interface for Network Configuration (WiFi SSID, PSK, IP, DNS options, etc.)
+  * Interface for System Settings/Commands (Power off, Reboot, Manual GPIO Reset, etc.)
+  * Live/in-place binary patching of ROMs
+  * API Master/Slave modes for large networks and GPIO reset support for every node
+
+On Hold
+----
+  * Catch exit signals and close everything properly
+  * Unit tests and E2E tests
+  * Set up build pipeline and automatic SD image generation
+
 Todo
 ----
  * DHCP configuration of NetDIMM(s)
- * Interface for Network Configuration (WiFi SSID, PSK, IP, DNS options, etc.)
- * Interface for System Settings/Commands (Power off, Reboot, Manual GPIO Reset, etc.)
  * Card emulation
- * Live/in-place binary patching of ROMs
- * API Master/Slave modes for large networks
- * Catch exit signals and close everything properly
- * Unit tests and E2E tests
- * Set up build pipeline and automatic SD image generation
+ * Some kind of user authentication so some dingus on the network can't just reconfigure everything
+ * Some kind of API authentication so some dingus on the network can't just reconfigure everything
