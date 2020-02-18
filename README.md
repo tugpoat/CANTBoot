@@ -47,10 +47,13 @@ Software Setup (TODO)
 
 Hardware Setup Examples
 -----------------------
+NOTE: You can use a straight through or crossover cable on a RasPi 3 or 4. The ports are autosensing, it doesn't care.
+      On a 2 you might have to use a crossover cable between the NetDIMM and the Pi. I don't know, I haven't tested it and I don't care to.
+
 ### Single DIMM:
 
     +---------+                         +--------------+
-    | NetDIMM | <==[Crossover Cable]==> | Raspberry Pi |
+    | NetDIMM | <====[cat5/6+rj45]====> | Raspberry Pi |
     +---------+                         +--------------+
                                               /\
                                               ||
@@ -61,32 +64,32 @@ Hardware Setup Examples
                                       | Internet Browser |
                                       +------------------+
 
-### Multiple DIMMs (IN PROGRESS):
+### Multiple DIMMs:
 
     +---------+
-    | NetDIMM | <==[Straight-thru Cable]==|
-    +---------+                          ||
-                                         ||    +--------+
-                                         |===> |        |
-    +---------+                                |        |                              +--------------+                      +-------------+
-    | NetDIMM | <==[Straight-thru Cable]=====> | Switch | <==[Straight-thru Cable]==>  | Raspberry Pi | <~~[ WiFi/Wired ]~~> | Web Browser |
-    +---------+                                |        |                              +--------------+                      +-------------+
-                                         |===> |        |
-                                         ||    +--------+
-    +---------+                          ||
-    | NetDIMM | <==[Straight-thru Cable]==|
+    | NetDIMM | <==[cat5/6+rj45]===|
+    +---------+                   ||
+                                  ||    +--------+
+                                  |===> |        |
+    +---------+                         |        |                              +--------------+                      +-------------+
+    | NetDIMM | <===[cat5/6+rj45]=====> | Switch | <==[Straight-thru Cable]==>  | Raspberry Pi | <~~[ WiFi/Wired ]~~> | Web Browser |
+    +---------+                         |        |                              +--------------+                      +-------------+
+                                  |===> |        |
+                                  ||    +--------+
+    +---------+                   ||
+    | NetDIMM | <==[cat5/6+rj45]===|
     +---------+
 
-### API Master/Slave mode (STRETCH GOAL):
-This would allow for very large deployments with great manageability, and enable one to just toss a RasPi into a cabinet, hook up another one elsewhere and never have to go into the cabinet to mess with it. Could live patch and then transfer games over wifi to the slave node and boot from there.
+### API Master/Slave mode (IN PROGRESS):
+This would allow for very large deployments with great manageability, and enable one to just toss a RasPi into a cabinet, hook up another one elsewhere and never have to go into the cabinet to mess with it. Could live patch and then transfer games over wifi to the slave node and boot from there. Also, this would enable every node to be able to GPIO reset.
 
-    +---------+                            +-----------------+                    +------------+
-    | NetDIMM | <==[Straight-thru Cable]==>| API Slave RasPi | <~~[WiFi/Wired]~~~>|            |
-    +---------+                            +-----------------+                    | API Master |                  +-------------+
-                                                                             //~~>| RasPi      |<~~[WiFi/Wired]~~>| Web Browser |
-    +---------+                            +-----------------+                    | Web UI     |                  +-------------+
-    | NetDIMM | <==[Straight-thru Cable]==>| API Slave RasPi | <~~[WiFi/Wired]~~~>|            |
-    +---------+                            +-----------------+                    +------------+
+    +---------+                    +-----------------+              +------------+
+    | NetDIMM | <==[cat5/6+rj45]==>| API Slave RasPi | <~~[WiFi]~~~>|            |
+    +---------+                    +-----------------+              | API Master |                  +-------------+
+                                                               //~~>| RasPi      |<~~[WiFi/Wired]~~>| Web Browser |
+    +---------+                    +-----------------+              | Web UI     |                  +-------------+
+    | NetDIMM | <==[cat5/6+rj45]==>| API Slave RasPi | <~~[WiFi]~~~>|            |
+    +---------+                    +-----------------+              +------------+
 
 DONE
 ----
@@ -116,5 +119,6 @@ Todo
 ----
  * DHCP configuration of NetDIMM(s)
  * Card emulation
+ * Implement DragonMinded's universal freeplay/monitor force patches
  * Some kind of user authentication so some dingus on the network can't just reconfigure everything
  * Some kind of API authentication so some dingus on the network can't just reconfigure everything
