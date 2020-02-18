@@ -6,12 +6,12 @@ It should work and load games and stuff, and I try my best to make sure that it 
 
 ACNTBoot is loosely based on NAOMIWeb, and started life as a fork of it.
 ### Github links:
-		- https://github.com/root670/NaomiWeb
-		- https://github.com/tugpoat/NaomiWeb
-		- https://github.com/tugpoat/ACNTBoot
+    - https://github.com/root670/NaomiWeb
+    - https://github.com/tugpoat/NaomiWeb
+    - https://github.com/tugpoat/ACNTBoot
 
 I wanted a cleanly-written, easy-to-use, efficient, and easily extensible loader, which was also functional and pleasant to look at.
-I couldn't find one, so I wrote it.
+I couldn't find one, so I wrote it. It's currently a bit more gross than I'd like, however.
 This will be what I think a NetDIMM loader should be.
 
 It's written in Python 3, using Bottle and Bootstrap.
@@ -22,24 +22,24 @@ Requirements
 ------------
 ### Hardware:
  * Any of the following:
- 	- Sega NAOMI mainboard (Must use one of the following BIOS revisions: E, F, G, H. Region shouldn't matter)
- 	- Sega NAOMI 2 mainboard (Any BIOS revision will work)
- 	- Sega Chihiro
- 	- Triforce
+  - Sega NAOMI mainboard (Must use one of the following BIOS revisions: E, F, G, H. Region shouldn't matter)
+  - Sega NAOMI 2 mainboard (Any BIOS revision will work)
+  - Sega Chihiro
+  - Triforce
 
  * NetDIMM cartridge w/ security PIC (NULL PIC recommended, but other PICs may work)
  * Raspberry Pi 3,4 (2 may work but will not be supported)
- * CAT5 Crossover Cable
+ * RJ45-terminated Cat5/6 cable(s) as needed
 
 ### Software:
  * Raspbian -- Other Linux distros should work, but haven't been rubberstamped (Works fine on my gentoo-based laptop minus GPIO functionality).
  * Python 3.6+ with:
- 	-bottle
+  -bottle
   -hashlib
- 	-json
   -pymessagebus
- 	-sqlite3
+  -sqlite3
   -threads
+  -pyyaml
  * NetDIMM-compatible game images (these are usually .bin files; you're on your own to find these!)
 
 Software Setup (TODO)
@@ -71,25 +71,36 @@ NOTE: You can use a straight through or crossover cable on a RasPi 3 or 4. The p
     +---------+                   ||
                                   ||    +--------+
                                   |===> |        |
-    +---------+                         |        |                              +--------------+                      +-------------+
-    | NetDIMM | <===[cat5/6+rj45]=====> | Switch | <==[Straight-thru Cable]==>  | Raspberry Pi | <~~[ WiFi/Wired ]~~> | Web Browser |
-    +---------+                         |        |                              +--------------+                      +-------------+
-                                  |===> |        |
-                                  ||    +--------+
-    +---------+                   ||
-    | NetDIMM | <==[cat5/6+rj45]===|
-    +---------+
+    +---------+                         |        |                      +--------------+
+    | NetDIMM | <===[cat5/6+rj45]=====> | Switch | <==[cat5/6+rj45]===> | Raspberry Pi |
+    +---------+                         |        |                      +--------------+
+                                  |===> |        |                             /\
+                                  ||    +--------+                             ||
+    +---------+                   ||                                      [ WiFi/Wired ]
+    | NetDIMM | <==[cat5/6+rj45]===|                                           ||
+    +---------+                                                                \/
+                                                                        +--------------+
+                                                                        |  Web Browser |
+                                                                        +--------------+
 
 ### API Master/Slave mode (IN PROGRESS):
 This would allow for very large deployments with great manageability, and enable one to just toss a RasPi into a cabinet, hook up another one elsewhere and never have to go into the cabinet to mess with it. Could live patch and then transfer games over wifi to the slave node and boot from there. Also, this would enable every node to be able to GPIO reset.
 
-    +---------+                    +-----------------+              +------------+
-    | NetDIMM | <==[cat5/6+rj45]==>| API Slave RasPi | <~~[WiFi]~~~>|            |
-    +---------+                    +-----------------+              | API Master |                  +-------------+
-                                                               //~~>| RasPi      |<~~[WiFi/Wired]~~>| Web Browser |
-    +---------+                    +-----------------+              | Web UI     |                  +-------------+
-    | NetDIMM | <==[cat5/6+rj45]==>| API Slave RasPi | <~~[WiFi]~~~>|            |
-    +---------+                    +-----------------+              +------------+
+    +---------+                    +-----------------+              +-------------+
+    | NetDIMM | <==[cat5/6+rj45]==>| API Slave RasPi | <~~[WiFi]~~~>|             |
+    +---------+                    +-----------------+              | API Master  |
+                                                               //~~>| RasPi       |
+    +---------+                    +-----------------+              | Web UI      |
+    | NetDIMM | <==[cat5/6+rj45]==>| API Slave RasPi | <~~[WiFi]~~~>|             |
+    +---------+                    +-----------------+              +-------------+
+                                                                          /\
+                                                                          ||
+                                                                    [ WiFi/Wired ]
+                                                                          ||
+                                                                          \/
+                                                                    +-------------+
+                                                                    | Web Browser |
+                                                                    +-------------+
 
 DONE
 ----
@@ -115,7 +126,7 @@ On Hold
   * Unit tests and E2E tests
   * Set up build pipeline and automatic SD image generation
 
-Todo
+TODO
 ----
  * DHCP configuration of NetDIMM(s)
  * Card emulation
