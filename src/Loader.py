@@ -317,9 +317,20 @@ class DIMMLoader(Loader):
 				break
 			if key:
 				data = d.encrypt(data[::-1])[::-1]
+
+
+			#TODO
+			#check patch data to see if there is a patchable address within this chunk.
+			#if there is, then check to see if it extends beyond the length of this chunk.
+				#if yes, set a flag that we are continuing the specified patch data at the beginning of the next chunk.
+
+				#overwrite the data in this chunk, then remove it from the patch data to be applied.
+				#in the case of a partial application, only remove the bytes that we have applied.
+
 			self.DIMM_Upload(addr, data, 0)
 			crc = zlib.crc32(data, crc)
 			addr += len(data)
+
 
 			# -- prm edit 2019/12/16
 			#Callback for percent progress
@@ -427,7 +438,7 @@ class DIMMLoader(Loader):
 		keys = []
 		for line in open(path, 'r'):
 
-			# If it's a comment we don't care
+			# If it's a comment we don't care about this line
 			if line[0:] == '#':
 				continue
 			# Split the line into target address, search bytes, and replace bytes
@@ -441,6 +452,15 @@ class DIMMLoader(Loader):
 		tmpl.sort(key=lambda d: [k in d for k in keys], reverse=True)
 		self._patches.append(tmpl)
 
+	def compilePatchData(self) -> str:
+
+		#search through patches and find any conflicting addresses/overlaps.
+
+		#combine into one large binpatch for more efficient application during rom transfer.
+
+		#return resulting string.
+
+		return ""
 
 	def bootGame(self) -> bool:
 		self._do_boot = True
