@@ -1,5 +1,4 @@
 import socket
-import json
 import yaml
 import io
 import glob
@@ -27,7 +26,6 @@ class NodeDescriptor(yaml.YAMLObject):
 	node_type = 0
 	node_id = ""
 	nickname = ""
-	hostname = ""
 	ip = ""
 	port = 0
 	system = None
@@ -50,16 +48,24 @@ class NodeDescriptor(yaml.YAMLObject):
 			self.controls = hostname.controls
 			self.dimm_ram = hostname.dimm_ram
 			self.game = hostname.game
-		elif type(hostname) is str and type(port) is int:
+		elif type(hostname) is str:
+			print("hello fgt")
 			self.hostname = hostname
-			#TODO: Error check DNS resolution
-			self.ip = self._resolve_hostname(hostname) #automatically resolve hostnames if we can
 			self.port = port
 
 		self.node_id =  hashlib.md5((self.hostname+self.ip+str(self.port)).encode()).hexdigest()
-
+		print("cock")
 		pass
 
+	@property
+	def hostname(self) -> str:
+		return self._hostname
+
+	@hostname.setter
+	def hostname(self, value : str):
+		self._hostname = value
+		self.ip = self._resolve_hostname(value)
+		self.node_id = hashlib.md5((self.hostname+self.ip+str(self.port)).encode()).hexdigest()
 
 	def setup(self):
 		#self.ip = self._resolve_hostname(hostname) #automatically resolve hostnames if we can

@@ -15,8 +15,6 @@ if "raspberrypi" in os.uname():
 from enum import Enum
 from mbus import *
 
-from NetComm import *
-
 '''
 Enum for Loader state machine
 '''
@@ -527,7 +525,7 @@ class DIMMLoader(Loader):
 	def exited(self):
 		return
 
-	def patching(self):
+	def uploading(self):
 		return
 
 	def waiting(self):
@@ -607,7 +605,7 @@ class DIMMLoader(Loader):
 		LoaderState.PATCHING_FAILED: patching_failed,
 		LoaderState.EXITED : exited,
 		LoaderState.WAITING : waiting,
-		LoaderState.PATCHING : patching,
+		LoaderState.UPLOADING : uploading,
 		LoaderState.CONNECTING : connecting,
 		LoaderState.TRANSFERRING : transferring,
 		LoaderState.BOOTING : booting,

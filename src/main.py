@@ -31,7 +31,6 @@ prefs.read_file(prefs_file)
 prefs_file.close()
 
 cfg_debug = bool(prefs['Main']['debug'])
-cfg_api = bool(prefs['Main']['api_mode_enable'])
 cfg_api_mode = str(prefs['Main']['api_mode'])
 
 #TODO if api slave skip all the following and call a different thingy
@@ -69,7 +68,6 @@ nodeman = NodeManager(bool(prefs['Main']['autoboot']))
 nodeman.loadNodesFromDisk(prefs['Directories']['nodes_dir'])
 
 if cfg_api_mode != 'slave':
-	games_list = GameList()
 
 	# set up database
 	db = ACNTBootDatabase('db.sqlite')

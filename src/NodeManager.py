@@ -10,7 +10,7 @@ class NodeManager():
 	nodes = None
 	_autoboot = False
 
-	def __init__(self, autoboot=False : bool, api_master=False : bool):
+	def __init__(self, autoboot : bool = False , api_master : bool = False):
 		self._autoboot = autoboot
 		self.__logger = logging.getLogger("NodeManager " + str(id(self)))
 		self.nodes = NodeList()
@@ -24,11 +24,11 @@ class NodeManager():
 
 		# Valid for this endpoint?
 		if not self.validateGameDescriptor(node, gd):
-			self.__logger.error("Won't boot " + self.nodes[n].game.filename + " on " + self.nodes[n].node_id)
+			self.__logger.error("Won't boot " + gd.filename + " on " + self.nodes[n].node_id)
 			return
-		
-		self.__logger.debug(self.nodes[n].game.filepath)
+			
 		self.nodes[n].game = gd
+		self.__logger.debug(self.nodes[n].game.filepath)
 
 		# Sync config to disk
 		MBus.handle(message=SaveConfigToDisk())
@@ -59,7 +59,7 @@ class NodeManager():
 		return False
 
 	def getLoaderState(self, node_id : str) -> str:
-		if len(self._loaders) > 0:
+		if len(self._loaders) > 0 and self._loaders[node_id]:
 			return self._loaders[node_id].state
 
 		return ""
@@ -113,12 +113,14 @@ class NodeManager():
 		self.nodes.loadNodes(nodes_dir)
 
 		for n in self.nodes:
-			if n.node_type == 0:
-				tloader = DIMMLoader(n.node_id, n.game.filepath, n.ip, n.port)
-			elif n.node_type == 1:
-				tloader = APILoader(n.node_id, n.game.filepath, n.ip, n.port)
-			if self._autoboot:
-				tloader.state = LoaderState.WAITING
+			#if there's no game associated with this node yet then don't attempt to create a loader yet
+			if n.game:
+				if n.node_type == 0:
+					tloader = DIMMLoader(n.node_id, n.game.filepath, n.ip, n.port)
+				elif n.node_type == 1:
+					tloader = APILoader(n.node_id, n.game.filepath, n.ip, n.port)
+				if self._autoboot:
+					tloader.state = LoaderState.WAITING
 	
 			self._loaders.append(tloader)
 
