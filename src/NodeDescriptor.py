@@ -26,6 +26,7 @@ class NodeDescriptor(yaml.YAMLObject):
 	node_type = 0
 	node_id = ""
 	nickname = ""
+	_hostname = ""
 	ip = ""
 	port = 0
 	system = None

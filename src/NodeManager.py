@@ -49,11 +49,18 @@ class NodeManager():
 			# Add a new loader instance
 			tloader = loader_class(self.nodes[n].node_id, self.nodes[n].game.filepath, self.nodes[n].ip, self.nodes[n].port)
 			self._loaders.append(tloader)
+	
+	def file_get_contents(self, filename):
+		with open(filename) as f:
+			return f.read()
 
 	def launchgame(self, node_id : str) -> bool:
 		#DO EET NOW
 		if self._loaders[node_id]:
 			self.__logger.debug("Booting game")
+
+			#self._loaders[node_id].addPatch(self.file_get_contents('patches/MarvelVsCapcom2_unlocked.binpatch'))
+			#self._loaders[node_id].addPatch(self.file_get_contents('patches/conflict.binpatch'))
 			return self._loaders[node_id].bootGame()
 
 		return False

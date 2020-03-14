@@ -1,11 +1,11 @@
 import os
+import re
 import time
 import json
 import configparser
 import logging
 import typing as t
-
-import os
+import zlib
 
 on_raspi=False
 if "raspberrypi" in os.uname():
@@ -303,22 +303,22 @@ class DIMMLoader(Loader):
 	# note that the re-encryption is obsoleted by just setting a zero-key, which
 	# is a magic to disable the decryption.
 	def DIMM_UploadFile(self, name, key = None, progress_cb = None):
-		import zlib
+		patchdata = self.compilePatchData()
+
 		crc = 0
 		f_sz = os.stat(name).st_size
 		a = open(name, "rb")
 		addr = 0
 		if key:
 			d = DES.new(key[::-1], DES.MODE_ECB)
+
+		#patch_continue = False
+
 		while True:
 			#sys.stderr.write("%08x\r" % addr)
 			data = a.read(0x8000)
-			if not len(data):
-				break
-			if key:
-				data = d.encrypt(data[::-1])[::-1]
-
-
+			datalen = len(data)
+'''
 			#TODO
 			#check patch data to see if there is a patchable address within this chunk.
 			#if there is, then check to see if it extends beyond the length of this chunk.
@@ -327,9 +327,25 @@ class DIMMLoader(Loader):
 				#overwrite the data in this chunk, then remove it from the patch data to be applied.
 				#in the case of a partial application, only remove the bytes that we have applied.
 
+			#FIXME: OH GOD THIS IS SLOW WHY AM I DOING IT THIS WAY FIX THIS
+			for e in patchdata:
+				for a, b in e
+					print()
+					if a > addr and a < addr + datalen:
+						#found a patch for this data
+'''
+
+
+
+			if not len(data):
+				break
+			if key:
+				data = d.encrypt(data[::-1])[::-1]
+
+
 			self.DIMM_Upload(addr, data, 0)
 			crc = zlib.crc32(data, crc)
-			addr += len(data)
+			addr += datalen
 
 
 			# -- prm edit 2019/12/16
@@ -435,32 +451,42 @@ class DIMMLoader(Loader):
 	'''
 	def addPatch(self, patchdata : str):
 		tmpl = []
-		keys = []
-		for line in open(path, 'r'):
+		tkeys = []
+
+		#FIXME: THERE'S A WAY MORE EFFICIENT METHOD TO STRUCTURE THIS DATA. FUCK THIS IS DUMB
+		for line in patchdata.split('\n'):
 
 			# If it's a comment we don't care about this line
-			if line[0:] == '#':
+			if len(line) < 1 or line[0] == '#':
 				continue
 			# Split the line into target address, search bytes, and replace bytes
+			print(line)
 			e = re.compile("^([A-F0-9]+):\s+([A-F0-9]+)\s+->\s([A-F0-9]+)$").split(line)
 			# Make a tuple of the data indexable by the target address, in a dict.
 			# Then put it into our temporary list
-			tmpl.append({e[0]: (e[1], e[2])})
+			tmpl.append({e[1]: (e[2], e[3])})
 			# Keep track of the target addresses (keys) we use so we can ensure they are sorted properly
-			keys.append(e[0])
+			tkeys.append(e[1])
 
-		tmpl.sort(key=lambda d: [k in d for k in keys], reverse=True)
+		tmpl.sort(key=lambda d: [k in d for k in tkeys], reverse=True)
+		print(tmpl)
+		print('------')
 		self._patches.append(tmpl)
+		print(self._patches)
 
-	def compilePatchData(self) -> str:
+
+
+	def compilePatchData(self) -> dict:
 
 		#search through patches and find any conflicting addresses/overlaps.
-
+		#for patch in self._patches:
 		#combine into one large binpatch for more efficient application during rom transfer.
+		biglist = [inner for outer in self._patches for inner in outer]
 
 		#return resulting string.
+		print(biglist)
 
-		return ""
+		return biglist
 
 	def bootGame(self) -> bool:
 		self._do_boot = True

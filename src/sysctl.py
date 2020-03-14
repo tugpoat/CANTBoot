@@ -74,7 +74,8 @@ def write_ifconfig(prefs):
 			data.append("broadcast ?", [prefs.get('Network', 'eth0_bcast')])
 
 		data.append("allow-hotplug wlan0")
-		if prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_subnet') == 'dhcp':
+		# Don't allow DHCP if we're running as an AP.
+		if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_subnet') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
 			setdhcp()
 			#DHCP setting
 		else:
