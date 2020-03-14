@@ -5,6 +5,7 @@ import configparser
 import copy
 import logging
 import os
+import argparse
 
 from GameDescriptor import GameDescriptor
 from GameList import *
@@ -19,16 +20,33 @@ from ui_web import UIWeb_Bottle
 
 
 
-#TODO: if config file/directory does not exist, copy a default from the read-only partition to the SD card.
+ 
+# create parser
+parser = argparse.ArgumentParser()
+ 
+# add arguments to the parser
+parser.add_argument("--cfgdir", default='/mnt/cfg')
+parser.add_argument("--romsdir", default='/mnt/roms')
+ 
+# parse the arguments
+args = parser.parse_args()
 
+CFG_DIR = args.cfgdir
 logger = logging.getLogger("main")
 logger.debug("init logger")
+logger.debug("CFG_DIR=" + CFG_DIR)
 
-PREFS_FILE="settings.cfg"
+if not os.path.isfile(CFG_DIR+'/settings.cfg'):
+	logger.fatal('no config found. todo: copy default config or create config in ' + CFG_DIR)
+
+PREFS_FILE=CFG_DIR+"/settings.cfg"
 prefs = configparser.ConfigParser()
 prefs_file = open(PREFS_FILE, 'r')
 prefs.read_file(prefs_file)
 prefs_file.close()
+
+
+prefs['Directories']['cfg_part'] = CFG_DIR
 
 cfg_debug = bool(prefs['Main']['debug'])
 cfg_api_mode = str(prefs['Main']['api_mode'])
@@ -56,8 +74,13 @@ def handle_Node_LaunchGameCommandMessage(message: Node_LaunchGameCommandMessage)
 def handle_SaveConfigToDisk(message: SaveConfigToDisk):
 	logger.info("Saving configuration to disk...")
 	if not cfg_debug: remount_rw(prefs['Directories']['cfg_part'])
-	nodeman.saveNodesToDisk(prefs['Directories']['nodes_dir'])
+
+	nodeman.saveNodesToDisk(prefs['Directories']['cfg_part'] + '/' + prefs['Directories']['nodes_dir'])
 	games_list.exportList()
+
+	with open(prefs['Directories']['cfg_part'] + '/settings.cfg', 'w') as prefs_file:
+		prefs.write(prefs_file)
+
 	if not cfg_debug: remount_ro(prefs['Directories']['cfg_part'])
 	logger.info("Done saving configuration to disk")
 

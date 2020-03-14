@@ -318,7 +318,7 @@ class DIMMLoader(Loader):
 			#sys.stderr.write("%08x\r" % addr)
 			data = a.read(0x8000)
 			datalen = len(data)
-'''
+			'''
 			#TODO
 			#check patch data to see if there is a patchable address within this chunk.
 			#if there is, then check to see if it extends beyond the length of this chunk.
@@ -333,9 +333,7 @@ class DIMMLoader(Loader):
 					print()
 					if a > addr and a < addr + datalen:
 						#found a patch for this data
-'''
-
-
+			'''
 
 			if not len(data):
 				break

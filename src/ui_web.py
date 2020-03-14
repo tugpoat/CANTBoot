@@ -219,9 +219,8 @@ class UIWeb_Bottle(Bottle):
 
 		self._prefs['Games']['directory']         =     games_directory =   request.forms.get('games_directory')
 
-		# TODO: Maybe farm this out somewhere else (main thread?)
-		with open('settings.cfg', 'w') as prefs_file:
-			self._prefs.write(prefs_file)
+		#Save config to disk
+		MBus.handle(SaveConfigToDisk())
 
 
 		if skip_checksum == 'True':
@@ -279,16 +278,16 @@ class UIWeb_Bottle(Bottle):
 	def do_node_add(self):
 		#Node doesn't exist, add it
 		tnode = NodeDescriptor(str(request.forms.get('node_ip')), str(request.forms.get('node_port')))
-		print('dicks')
 		tnode.nickname = str(request.forms.get('nickname'))
 		tnode.system = make_tuple(request.forms.get('system'))
 		tnode.controls = make_tuple(request.forms.get('control-type'))
 		tnode.monitor = make_tuple(request.forms.get('monitor-type'))
 		tnode.dimm_ram = make_tuple(request.forms.get('dimm-ram'))
-		print('penis')
 
 		self._nodeman.nodes.append(tnode)
-		print('huh')
+
+		MBus.handle(SaveConfigToDisk())
+
 		return template('nodes', nodes=self._nodeman.nodes)
 
 	def node_edit(self,node_id, did_edit=False):
@@ -311,7 +310,9 @@ class UIWeb_Bottle(Bottle):
 				self._nodeman.nodes[node_id].controls = make_tuple(request.forms.get('control-type'))
 				self._nodeman.nodes[node_id].monitor = make_tuple(request.forms.get('monitor-type'))
 				self._nodeman.nodes[node_id].dimm_ram = make_tuple(request.forms.get('dimm-ram'))
+
 				MBus.handle(SaveConfigToDisk())
+				
 				return self.node_edit(node_id, True)
 
 		#kick em back to the index

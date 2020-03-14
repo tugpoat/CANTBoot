@@ -50,12 +50,10 @@ class NodeDescriptor(yaml.YAMLObject):
 			self.dimm_ram = hostname.dimm_ram
 			self.game = hostname.game
 		elif type(hostname) is str:
-			print("hello fgt")
 			self.hostname = hostname
 			self.port = port
 
 		self.node_id =  hashlib.md5((self.hostname+self.ip+str(self.port)).encode()).hexdigest()
-		print("cock")
 		pass
 
 	@property
