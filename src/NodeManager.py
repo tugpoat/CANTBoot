@@ -128,8 +128,8 @@ class NodeManager():
 					tloader = APILoader(n.node_id, n.game.filepath, n.ip, n.port)
 				if self._autoboot:
 					tloader.state = LoaderState.WAITING
-	
-			self._loaders.append(tloader)
+
+				self._loaders.append(tloader)
 
 
 	def saveNodesToDisk(self, nodes_dir: str):

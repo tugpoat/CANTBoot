@@ -45,8 +45,7 @@ prefs_file = open(PREFS_FILE, 'r')
 prefs.read_file(prefs_file)
 prefs_file.close()
 
-
-prefs['Directories']['cfg_part'] = CFG_DIR
+prefs['Directories']['cfg_dir'] = CFG_DIR
 
 cfg_debug = bool(prefs['Main']['debug'])
 cfg_api_mode = str(prefs['Main']['api_mode'])
@@ -73,22 +72,22 @@ def handle_Node_LaunchGameCommandMessage(message: Node_LaunchGameCommandMessage)
 
 def handle_SaveConfigToDisk(message: SaveConfigToDisk):
 	logger.info("Saving configuration to disk...")
-	if not cfg_debug: remount_rw(prefs['Directories']['cfg_part'])
+	#if not cfg_debug: remount_rw(prefs['Directories']['cfg_part'])
 
-	nodeman.saveNodesToDisk(prefs['Directories']['cfg_part'] + '/' + prefs['Directories']['nodes_dir'])
+	nodeman.saveNodesToDisk(prefs['Directories']['cfg_dir'] + '/nodes')
 	games_list.exportList()
 
-	with open(prefs['Directories']['cfg_part'] + '/settings.cfg', 'w') as prefs_file:
+	with open(prefs['Directories']['cfg_dir'] + '/settings.cfg', 'w') as prefs_file:
 		prefs.write(prefs_file)
 
-	if not cfg_debug: remount_ro(prefs['Directories']['cfg_part'])
+	#if not cfg_debug: remount_ro(prefs['Directories']['cfg_part'])
 	logger.info("Done saving configuration to disk")
 
 
 #MAIN SHITS
 # set up node list
 nodeman = NodeManager(bool(prefs['Main']['autoboot']))
-nodeman.loadNodesFromDisk(prefs['Directories']['nodes_dir'])
+nodeman.loadNodesFromDisk(prefs['Directories']['cfg_dir'] + '/nodes')
 
 if cfg_api_mode != 'slave':
 
