@@ -49,7 +49,7 @@ class UI_Adafruit(Thread):
 
 	def handle_GameList_ScanEventMessage(self, message: GameList_ScanEventMessage):
 		self.lcd.clear()
-		if message.payload = "donelol":
+		if message.payload == "donelol":
 			self._scandone = True
 		else:
 			self._lcd.message("Scanning...\n" + message.payload[16:])
