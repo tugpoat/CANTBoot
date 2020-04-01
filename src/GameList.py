@@ -19,6 +19,7 @@ class GameList():
 			pass
 
 		self.__logger = logging.getLogger("GameList")
+		self.__logger.debug("init logger")
 		self._cfg_dir = cfgdir
 		self._games_dir = gamesdir
 
@@ -115,7 +116,7 @@ class GameList():
 					print("\tUnable to identify " + file)
 					tgame.game_id = 0
 					tgame.checksum_status = True
-					tgame.title = filename
+					tgame.title = file
 					tgame.attributes = []
 					tgame.setSystem(database.getSystemFromName(tgame.system_name.upper()))
 					self.append(tgame)

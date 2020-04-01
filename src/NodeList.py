@@ -37,9 +37,9 @@ class NodeList():
 		self._nodes.append(node)
 
 	def pop(self, key: str):
-		for lk,elem in self._nodes:
+		for elem in self._nodes:
 				if str(elem.node_id) == str(key):
-					self._nodes.pop(lk)
+					self._nodes.remove(elem)
 					return
 					
 

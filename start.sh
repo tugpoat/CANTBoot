@@ -1,1 +1,1 @@
-python ./src/main.py --cfgdir ./cfg --romsdir ./roms
+python3 ./src/main.py --cfgdir ./cfg --romsdir ./roms

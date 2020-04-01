@@ -13,6 +13,7 @@ class NodeManager():
 	def __init__(self, autoboot : bool = False , api_master : bool = False):
 		self._autoboot = autoboot
 		self.__logger = logging.getLogger("NodeManager " + str(id(self)))
+		self.__logger.debug("init logger")
 		self.nodes = NodeList()
 		self._loaders = LoaderList()
 
@@ -111,7 +112,7 @@ class NodeManager():
 			#else:
 				#self.__logger.debug("DIMM RAM ok")
 		except Exception as ex:
-			self.__logger.error(repr(ex) + traceback.print_exc())
+			self.__logger.debug(repr(ex) + traceback.print_exc())
 
 		return bootable
 

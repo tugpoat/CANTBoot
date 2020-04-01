@@ -305,6 +305,8 @@ class UIWeb_Bottle(Bottle):
 			if request.forms.get('delete_node') == 'on':
 				self._nodeman.nodes.pop(node_id)
 			else:
+				# if self._nodeman.nodes[node_id].nickname != str(request.forms.get('nickname')): #TODO: remove old file
+
 				self._nodeman.nodes[node_id].nickname = str(request.forms.get('nickname'))
 				self._nodeman.nodes[node_id].system = make_tuple(request.forms.get('system'))
 				self._nodeman.nodes[node_id].controls = make_tuple(request.forms.get('control-type'))
