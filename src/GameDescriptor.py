@@ -60,9 +60,11 @@ class GameDescriptor(yaml.YAMLObject):
 			self.system_name = self.__file_get_target_system
 			self.rom_title = self.__file_get_title
 
-			# Checksum the file if we want to do that
-			if not skip_checksum:
-				self.file_checksum = self.__checksum
+			#don't waste time or cpu checksumming an invalid file
+			if self.isValid:
+				# Checksum the file if we want to do that
+				if not skip_checksum:
+					self.file_checksum = self.__checksum
 
 		except Exception as ex:
 			print('failed to construct GameDescriptor'+repr(ex))

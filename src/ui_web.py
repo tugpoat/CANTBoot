@@ -122,8 +122,17 @@ class UIWeb_Bottle(Bottle):
 		return template('game_edit', hashid=fhash, filename=cur_game.filename, game_title=cur_game.title, games_list=outgames)
 
 	def game_do_edit(self, fhash : str):
-		new_id = request.forms.get('value')
-		pass
+
+		new_id = request.forms.get('games')
+		identity = self._db.getGameInformationById(new_id)
+		self._games[fhash].game_id = identity[0]
+		self._games[fhash].title = identity[1]
+
+		self._games[fhash].setSystem(self._db.getGameSystem(identity[0]))
+		self._games[fhash].setAttributes(self._db.getGameAttributes(identity[0]))
+
+		return self.game_edit(fhash)
+		#TODO: Session variables so we can kick back to the game list for this node without passing things everywhere
 
 	def do_gpio_reset(self):
 		return "todo"

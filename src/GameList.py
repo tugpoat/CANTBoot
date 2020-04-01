@@ -106,7 +106,6 @@ class GameList():
 					tgame.title = identity[1]
 
 					tgame.setSystem(database.getGameSystem(identity[0]))
-					tgame.attributes = database.getGameAttributes(identity[0])
 					tgame.setAttributes(database.getGameAttributes(identity[0]))
 					self.append(tgame)
 					self.__logger.info("\tAdded " + tgame.title)
