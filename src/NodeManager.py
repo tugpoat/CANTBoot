@@ -86,18 +86,20 @@ class NodeManager():
 			#
 			# Side note: Hard coding ID's like this is bad practice. It's all 20 year old hardware though so fuck it.
 			# If anyone's going to be messing with this they're gonna be gutting it anyways.
-			if (nd.system[0] != gd.getSystem[0]) and not ((nd.system[0] == 2 and int(gd.getSystem[0]) in {1,2,3}) or (nd.system[0] == 2 and gd.isNaomi2CV)) :
-				# You dun goofed.
-				self.__logger.debug("Checking game " + gd.filename + " against node " + nd.nickname + " : Wrong system. Game wants " + gd.getSystem[1] + " but this node is a " + nd.system[1])
-				bootable = False
-			#else:
-				#nd.__logger.debug("system ok")
+			if not gd.getSystem  is None:
+				if (nd.system[0] != gd.getSystem[0]) and not ((nd.system[0] == 2 and int(gd.getSystem[0]) in {1,2,3}) or (nd.system[0] == 2 and gd.isNaomi2CV)) :
+					# You dun goofed.
+					self.__logger.debug("Checking game " + gd.filename + " against node " + nd.nickname + " : Wrong system. Game wants " + gd.getSystem[1] + " but this node is a " + nd.system[1])
+					bootable = False
+				#else:
+					#nd.__logger.debug("system ok")
 
-			if nd.monitor[0] != gd.getMonitor[0]:
-			#    nd.__logger.debug('Wrong monitor type. Game wants ' + gd.getMonitor()[1] + " but node has " + nd.monitor[1])
-				if strict: bootable = False
-			#else:
-			#    nd.__logger.debug("monitor ok")
+			if not gd.getMonitor is None:
+				if nd.monitor[0] != gd.getMonitor[0]:
+				#    nd.__logger.debug('Wrong monitor type. Game wants ' + gd.getMonitor()[1] + " but node has " + nd.monitor[1])
+					if strict: bootable = False
+				#else:
+				#    nd.__logger.debug("monitor ok")
 
 			#1if nd.controls[0] != gd.getControls()[0]:
 				#FIXME: do in-depth logic of control schemes
@@ -106,11 +108,13 @@ class NodeManager():
 			#else:
 			#    nd.__logger.debug("controls ok")
 
-			if nd.dimm_ram[1].strip('MB') < gd.getDIMMRAMReq[1].strip('MB'):
-				#nd.__logger.debug('Not enough RAM in NetDIMM node to load game, ' + gd.getDIMMRAMReq()[1] + "required")
-				bootable = False
-			#else:
-				#self.__logger.debug("DIMM RAM ok")
+			if not gd.getDIMMRAMReq is None:
+				if nd.dimm_ram[1].strip('MB') < gd.getDIMMRAMReq[1].strip('MB'):
+					#nd.__logger.debug('Not enough RAM in NetDIMM node to load game, ' + gd.getDIMMRAMReq()[1] + "required")
+					bootable = False
+				#else:
+					#self.__logger.debug("DIMM RAM ok")
+					
 		except Exception as ex:
 			self.__logger.debug(repr(ex) + traceback.print_exc())
 
