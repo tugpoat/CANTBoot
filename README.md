@@ -35,6 +35,7 @@ Requirements
  * Raspbian -- Other Linux distros should work, but haven't been rubberstamped (Works fine on my gentoo-based laptop minus GPIO functionality).
  * Python 3.6+ with:
   -bottle
+  -beaker
   -hashlib
   -pymessagebus
   -sqlite3

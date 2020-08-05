@@ -12,7 +12,7 @@ from Database import ACNTBootDatabase
 from GameList import *
 
 from mbus import *
-from main_events import SaveConfigToDisk
+from main_events import SaveConfigToDisk, ApplySysConfig
 from Loader import *
 
 
@@ -72,6 +72,7 @@ class UIWeb_Bottle(Bottle):
 		self.route('/static/<filepath:path>', method="GET", callback=self.serve_static)
 		self.route('/config', method="GET", callback=self.appconfig)
 		self.route('/config', method="POST", callback=self.do_appconfig)
+		self.route('/config/apply', method="GET", callback=self.apply_appconfig)
 
 		self.route('/load/<node_id>/<fhash>', method="GET", callback=self.load)
 		self.route('/launch/<node_id>', method="GET", callback=self.launch)
@@ -168,6 +169,10 @@ class UIWeb_Bottle(Bottle):
 		wlan0_ssid      =   self._prefs['Network']['wlan0_ssid']    or 'NAOMI'
 		wlan0_psk       =   self._prefs['Network']['wlan0_psk']     or 'segarocks'
 
+		wlan0_dhcp_low = self._prefs['Network']['wlan0_dhcp_low']  or '10.0.0.100'
+		wlan0_dhcp_high = self._prefs['Network']['wlan0_dhcp_high']  or '10.0.0.200'
+
+
 		games_directory =   self._prefs['Games']['directory']       or 'games'
 		#render
 		return template('config',
@@ -181,8 +186,10 @@ class UIWeb_Bottle(Bottle):
 			wlan0_ssid=wlan0_ssid,
 			wlan0_psk=wlan0_psk,
 			wlan0_netmask=wlan0_netmask,
+			wlan0_dhcp_low=wlan0_dhcp_low,
+			wlan0_dhcp_high=wlan0_dhcp_high,
 			games_directory=games_directory)
-		
+
 	def do_appconfig(self):
 		skip_checksum   = request.forms.get('skip_checksum')
 		autoboot        = request.forms.get('autoboot')
@@ -226,6 +233,9 @@ class UIWeb_Bottle(Bottle):
 		self._prefs['Network']['wlan0_ssid']      =     wlan0_ssid      =   request.forms.get('wlan0_ssid')
 		self._prefs['Network']['wlan0_psk']       =     wlan0_psk       =   request.forms.get('wlan0_psk')
 
+		self._prefs['Network']['wlan0_dhcp_low']       =     wlan0_dhcp_low       =   request.forms.get('wlan0_dhcp_low')
+		self._prefs['Network']['wlan0_dhcp_high']       =     wlan0_dhcp_high       =   request.forms.get('wlan0_dhcp_high')
+
 		self._prefs['Games']['directory']         =     games_directory =   request.forms.get('games_directory')
 
 		#Save config to disk
@@ -259,10 +269,13 @@ class UIWeb_Bottle(Bottle):
 			wlan0_ssid=wlan0_ssid,
 			wlan0_psk=wlan0_psk,
 			wlan0_netmask=wlan0_netmask,
+			wlan_dhcp_low=wlan_dhcp_low,
+			wlan_dhcp_high=wlan_dhcp_high,
 			games_directory=games_directory)
 
 	def apply_appconfig(self):
-		#TODO: yell at the main thread to reconfigure the network
+		#yell at the main thread to reconfigure the network and reboob
+		MBus.handle(ApplySysConfig())
 		return
 
 	def nodes(self):

@@ -9,4 +9,3 @@ from NodeManager import NodeManager
 
 from GameDescriptor import GameDescriptor
 from GameList import *
-

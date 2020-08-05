@@ -14,20 +14,23 @@ from Database import ACNTBootDatabase
 
 from mbus import *
 from main_events import *
+from sysctl import *
 from Loader import *
 
 from ui_web import UIWeb_Bottle
 
-
-
- 
+'''
+######################################################################################################
+## Basic Configuration and setup
+######################################################################################################
+'''
 # create parser
 parser = argparse.ArgumentParser()
  
 # add arguments to the parser
 parser.add_argument("--cfgdir", default='/mnt/cfg')
 parser.add_argument("--romsdir", default='/mnt/roms')
- 
+
 # parse the arguments
 args = parser.parse_args()
 
@@ -51,10 +54,19 @@ cfg_debug = bool(prefs['Main']['debug'])
 cfg_api_mode = str(prefs['Main']['api_mode'])
 
 #TODO if api slave skip all the following and call a different thingy
-
+'''
+######################################################################################################
+## Event Handlers
+######################################################################################################
+'''
 def handle_Node_SetGameCommandMessage(message: Node_SetGameCommandMessage):
 	logger.debug("handling SetGameCommandMessage %s %s", message.payload[0], message.payload[1])
-	if message.payload[0] == '0':
+	if message.payload[0] == '0' and message.payload[1] == '0':
+		#api ui magic
+		nodeid = nodeman.nodes[0].node_id
+		nodeman.setgame(nodeid, GameDescriptor('/tmp/game.bin'))
+		#we can probably do this in a more complicated way that reduces network transmission overhead but meh.
+	elif message.payload[0] == '0':
 		#adafruit ui magic for launching on the first node in the list
 		nodeid = nodeman.nodes[0].node_id
 		nodeman.setgame(nodeid, games_list[message.payload[1]])
@@ -71,6 +83,14 @@ def handle_Node_LaunchGameCommandMessage(message: Node_LaunchGameCommandMessage)
 		nodeman.launchgame(message.payload)
 
 def handle_SaveConfigToDisk(message: SaveConfigToDisk):
+	saveconftodisk()
+
+#Remember to save config to disk before calling this!
+def handle_ApplySysConfig(message: ApplySysConfig):
+	saveconftodisk()
+	applysysconfig()
+
+def saveconftodisk():
 	logger.info("Saving configuration to disk...")
 	#if not cfg_debug: remount_rw(prefs['Directories']['cfg_part'])
 
@@ -83,8 +103,39 @@ def handle_SaveConfigToDisk(message: SaveConfigToDisk):
 	#if not cfg_debug: remount_ro(prefs['Directories']['cfg_part'])
 	logger.info("Done saving configuration to disk")
 
+def applysysconfig():
+	logger.info("Applying System configuration...")
 
-#MAIN SHITS
+	logger.debug("Remounting / rw")
+	remount_rw('/')
+
+	logger.debug("Writing interface config")
+	write_ifconfig(prefs)
+
+	logger.debug("writing wlan config")
+	write_iwconfig(prefs)
+
+	if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_subnet') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
+		#wifi client
+		logger.debug("wifi client. disabling dnsmasq and hostapd.")
+		disable_dnsmasq()
+		disable_hostapd()
+	else:
+		#wifi ap
+		logger.debug("wifi ap. enabling dnsmasq and hostapd.")
+		enable_dnsmasq()
+		enable_hostapd()
+
+	logger.debug("remounting / ro")
+	remount_ro('/')
+	logger.info("Done. rebooting system.")
+	reboot_system()
+	
+'''
+######################################################################################################
+## MAIN SHITZ
+######################################################################################################
+'''
 # set up node list
 nodeman = NodeManager(bool(prefs['Main']['autoboot']))
 nodeman.loadNodesFromDisk(prefs['Directories']['cfg_dir'] + '/nodes')
@@ -103,30 +154,27 @@ if cfg_api_mode != 'slave':
 		adafapp = UI_Adafruit(prefs, games_list)
 		t = threading.Thread(target=adafapp.run)
 
-	games_list.scanForNewGames(db)
+	#TODO: Launch other UIs here
 
 	# Launch web UI if enabled
 	if prefs['Main']['web_ui'] == 'True':
 		wapp = UIWeb_Bottle('Web UI', games_list, nodeman, prefs)
 		t = threading.Thread(target=wapp.start).start()
+
+	#FIXME: Having this after UI loading without notifying the user what's going on is bad.
+	games_list.scanForNewGames(db)
+
 else:
 	#All we need if we're running as an API Slave node is the NodeManager and the API Receiver
 	from ui_api import UIAPI
 	wapp = UIAPI()
 	t = threading.Thread(target=wapp.start).start()
 
-	# Set up event handlers
-	#FIXME: probably should break these out into their own module(s))
-
-	#TODO: Raise this when we boot a new game
-	#def handle_SaveNodesToDisk(message: SaveNodesToDisk):
-	#	if not cfg_debug: remount_rw(prefs['Directories']['cfg_part'])
-	#	nodeman.saveNodesToDisk(prefs['Directories']['nodes_dir'])
-	#	if not cfg_debug: remount_ro(prefs['Directories']['cfg_part'])
-
+# Set up event handlers
 MBus.add_handler(Node_SetGameCommandMessage, handle_Node_SetGameCommandMessage)
 MBus.add_handler(Node_LaunchGameCommandMessage, handle_Node_LaunchGameCommandMessage)
 MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
+MBus.add_handler(ApplySysConfig, handle_ApplySysConfig)
 
 while 1:
 	nodeman.tickLoaders()

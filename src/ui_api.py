@@ -65,7 +65,14 @@ class UIAPI(Bottle):
 		pass
 
 	def handle_upload(self):
-		pass
+		if 'file' in request.files:
+			filename = secure_filename(file.filename)
+			file.save("/tmp/", filename)
+
+			#TODO: add to loader/set to main
+			return "OK"
+
+		return "nope"
 
 	def handle_patch_upload(self):
 		pass

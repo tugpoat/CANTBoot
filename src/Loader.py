@@ -132,7 +132,7 @@ class APILoader(Loader):
 	pass
 
 '''
-Lo
+Loader for endpoint nodes
 '''
 class DIMMLoader(Loader):
 
@@ -476,8 +476,9 @@ class DIMMLoader(Loader):
 
 	def compilePatchData(self) -> dict:
 
-		#search through patches and find any conflicting addresses/overlaps.
+		#TODO: search through patches and find any conflicting addresses/overlaps.
 		#for patch in self._patches:
+        
 		#combine into one large binpatch for more efficient application during rom transfer.
 		biglist = [inner for outer in self._patches for inner in outer]
 

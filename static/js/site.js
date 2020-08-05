@@ -18,7 +18,7 @@ $('.game').click(function(event)
 $('.launch-link').click(function(event)
 {
 	event.preventDefault();
-	
+
 	$.ajax
 	({
 		url: $(this).attr('href'),
@@ -31,6 +31,20 @@ $('.launch-link').click(function(event)
 		}
 	});
 });
+
+$('#btn-apply').click(function() {
+	event.preventDefault();
+	
+	$.ajax
+	({
+		url: "/config/apply",
+		type: 'get',
+		success: function(result)
+		{
+			alert("applying conf and reboobing fuck u");
+		}
+	});
+})
 
 $('#gpio_reboot').click(function() {
 	event.preventDefault();
