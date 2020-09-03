@@ -98,7 +98,7 @@ def write_iwconfig(prefs):
 	if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_subnet') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
 		with open("/etc/wpa_supplicant/wpa_supplicant.conf",  "rw") as outfile:
 
-			data = "country=US\nctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\n\nnetwork={\nssid=\"%s\"\nscan_ssid=1\npsk=\"%s\"\nkey_mgmt=WPA-PSK\n}\n"  % (prefs.get('Network', 'wlan0_ssid'), prefs.get('Network', 'wlan0_psk')))
+			data = "country=US\nctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\n\nnetwork={\nssid=\"%s\"\nscan_ssid=1\npsk=\"%s\"\nkey_mgmt=WPA-PSK\n}\n"  % (prefs.get('Network', 'wlan0_ssid'), prefs.get('Network', 'wlan0_psk'))
 
 			outfile.writelines(data)
 			outfile.close()
