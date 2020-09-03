@@ -145,6 +145,7 @@ class DIMMLoader(Loader):
 	_wait_tick = 0
 
 	_do_boot = False
+	_enableFastboot = True
 	_do_keepalive = False
 
 	_patches = []
@@ -174,6 +175,15 @@ class DIMMLoader(Loader):
 	@enableGPIOReset.setter
 	def enableGPIOReset(self, value : bool):
 		self._enableGPIOReset = value
+
+	@property
+	def enableFastboot(self) ->bool:
+		return self._enableFastboot
+
+	@enableFastboot.setter
+	def enableFastboot(self, value : bool):
+		self._enableFastboot = value
+
 
 	'''
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -265,6 +275,19 @@ class DIMMLoader(Loader):
 	def SECURITY_SetKeycode(self, data):
 		assert len(data) == 8
 		self._s.send(struct.pack("<I", 0x7F000008) + data.encode())
+
+	'''
+	Must be called immediately after SECURITY_Setkeycode (probably)
+
+	courtesy of :
+	@mathieulh
+	@bobbydilley
+	@chunksin
+	@whatnot
+	https://www.arcade-projects.com/forums/index.php?thread/14549-no-more-pesky-memory-checkings-on-netdimm/&pageNo=1
+	'''
+	def HOST_EnableFastboot(self):
+		self._s.send(struct.pack(">IIIIIIIIH", 0x00000001, 0x1a008104, 0x01000000, 0xf0fffe3f, 0x0000ffff, 0xffffffff, 0xffff0000, 0x00000000, 0x0000))
 
 	def HOST_SetMode(self, v_and, v_or) -> bytes:
 		self._s.send(struct.pack("<II", 0x07000004, (v_and << 8) | v_or))
@@ -608,6 +631,9 @@ class DIMMLoader(Loader):
 
 			# disable encryption by setting magic zero-key
 			self.SECURITY_SetKeycode("\x00" * 8)
+
+			if self.enableFastboot:
+				self.HOST_EnableFastboot()
 
 			self._logger.info("Uploading " + self.rom_path)
 			# uploads file. Also sets "dimm information" (file length and crc32)
