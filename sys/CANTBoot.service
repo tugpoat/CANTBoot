@@ -1,0 +1,13 @@
+[Unit]
+Description=CANTBoot
+After=network.target
+
+[Service]
+Type=simple
+User=naomi
+WorkingDirectory=/home/naomi/CANTBoot
+ExecStart=/home/naomi/CANTBoot/src/main.py --cfgdir /mnt/cfg --romsdir /mnt/roms
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

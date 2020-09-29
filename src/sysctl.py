@@ -89,11 +89,13 @@ def write_ifconfig(prefs):
 			#data.append("network ?", [])
 			data.append("network ?", [prefs.get('Network', 'eth0_network')])
 			data.append("broadcast ?", [prefs.get('Network', 'eth0_bcast')])
+		else:
+			data.append("iface eth0 inet auto")
 
 		data.append("allow-hotplug wlan0")
 		# Don't allow DHCP if we're running as an AP.
 		if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_subnet') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
-			setdhcp()
+			data.append("iface wlan0 inet auto")
 			#DHCP setting
 		else:
 			data.append("iface wlan0 inet static")
