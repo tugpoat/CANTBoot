@@ -106,9 +106,6 @@ def saveconftodisk():
 def applysysconfig():
 	logger.info("Applying System configuration...")
 
-	logger.debug("Remounting / rw")
-	remount_rw('/')
-
 	logger.debug("Writing interface config")
 	write_ifconfig(prefs)
 
@@ -125,9 +122,7 @@ def applysysconfig():
 		logger.debug("wifi ap. enabling dnsmasq and hostapd.")
 		enable_dnsmasq()
 		enable_hostapd()
-
-	logger.debug("remounting / ro")
-	remount_ro('/')
+		
 	logger.info("Done. rebooting system.")
 	reboot_system()
 	

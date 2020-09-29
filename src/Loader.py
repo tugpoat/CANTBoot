@@ -8,7 +8,7 @@ import typing as t
 import zlib
 
 on_raspi=False
-if "raspberrypi" in os.uname():
+if "arm" in os.uname().machine:
 	on_raspi=True
 	import RPi.GPIO as GPIO
 

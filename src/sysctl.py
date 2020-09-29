@@ -26,6 +26,18 @@ def enable_sshd():
 	os.system("sudo service ssh enable")
 	os.system("sudo service ssh start")
 
+def enable_ftpd():
+	remount_rw('/mnt/roms')
+	remount_rw('/mnt/cfg')
+	os.system("sudo service vsftpd enable")
+	os.system("sudo service vsftpd start")
+
+def disable_ftpd():
+	remount_ro('/mnt/roms')
+	remount_ro('/mnt/cfg')
+	os.system("sudo service vsftpd disable")
+	os.system("sudo service vsftpd stop")
+
 def disable_dnsmasq():
 	os.system("sudo service dnsmasq stop")
 	os.system("sudo service dnsmasq disable")
