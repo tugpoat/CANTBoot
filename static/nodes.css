@@ -2,8 +2,10 @@ div.node {
 	display: block;
 	margin-left: 2em;
 	margin-bottom: 1em;
-	padding-top:.6em;
-	padding-bottom: .6em;
+/*	padding-top:.6em; */
+    padding-bottom: .6em;
+    padding-left:0;
+    padding-right: 0;
 	max-width: 1140px;
 }
 
@@ -30,21 +32,10 @@ div.col0 {
 
 div.col1 {
 	display:block;
-	float:left;
+	float:right;
+	margin-right: 2em;
 	width: 40%;
 	height: auto;
-}
-
-div.col1 div {
-	display: block;
-	margin: 0.2em 0.2em;
-	text-align: left;
-	vertical-align: middle;
-	white-space: pre-wrap; /* css-3 */    
-    white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
-    white-space: -pre-wrap; /* Opera 4-6 */    
-    white-space: -o-pre-wrap; /* Opera 7 */    
-    word-wrap: break-word; /* Internet Explorer 5.5+ */
 }
 
 div.col0 .game-title {
@@ -54,6 +45,13 @@ div.col0 .game-title {
     white-space: -pre-wrap; /* Opera 4-6 */    
     white-space: -o-pre-wrap; /* Opera 7 */    
     word-wrap: break-word; /* Internet Explorer 5.5+ */
+}
+
+.node progress {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 100%;
+	margin-bottom: 0.6em;
 }
 
 .node-control { 

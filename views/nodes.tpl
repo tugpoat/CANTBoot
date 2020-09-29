@@ -7,13 +7,17 @@
 	<h4>DIMM Nodes</h4>
 	% for node in nodes:
 		<div class="label label-default node" id="{{node.node_id}}">
+			<progress max="100" value="692"></progress>
 			<div class="row">
 				<div class="col0">
 					<img class="system-logo" src="/static/images/systems/{{node.system[0]}}.png" alt="{{node.system[1]}}" />
 					
 					<div class="node-details">
 						<span class="node-nickname row">{{node.nickname}}</span>
-						<span class="node-ip-port row">{{node.ip}}:{{node.port}}</span> (<span class="node-hostname">{{node.hostname}}</span>)
+						<span class="node-ip-port row">{{node.ip}}:{{node.port}}</span> 
+						%if node.hostname:
+						(<span class="node-hostname">{{node.hostname}}</span>)
+						%end
 						<span class="node-status row"></span>
 					</div>
 					<div class="game-details">
@@ -42,7 +46,7 @@
 		
 	% end
 	% end
-	<a class="add-link" href="/nodes/add"><span class="glyphicon glyphicon-plus"></span></a>
+	<a class="add-link" href="/nodes/add"><span class="glyphicon glyphicon-plus"></span>Add Node</a>
 
 	% if not defined('nodes'):
 	<div class="alert alert-danger"><span class="glyphicon glyphicon-warning-sign"></span> No nodes were found! You'll need to add one.</div>

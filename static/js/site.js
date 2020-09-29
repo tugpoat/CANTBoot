@@ -90,6 +90,7 @@ source.onmessage = function(event) {
 		}
 		if (nodes[i].uploadpct) {
 			status += ' uploading: ' + nodes[i].uploadpct + "%\n" ;
+			$("#"+nodes[i].node_id+">progress").attr('value', nodes[i].uploadpct)
 		}
 		console.log(status)
 
