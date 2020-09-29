@@ -1,14 +1,14 @@
-ACNTBoot
+CANTBoot
 ========
 ********WARNING: THIS MAY OR MAY NOT WORK.
 
 It should work and load games and stuff, and I try my best to make sure that it does with each commit.
 
-ACNTBoot is loosely based on NAOMIWeb, and started life as a fork of it.
+CANTBoot is loosely based on NAOMIWeb, and started life as a fork of it.
 ### Github links:
     - https://github.com/root670/NaomiWeb
     - https://github.com/tugpoat/NaomiWeb
-    - https://github.com/tugpoat/ACNTBoot
+    - https://github.com/tugpoat/CANTBoot
 
 I wanted a cleanly-written, easy-to-use, efficient, and easily extensible loader, which was also functional and pleasant to look at.
 I couldn't find one, so I wrote it. It's currently a bit more gross than I'd like, however.

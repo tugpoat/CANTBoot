@@ -286,7 +286,7 @@ class DIMMLoader(Loader):
 	@whatnot
 	https://www.arcade-projects.com/forums/index.php?thread/14549-no-more-pesky-memory-checkings-on-netdimm/&pageNo=1
 	'''
-	def HOST_EnableFastboot(self):
+	def DIMM_CheckDisable(self):
 		self._s.send(struct.pack(">IIIIIIIIH", 0x00000001, 0x1a008104, 0x01000000, 0xf0fffe3f, 0x0000ffff, 0xffffffff, 0xffff0000, 0x00000000, 0x0000))
 
 	def HOST_SetMode(self, v_and, v_or) -> bytes:
@@ -335,31 +335,71 @@ class DIMMLoader(Loader):
 		if key:
 			d = DES.new(key[::-1], DES.MODE_ECB)
 
-		#patch_continue = False
+		patch_continue = 0
+		patched = False
+		patch_iter = iter(patchdata)
 
 		while True:
-			#sys.stderr.write("%08x\r" % addr)
-			data = a.read(0x8000)
-			datalen = len(data)
-			'''
-			#TODO
-			#check patch data to see if there is a patchable address within this chunk.
-			#if there is, then check to see if it extends beyond the length of this chunk.
-				#if yes, set a flag that we are continuing the specified patch data at the beginning of the next chunk.
-
-				#overwrite the data in this chunk, then remove it from the patch data to be applied.
-				#in the case of a partial application, only remove the bytes that we have applied.
-
-			#FIXME: OH GOD THIS IS SLOW WHY AM I DOING IT THIS WAY FIX THIS
-			for e in patchdata:
-				for a, b in e
-					print()
-					if a > addr and a < addr + datalen:
-						#found a patch for this data
-			'''
 
 			if not len(data):
 				break
+
+			# patch continue is set to the index of whatever patch data we need to continue on with the next chunk.
+			# if zero, we don't need to continue. load the next patch if we have already patched the one we were looking for.
+			if patched and patch_continue == 0:
+				#TODO: comment this out for release. no sense in slowing this down with debug output.
+				self._logger.debug("loading next patch.")
+				next_patch = next(patch_iter)
+				patched = False
+
+			#sys.stderr.write("%08x\r" % addr)
+			data = a.read(0x8000)
+			datalen = len(data)
+
+			if next_patch:
+				chunk_end_addr = addr + datalen
+
+				patch_start_addr = next_patch[0]
+				patch_end_addr = next_patch[0] + len(next_patch[1]) * 0xff
+				patch_data_length = patch_end_addr - patch_start_addr
+
+				# patch data solely as far as the current chunk is concerned
+				# address to start patching at within this chunk
+				chunk_patch_start_addr = next_patch[0] + (0xff * patch_continue)
+				# address to end patching at within this chunk
+				chunk_patch_end_addr = (next_patch[0] + (0xff * patch_continue)) + (len(next_patch[1]) * 0xff)
+				# length of the data to patch within this chunk
+				chunk_patch_data_length = chunk_patch_end_addr - chunk_patch_start_addr
+				# number of bytes to patch within this chunkW
+				chunk_patch_data_nbytes = chunk_patch_data_length / 0xff
+
+				#TODO: comment these out for release. no sense in slowing this down with debug output.
+				self._logger.debug("patch start %08x end %08x len %08x" % (patch_start_addr, patch_end_addr, patch_data_length))
+				self._logger.debug("chunk patch start %08x end %08x len %08x" % (chunk_patch_start_addr, chunk_patch_end_addr, chunk_patch_data_length))
+
+				# are we patching anything in this chunk?
+				# we need to account for how far through this patch we are.
+				if chunk_patch_start_addr >= addr and chunk_patch_end_addr <= chunk_end_addr:
+					#we need to patch data in this chunk.
+
+					#TODO: loop each byte to patch from chunk_patch_start_addr and replace the indexed byte in data
+
+					# we need to check if the patch extends beyond this chunk, and if so: how far?
+					# lvalue = end address of patch
+					# rvalue = end address of this chunk
+					if patch_end_addr > chunk_end_addr:
+
+						# patch continues beyond the end of this chunk. Find out how far, and turn it into an byte-array indexable value.
+						patch_continue = (patch_end_addr - chunk_end_addr) / 0xff
+
+						#TODO: comment this out for release. no sense in slowing this down with debug output.
+						self._logger.debug("patch data continues %08x (%d bytes) beyond this chunk" % ((patch_end_addr - chunk_end_addr), patch_continue))
+					else:
+						#TODO: comment these out for release. no sense in slowing this down with debug output.
+						self._logger.debug("patch from %08x done." % patch_start_addr)
+						patched = True
+						patch_continue = 0
+
 			if key:
 				data = d.encrypt(data[::-1])[::-1]
 
@@ -633,7 +673,7 @@ class DIMMLoader(Loader):
 			self.SECURITY_SetKeycode("\x00" * 8)
 
 			if self.enableFastboot:
-				self.HOST_EnableFastboot()
+				self.DIMM_CheckDisable()
 
 			self._logger.info("Uploading " + self.rom_path)
 			# uploads file. Also sets "dimm information" (file length and crc32)

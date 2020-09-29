@@ -24,7 +24,6 @@ class ACNTBootDatabase:
 		return self._sqlite.execute("SELECT id, title FROM games WHERE header_title = ? LIMIT 1", [header_title]).fetchone()
 
 	def getGameInformationById(self, game_id):
-		print("fuck" +game_id)
 		return self._sqlite.execute("SELECT id, title FROM games WHERE id = ? LIMIT 1", [game_id]).fetchone()
 
 	def getAttributes(self):

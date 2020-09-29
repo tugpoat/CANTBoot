@@ -42,10 +42,12 @@ def enable_hostapd():
 	os.system("sudo service hostapd enable")
 	os.system("sudo service hostapd start")
 
+#FIXME: actually read from stdout
 def get_ifstate(iface : str):
 	#get output from ifconfig to check up on live configuration data/state
 	os.system("ifconfig "+iface)
 
+#FIXME: actually read from stdout
 def get_wlanstate(iface : str):
 	#get output from iwconfig to check up on live state
 	os.system("sudo iwconfig "+iface)
