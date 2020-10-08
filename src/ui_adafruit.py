@@ -7,6 +7,8 @@ from GameDescriptor import GameDescriptor
 from GameList import GameList, GameList_ScanEventMessage
 from mbus import *
 
+#TODO: break each menu out into its own class and just set an instance of the parent
+
 class UI_Adafruit(Thread):
 	_db = None
 	_pi_rev = None
@@ -62,6 +64,26 @@ class UI_Adafruit(Thread):
 				revision = item[1].strip()
 		return revision
 
+	def cb_menu_nodes_up(self):
+		#select prev node
+		return
+
+	def cb_menu_nodes_dn(self):
+		#select next node
+		return
+
+	def cb_menu_nodes_left(self):
+		#idk, rescan or something?
+		return
+
+	def cb_menu_nodes_right(self):
+		#node options... universal patches maybe?
+		return
+
+	def cb_menu_nodes_sel(self):
+		#goto games menu for node
+		return
+
 	# Input callbacks for games menu
 	def cb_menu_games_up(self):
 		if lcd.DOWN not in pressedButtons:
@@ -99,12 +121,15 @@ class UI_Adafruit(Thread):
 		return
 
 	def cb_menu_games_left(self):
+		#back?
 		return
 
 	def cb_menu_games_right(self):
+		#goto game options menu (patch select?)
 		return
 
-	def cb_menu_games_select(self):
+	def cb_menu_games_sel(self):
+
 		#Yell at main thread to set game
 		MBus.handle(Node_SetGameCommandMessage(payload=['0', selection.file_checksum]))
 		#Yell at main to run the game on the node
@@ -131,6 +156,8 @@ class UI_Adafruit(Thread):
 				if lcd.buttonPressed(lcd.UP):
 					if self._mode == "games":
 						self.cb_menu_games_up()
+					elif self._mode == "nodes":
+
 				# Handle DOWN
 				if lcd.buttonPressed(lcd.DOWN):
 					if self._mode == "games":
@@ -138,7 +165,7 @@ class UI_Adafruit(Thread):
 
 				if lcd.buttonPressed(lcd.SELECT):
 					if self._mode == "games":
-						self.cb_menu_games_select();
+						self.cb_menu_games_sel();
 
 			sleep(0.1)
 

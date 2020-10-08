@@ -19,6 +19,11 @@ class NodeManager():
 
 		MBus.add_handler(Node_LoaderUploadPctMessage, self.handle_LoaderUploadPctMessage)
 
+	'''
+	Associates a GameDescriptor object with a NodeDescriptor object.
+	Then, instantiates or updates the appropriate Loader object for the NodeDescriptor.
+	This is an integral part of loading a game.
+	'''
 	def setgame(self, n: str, gd : GameDescriptor):
 		node = self.nodes[n]
 		loader_class = Loader
@@ -77,6 +82,10 @@ class NodeManager():
 			for l in self._loaders:
 				l.tick()
 
+	'''
+	This function sanity-checks a gamedescriptor against a nodedescriptor based on what the user has configured for properties.
+	It is also used to filter the games list when selecting a game to boot on the specified node.
+	'''
 	def validateGameDescriptor(self, nd : NodeDescriptor, gd : GameDescriptor, strict = True) -> bool:
 		bootable = True
 		try:
