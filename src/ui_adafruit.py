@@ -9,6 +9,40 @@ from mbus import *
 
 #TODO: break each menu out into its own class and just set an instance of the parent
 
+##TODO: My brain isn't working well enough right now to implement this. I may or may not be on the right track.`
+class TwoLineLcdMenu():
+	__line1 = 'C==============3'
+	__line2 = '8==============D'
+	__submenu = None
+
+	_lcd = None
+
+	def __init__(self, lcd):
+		self._lcd = lcd
+
+	def render():
+		self._lcd.clear()
+		self._lcd.message(self.__line1 + self.__line2)
+
+	def btn_press_up():
+		pass
+
+	def btn_press_dn():
+		pass
+
+	def btn_press_left():
+		pass
+
+	def btn_press_right():
+		pass
+
+	def btn_press_sel():
+		pass
+
+class NodeMenu(TwoLineLcdMenu):
+	pass 
+
+
 class UI_Adafruit(Thread):
 	_db = None
 	_pi_rev = None
@@ -18,12 +52,15 @@ class UI_Adafruit(Thread):
 
 	_pressedButtons = []
 
+
 	# Currently selected menu/mode. Maybe supercede this with something better
 	_mode = None
 
 	def __init__(self, prefs, games):
 		super(UI_Adafruit, self).__init__()
 
+		self.__logger = logging.getLogger("UI_Adafruit " + str(id(self)))
+		self.__logger.debug("init logger")
 		# We need to know the hw revision apparently.
 		# piforcetools did this so I'll do it too
 		self._pi_rev = self.get_hw_rev();
@@ -98,6 +135,7 @@ class UI_Adafruit(Thread):
 					needle = iterator.next()
 				except StopIteration:
 					break
+
 			lcd.clear()
 			lcd.message(selection.title)
 		elif lcd.UP in pressedButtons:
@@ -111,9 +149,9 @@ class UI_Adafruit(Thread):
 			try:
 				selection = iterator.next()
 			except StopIteration:
-					iterator = iter(games)
-
+				iterator = iter(self._games)
 				selection = iterator.next()
+
 			lcd.clear()
 			lcd.message(selection.title)
 		elif lcd.DOWN in pressedButtons:
@@ -157,7 +195,8 @@ class UI_Adafruit(Thread):
 					if self._mode == "games":
 						self.cb_menu_games_up()
 					elif self._mode == "nodes":
-
+						pass
+						
 				# Handle DOWN
 				if lcd.buttonPressed(lcd.DOWN):
 					if self._mode == "games":

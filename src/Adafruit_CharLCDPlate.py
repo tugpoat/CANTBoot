@@ -449,9 +449,9 @@ if __name__ == '__main__':
            ('Teal', lcd.TEAL), ('Blue'  , lcd.BLUE)  , ('Violet', lcd.VIOLET),
            ('Off' , lcd.OFF) , ('On'    , lcd.ON))
 
-    print "Cycle thru backlight colors"
+    print("Cycle thru backlight colors")
     for c in col:
-       print c[0]
+       print(c[0])
        lcd.clear()
        lcd.message(c[0])
        lcd.backlight(c[1])
@@ -463,7 +463,7 @@ if __name__ == '__main__':
            (lcd.DOWN  , 'Down'  , lcd.GREEN),
            (lcd.RIGHT , 'Right' , lcd.VIOLET))
     
-    print "Try buttons on plate"
+    print("Try buttons on plate")
     lcd.clear()
     lcd.message("Try buttons")
     prev = -1
@@ -471,7 +471,7 @@ if __name__ == '__main__':
         for b in btn:
             if lcd.buttonPressed(b[0]):
                 if b is not prev:
-                    print b[1]
+                    print(b[1])
                     lcd.clear()
                     lcd.message(b[1])
                     lcd.backlight(b[2])

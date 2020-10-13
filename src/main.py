@@ -144,7 +144,7 @@ if cfg_api_mode != 'slave':
 	games_list = GameList(prefs['Directories']['cfg_dir'], prefs['Directories']['games_dir'])
 
 	# Set up adafruit ui if detected and enabled
-	if prefs['Main']['adafruit_ui'] == 'True' and "raspberrypi" in os.uname():
+	if prefs['Main']['adafruit_ui'] == 'True' and "arm" in os.uname().machine:
 		from ui_adafruit import UI_Adafruit
 		adafapp = UI_Adafruit(prefs, games_list)
 		t = threading.Thread(target=adafapp.run)
