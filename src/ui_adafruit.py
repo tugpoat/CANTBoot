@@ -87,10 +87,14 @@ class UI_Adafruit(Thread):
 		# piforcetools did this so I'll do it too
 		self._pi_rev = self.get_hw_rev();
 
-		if self._pi_rev.startswith('a'):
-			self._lcd = Adafruit_CharLCDPlate(busnum = 1)
-		else:
-			self._lcd = Adafruit_CharLCDPlate()
+		try:
+			if self._pi_rev.startswith('a'):
+				self._lcd = Adafruit_CharLCDPlate(busnum = 1)
+			else:
+				self._lcd = Adafruit_CharLCDPlate()
+		except OSError as ex:
+			self.__logger.error("Eror spawning Adafruit LCD object:" + repr(ex))
+			return
 
 		MBus.add_handler(GameList_ScanEventMessage, self.handle_GameList_ScanEventMessage)
 

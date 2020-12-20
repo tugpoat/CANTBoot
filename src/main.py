@@ -147,8 +147,11 @@ if cfg_api_mode != 'slave':
 	# Set up adafruit ui if detected and enabled
 	if prefs['Main']['adafruit_ui'] == 'True' and "arm" in os.uname().machine:
 		from ui_adafruit import UI_Adafruit
-		adafapp = UI_Adafruit(prefs, games_list)
-		t = threading.Thread(target=adafapp.runui).start()
+		try:
+			adafapp = UI_Adafruit(prefs, games_list)
+			t = threading.Thread(target=adafapp.runui).start()
+		except Exception as ex:
+			logger.error("Error spawning Adafruit UI: " + repr(ex))
 
 	#TODO: Launch other UIs here
 
