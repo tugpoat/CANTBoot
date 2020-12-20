@@ -51,6 +51,7 @@ prefs_file.close()
 prefs['Directories']['cfg_dir'] = CFG_DIR
 
 cfg_debug = bool(prefs['Main']['debug'])
+cfg_use_parts = bool(prefs['Main']['use_parts'])
 cfg_api_mode = str(prefs['Main']['api_mode'])
 
 #TODO if api slave skip all the following and call a different thingy
@@ -92,7 +93,7 @@ def handle_ApplySysConfig(message: ApplySysConfig):
 
 def saveconftodisk():
 	logger.info("Saving configuration to disk...")
-	#if not cfg_debug: remount_rw(prefs['Directories']['cfg_part'])
+	if cfg_use_parts: remount_rw(prefs['Partitions']['cfg_part'])
 
 	nodeman.saveNodesToDisk(prefs['Directories']['cfg_dir'] + '/nodes')
 	games_list.exportList()
@@ -100,7 +101,7 @@ def saveconftodisk():
 	with open(prefs['Directories']['cfg_dir'] + '/settings.cfg', 'w') as prefs_file:
 		prefs.write(prefs_file)
 
-	#if not cfg_debug: remount_ro(prefs['Directories']['cfg_part'])
+	if cfg_use_parts: remount_ro(prefs['Partitions']['cfg_part'])
 	logger.info("Done saving configuration to disk")
 
 def applysysconfig():
@@ -147,7 +148,7 @@ if cfg_api_mode != 'slave':
 	if prefs['Main']['adafruit_ui'] == 'True' and "arm" in os.uname().machine:
 		from ui_adafruit import UI_Adafruit
 		adafapp = UI_Adafruit(prefs, games_list)
-		t = threading.Thread(target=adafapp.run)
+		t = threading.Thread(target=adafapp.runui).start()
 
 	#TODO: Launch other UIs here
 

@@ -173,7 +173,7 @@ class UIWeb_Bottle(Bottle):
 		wlan0_dhcp_high = self._prefs['Network']['wlan0_dhcp_high']  or '10.0.0.200'
 
 
-		games_directory =   self._prefs['Games']['directory']       or 'games'
+		games_directory =   self._prefs['Directories']['games_dir']       or 'games'
 		#render
 		return template('config',
 			skip_checksum=skip_checksum,

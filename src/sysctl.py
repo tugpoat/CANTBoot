@@ -4,10 +4,10 @@
 import os
 
 def remount_rw(mountpoint : str):
-	os.system("sudo mount -o remount,rw %s", mountpoint)
+	os.system("sudo mount -o remount,rw "+mountpoint)
 
 def remount_ro(mountpoint : str):
-	os.system("sudo mount -o remount,ro %s", mountpoint)
+	os.system("sudo mount -o remount,ro "+mountpoint)
 
 def reboot_system():
 	os.system("sudo reboot")

@@ -38,6 +38,7 @@ Requirements
   -beaker
   -hashlib
   -pymessagebus
+  -smbus
   -sqlite3
   -threads
   -pyyaml

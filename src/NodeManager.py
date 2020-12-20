@@ -151,4 +151,3 @@ class NodeManager():
 
 	def handle_LoaderUploadPctMessage(self, message: Node_LoaderUploadPctMessage):
 		self.nodes[message.payload[0]].loader_uploadpct = message.payload[1]
-		#	self.loader_uploadpct = message.payload[1] #I don't know why this isn't setting on my python but it's blocking me and I'm going to look at it with fresh eyes later
