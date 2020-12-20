@@ -17,7 +17,7 @@ class Adafruit_I2C :
 			with open('/proc/cpuinfo','r') as f:
 				for line in f:
 					if line.startswith('Revision'):
-						#Smurph edit
+						#tugpoat edit
 						r = line.rstrip()[-1] 
 						return 1 if r in ['1','2'] else r
 		except:
@@ -34,8 +34,9 @@ class Adafruit_I2C :
 		# Alternatively, you can hard-code the bus version below:
 		# self.bus = smbus.SMBus(0); # Force I2C0 (early 256MB Pi's)
 		# self.bus = smbus.SMBus(1); # Force I2C1 (512MB Pi's)
-		self.bus = smbus.SMBus(
-			busnum if busnum >= 0 else Adafruit_I2C.getPiI2CBusNumber())
+		#self.bus = smbus.SMBus(
+		#	busnum if busnum >= 0 else Adafruit_I2C.getPiI2CBusNumber())
+		self.bus = smbus.SMBus(1) #Always use 1. Literally nobody is still using the original RPi and I have no reason to support it. -tugpoat
 		self.debug = debug
 
 	def reverseByteOrder(self, data):
