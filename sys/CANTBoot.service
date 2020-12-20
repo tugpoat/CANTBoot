@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=naomi
+User=root
 WorkingDirectory=/home/naomi/CANTBoot
 ExecStart=/home/naomi/CANTBoot/src/main.py --cfgdir /mnt/cfg --romsdir /mnt/roms
 Restart=on-failure
