@@ -9,21 +9,30 @@ from GameList import GameList, GameList_ScanEventMessage
 from Loader import Node_SetGameCommandMessage, Node_LaunchGameCommandMessage
 from mbus import *
 
+from main import nodeman
+
 #TODO: break each menu out into its own class and just set an instance of the parent
 
 ##TODO: My brain isn't working well enough right now to implement this. I may or may not be on the right track.`
 class TwoLineLcdMenu():
 	_line1 = 'C==============3'
+	_line1_scroll_idx = 0
 	_line2 = '8==============D'
+	_line2_scroll_idx = 0
+
 	_parent_menu = None
 	_sub_menu = None
 
 	_lcd = None
+	_prev_button = None
+	_pressed_buttons = []
 
 	_list = None
 	_index = 0
 
-	def __init__(self, lcd, parent = None):
+	_exit = False
+
+	def __init__(self, lcd):
 		self._lcd = lcd
 
 		if parent != None:
@@ -34,9 +43,23 @@ class TwoLineLcdMenu():
 		self._lcd.message(self._line1 + "\n" + self._line2)
 
 	def btn_press_up():
+		#One press at a time, please
+		if self._lcd.UP in self._pressed_buttons:
+			return
+		else
+			self._pressed_buttons.remove(self._lcd.UP)
+
+		self._pressed_buttons.append(self._lcd.UP)
 		pass
 
 	def btn_press_dn():
+		#One press at a time, please
+		if self._lcd.DOWN in self._pressed_buttons: 
+			return
+		else
+			self._pressed_buttons.remove(self._lcd.DOWN)
+
+		self._pressed_buttons.append(self._lcd.DOWN)
 		pass
 
 	def btn_press_left():
@@ -54,12 +77,107 @@ class TwoLineLcdMenu():
 		# Also because we're guaranteed to be working with more than enough memory/cpu resources on any platform we will be running this code on
 		# Since python treats all objects as references, we can just pass all the LCD and MessageBus objects around and it's fine
 		# Therefore, code readability > efficiency for this module.
-		pass
+		while self._exit == False:
+			if self._lcd.buttonPressed(self._lcd.UP):
+				self.btn_press_up()
+			elif self._lcd.buttonPressed(self._lcd.DOWN):
+				self.btn_press_dn()
+			elif self._lcd.buttonPressed(self._lcd.LEFT):
+				self.btn_press_left()
+			elif self._lcd.buttonPressed(self._lcd.RIGHT):
+				self.btn_press_right()
+			elif self._lcd.buttonPressed(self._lcd.SELECT):
+				self.btn_press_sel()
+			else:
+				self._logger.error("unhandled button")
 
-class NodeMenu(TwoLineLcdMenu):
-	pass 
+			self.render()
+
+class UIAdaMainMenu(TwoLineLcdMenu):
+	def __init__(self, lcd)
+		super().__init__(lcd)
+
+		self._list = ['Nodes', 'Config']
+
+		self._logger = logging.getLogger("UIAdaConfigMenu " + str(id(self)))
+		self._logger.debug("init logger")
+
+		def btn_press_up():
+			super().btn_press_up()
+
+			self._index += 1
+			if self._index >= self._list.len(): self._index = 0
+
+			self._line1 = self._list[self._index]
+
+		def btn_press_dn():
+			super().btn_press_dn()
+
+			self._index -= 1
+			if self._index < 0: self._index = self._list.len() - 1
+
+			self._line1 = self._list[self._index]
+
+		def btn_press_sel():
+			if self._list[self._index] == 'Nodes':
+				submenu = UIAdaNodeListMenu(self._lcd, nodeman.nodes)
+				submenu.run_menu()
+			elif self._list[self._index] == 'Config':
+				submenu = UIAdaConfigMenu(self._lcd)
+				submenu.run_menu()
+
+class UIAdaConfigMenu(TwoLineLcdMenu):
+		def __init__(self, lcd)
+		super().__init__(lcd)
+
+		self._logger = logging.getLogger("UIAdaConfigMenu " + str(id(self)))
+		self._logger.debug("init logger")
+
+class UIAdaNodeListMenu(TwoLineLcdMenu):
+
+	def __init__(self, lcd, nodelist)
+		super().__init__(lcd)
+
+		self._logger = logging.getLogger("UIAdaNodeMenu " + str(id(self)))
+		self._logger.debug("init logger")
+
+		self._list = nodelist
+
+	def btn_press_up():
+		#One press at a time, please
+		if self._lcd.UP in self._pressed_buttons:
+			return
+		else
+			self._pressed_buttons.remove(self._lcd.UP)
+
+		self._pressed_buttons.append(self._lcd.UP)
+
+		self._index += 1
+		if self._index >= self._list.len(): self._index = 0
+
+		self._line1 = self._list[self._index].hostname
+
+	def btn_press_dn():
+		#One press at a time, please
+		if self._lcd.DOWN in self._pressed_buttons:
+			return
+		else
+			self._pressed_buttons.remove(self._lcd.DOWN)
+
+		self._pressed_buttons.append(self._lcd.DOWN)
+
+		self._index -= 1
+		if self._index < 0: self._index = self._games.len() - 1
+
+		self._line1 = self._list[self._index].hostname
+
+	def run_menu():
+		while self._exit == False:
+
+
 
 class GamesMenu(TwoLineLcdMenu):
+	_games = None
 	pass
 
 

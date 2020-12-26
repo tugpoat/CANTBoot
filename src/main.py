@@ -49,6 +49,7 @@ prefs.read_file(prefs_file)
 prefs_file.close()
 
 prefs['Directories']['cfg_dir'] = CFG_DIR
+prefs['Directories']['roms_dir'] = args.romsdir
 
 cfg_debug = bool(prefs['Main']['debug'])
 cfg_use_parts = bool(prefs['Main']['use_parts'])
