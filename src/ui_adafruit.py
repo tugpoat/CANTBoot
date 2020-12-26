@@ -144,13 +144,7 @@ class UIAdaNodeListMenu(TwoLineLcdMenu):
 		self._list = nodelist
 
 	def btn_press_up():
-		#One press at a time, please
-		if self._lcd.UP in self._pressed_buttons:
-			return
-		else
-			self._pressed_buttons.remove(self._lcd.UP)
-
-		self._pressed_buttons.append(self._lcd.UP)
+		super().btn_press_up()
 
 		self._index += 1
 		if self._index >= self._list.len(): self._index = 0
@@ -158,21 +152,12 @@ class UIAdaNodeListMenu(TwoLineLcdMenu):
 		self._line1 = self._list[self._index].hostname
 
 	def btn_press_dn():
-		#One press at a time, please
-		if self._lcd.DOWN in self._pressed_buttons:
-			return
-		else
-			self._pressed_buttons.remove(self._lcd.DOWN)
-
-		self._pressed_buttons.append(self._lcd.DOWN)
+		super().btn_press_dn()
 
 		self._index -= 1
 		if self._index < 0: self._index = self._games.len() - 1
 
 		self._line1 = self._list[self._index].hostname
-
-	def run_menu():
-		while self._exit == False:
 
 
 
@@ -214,7 +199,7 @@ class UI_Adafruit(Thread):
 
 		# Let the user know that we're doing things
 		self._lcd.begin(16, 2)
-		self._lcd.message("ACNTBoot Loading\n    Hold up.")
+		self._lcd.message("CANTBoot Loading\n    Hold up.")
 
 		self._mode ="games" #set for games list by default
 
