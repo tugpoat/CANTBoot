@@ -19,6 +19,10 @@ from Loader import *
 
 from ui_web import UIWeb_Bottle
 
+on_raspi=False
+if "arm" in os.uname().machine:
+	on_raspi=True
+
 '''
 ######################################################################################################
 ## Basic Configuration and setup
@@ -34,25 +38,31 @@ parser.add_argument("--romsdir", default='/mnt/roms')
 # parse the arguments
 args = parser.parse_args()
 
-CFG_DIR = args.cfgdir
 logger = logging.getLogger("main")
 logger.debug("init logger")
-logger.debug("CFG_DIR=" + CFG_DIR)
+logger.info("cfg_dir=" + args.cfgdir)
+logger.info("roms_dir=" + args.romsdir)
 
-if not os.path.isfile(CFG_DIR+'/settings.cfg'):
-	logger.fatal('no config found. todo: copy default config or create config in ' + CFG_DIR)
+if not os.path.isfile(args.cfgdir+'/settings.cfg'):
+	logger.fatal('no config found. todo: copy default config or create config in ' + args.cfgdir)
 
-PREFS_FILE=CFG_DIR+"/settings.cfg"
+PREFS_FILE=args.cfgdir+"/settings.cfg"
 prefs = configparser.ConfigParser()
 prefs_file = open(PREFS_FILE, 'r')
 prefs.read_file(prefs_file)
 prefs_file.close()
 
-prefs['Directories']['cfg_dir'] = CFG_DIR
+prefs['Directories']['cfg_dir'] = args.cfgdir
 prefs['Directories']['roms_dir'] = args.romsdir
 
 cfg_debug = bool(prefs['Main']['debug'])
 cfg_use_parts = bool(prefs['Main']['use_parts'])
+
+#We're not on a raspi and likely also not using our image. Don't try to mount and unmount the partitions that don't exist.
+if not on_raspi and cfg_use_parts:
+	cfg_use_parts = False
+	prefs['Main']['use_parts'] = 'False'
+
 cfg_api_mode = str(prefs['Main']['api_mode'])
 
 #TODO if api slave skip all the following and call a different thingy
@@ -134,6 +144,7 @@ def applysysconfig():
 ######################################################################################################
 '''
 # set up node list
+
 nodeman = NodeManager(bool(prefs['Main']['autoboot']))
 nodeman.loadNodesFromDisk(prefs['Directories']['cfg_dir'] + '/nodes')
 
@@ -143,10 +154,10 @@ if cfg_api_mode != 'slave':
 	db = ACNTBootDatabase('db.sqlite')
 
 	# set up game list
-	games_list = GameList(prefs['Directories']['cfg_dir'], prefs['Directories']['games_dir'])
+	games_list = GameList(prefs['Directories']['cfg_dir'], prefs['Directories']['roms_dir'])
 
 	# Set up adafruit ui if detected and enabled
-	if prefs['Main']['adafruit_ui'] == 'True' and "arm" in os.uname().machine:
+	if prefs['Main']['adafruit_ui'] == 'True' and on_raspi == True:
 		from ui_adafruit import UI_Adafruit
 		try:
 			adafapp = UI_Adafruit(prefs, games_list)

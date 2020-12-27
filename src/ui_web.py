@@ -173,7 +173,7 @@ class UIWeb_Bottle(Bottle):
 		wlan0_dhcp_high = self._prefs['Network']['wlan0_dhcp_high']  or '10.0.0.200'
 
 
-		games_directory =   self._prefs['Directories']['games_dir']       or 'games'
+		games_directory =   self._prefs['Directories']['roms_dir']       or 'games'
 		#render
 		return template('config',
 			skip_checksum=skip_checksum,
@@ -236,7 +236,7 @@ class UIWeb_Bottle(Bottle):
 		self._prefs['Network']['wlan0_dhcp_low']       =     wlan0_dhcp_low       =   request.forms.get('wlan0_dhcp_low')
 		self._prefs['Network']['wlan0_dhcp_high']       =     wlan0_dhcp_high       =   request.forms.get('wlan0_dhcp_high')
 
-		self._prefs['Games']['directory']         =     games_directory =   request.forms.get('games_directory')
+		self._prefs['Directories']['roms']         =     games_directory =   request.forms.get('games_directory')
 
 		#Save config to disk
 		MBus.handle(SaveConfigToDisk())

@@ -9,15 +9,16 @@ from GameList import GameList, GameList_ScanEventMessage
 from Loader import Node_SetGameCommandMessage, Node_LaunchGameCommandMessage
 from mbus import *
 
-from main import nodeman
-
+nodeman = None
 #TODO: break each menu out into its own class and just set an instance of the parent
 
 ##TODO: My brain isn't working well enough right now to implement this. I may or may not be on the right track.`
 class TwoLineLcdMenu():
 	_line1 = 'C==============3'
+	_line1_outbuf=''
 	_line1_scroll_idx = 0
 	_line2 = '8==============D'
+	_line2_outbuf=''
 	_line2_scroll_idx = 0
 
 	_parent_menu = None
@@ -27,7 +28,7 @@ class TwoLineLcdMenu():
 	_prev_button = None
 	_pressed_buttons = []
 
-	_list = None
+	_list = []
 	_index = 0
 
 	_exit = False
@@ -35,43 +36,39 @@ class TwoLineLcdMenu():
 	def __init__(self, lcd):
 		self._lcd = lcd
 
-		if parent != None:
-			self._parent_menu = parent
+		self._logger = logging.getLogger("TwoLineLcdMenu " + str(id(self)))
+		self._logger.debug("init logger")
 
-	def render():
+	def render(self):
 		self._lcd.clear()
-		self._lcd.message(self._line1 + "\n" + self._line2)
+		self._lcd.message(self._line1_outbuf + "\n" + self._line2_outbuf)
 
-	def btn_press_up():
+	def btn_press_up(self):
 		#One press at a time, please
 		if self._lcd.UP in self._pressed_buttons:
-			return
-		else
 			self._pressed_buttons.remove(self._lcd.UP)
+			return
 
 		self._pressed_buttons.append(self._lcd.UP)
-		pass
 
-	def btn_press_dn():
+	def btn_press_dn(self):
 		#One press at a time, please
 		if self._lcd.DOWN in self._pressed_buttons: 
-			return
-		else
 			self._pressed_buttons.remove(self._lcd.DOWN)
+			pass
 
 		self._pressed_buttons.append(self._lcd.DOWN)
+
+	def btn_press_left(self):
 		pass
 
-	def btn_press_left():
+	def btn_press_right(self):
 		pass
 
-	def btn_press_right():
+	def btn_press_sel(self):
 		pass
 
-	def btn_press_sel():
-		pass
-
-	def run_menu():
+	def run_menu(self):
 		# Should include a while loop here to run the menu in each inherited definition, as these menus are all executed synchronously 
 		# So we can have a bunch of nested loops and not give a fuck
 		# Also because we're guaranteed to be working with more than enough memory/cpu resources on any platform we will be running this code on
@@ -91,10 +88,60 @@ class TwoLineLcdMenu():
 			else:
 				self._logger.error("unhandled button")
 
+			# FIXME: TEST THIS HORIZONTAL SCROLL WRAPPING STUFF
+			# I JUST BLIND-WROTE IT IN LIKE 5 MINUTES AND I HAVENT EATEN YET TODAY SO IT'S PROBABLY CRAP
+
+			#build output buffer for line 1
+			if len(self._line1) > 16:
+
+				#get the window end index inside of our string buffer
+				window_end_idx = self._line1_scroll_idx+16
+
+				#set this up just in case
+				wrap_idx = 0
+
+				# If the window end is past the end of the string buffer, 
+				# then use the end of the string buffer for our window end index
+				if window_end_idx > len(self._line1)-1:
+					# we've gone beyond the end of our string.
+					# get the 0+n index of characters we can wrap by
+					wrap_idx = window_end_idx - len(self._line1) - 2 # Leave room for a whitespace
+
+					#the end of our window is the end of our content string.
+					window_end_idx = len(self._line1) - 1
+
+					self._logger.debug("start_idx="+self._line1_scroll_idx+",wrap_idx="+wrap_idx+",window_end_idx="+window_end_idx)
+
+					window = self._line1[self._line1_scroll_idx:window_end_idx]
+
+					wrap = " " + self._line1[0:wrap_idx]
+
+					self._logger.debug("wrap="+wrap+",window="+window)
+
+					tmpbuf = window+wrap
+				else:
+					# Otherwise just use the end idx we calculated above
+					tmpbuf =self._line1[self._line1_scroll_idx:window_end_idx]
+
+				self._line1_scroll_idx += 1 #we will scroll one character every interval (todo: maybe some kind of refresh counter?)
+
+				# Reset index to 0 when we pass the end of the string
+				if self._line1_scroll_idx >= len(self._line1):
+					self._line1_scroll_idx = 0
+			else:
+				tmpbuf = self._line1
+
+			self._logger.debug(tmpbuf)
+
+			self._line1_outbuf = tmpbuf
+			self._line2_outbuf = self._line2 # todo: wrap maybe idk
+
 			self.render()
 
+			sleep(0.3)
+
 class UIAdaMainMenu(TwoLineLcdMenu):
-	def __init__(self, lcd)
+	def __init__(self, lcd):
 		super().__init__(lcd)
 
 		self._list = ['Nodes', 'Config']
@@ -102,32 +149,37 @@ class UIAdaMainMenu(TwoLineLcdMenu):
 		self._logger = logging.getLogger("UIAdaConfigMenu " + str(id(self)))
 		self._logger.debug("init logger")
 
-		def btn_press_up():
-			super().btn_press_up()
+	def btn_press_up(self):
+		super().btn_press_up()
+		if self._lcd.UP not in self._pressed_buttons: return
 
-			self._index += 1
-			if self._index >= self._list.len(): self._index = 0
+		self._index += 1
+		if self._index >= self._list.len(): self._index = 0
 
-			self._line1 = self._list[self._index]
+		self._line1 = self._list[self._index]
 
-		def btn_press_dn():
-			super().btn_press_dn()
+	def btn_press_dn(self):
+		super().btn_press_dn()
+		if self._lcd.DOWN not in self._pressed_buttons: return
 
-			self._index -= 1
-			if self._index < 0: self._index = self._list.len() - 1
+		self._index -= 1
+		if self._index < 0: self._index = self._list.len() - 1
 
-			self._line1 = self._list[self._index]
+		self._line1 = self._list[self._index]
 
-		def btn_press_sel():
-			if self._list[self._index] == 'Nodes':
-				submenu = UIAdaNodeListMenu(self._lcd, nodeman.nodes)
-				submenu.run_menu()
-			elif self._list[self._index] == 'Config':
-				submenu = UIAdaConfigMenu(self._lcd)
-				submenu.run_menu()
+	def btn_press_sel(self):
+		super().btn_press_sel()
+		if self._lcd.SELECT not in self._pressed_buttons: return
+
+		if self._list[self._index] == 'Nodes':
+			submenu = UIAdaNodeListMenu(self._lcd, nodeman.nodes)
+			submenu.run_menu()
+		elif self._list[self._index] == 'Config':
+			submenu = UIAdaConfigMenu(self._lcd)
+			submenu.run_menu()
 
 class UIAdaConfigMenu(TwoLineLcdMenu):
-		def __init__(self, lcd)
+	def __init__(self, lcd):
 		super().__init__(lcd)
 
 		self._logger = logging.getLogger("UIAdaConfigMenu " + str(id(self)))
@@ -135,7 +187,7 @@ class UIAdaConfigMenu(TwoLineLcdMenu):
 
 class UIAdaNodeListMenu(TwoLineLcdMenu):
 
-	def __init__(self, lcd, nodelist)
+	def __init__(self, lcd, nodelist):
 		super().__init__(lcd)
 
 		self._logger = logging.getLogger("UIAdaNodeMenu " + str(id(self)))
@@ -143,19 +195,19 @@ class UIAdaNodeListMenu(TwoLineLcdMenu):
 
 		self._list = nodelist
 
-	def btn_press_up():
+	def btn_press_up(self):
 		super().btn_press_up()
 
 		self._index += 1
-		if self._index >= self._list.len(): self._index = 0
+		if self._index >= len(self._list): self._index = 0
 
 		self._line1 = self._list[self._index].hostname
 
-	def btn_press_dn():
+	def btn_press_dn(self):
 		super().btn_press_dn()
 
 		self._index -= 1
-		if self._index < 0: self._index = self._games.len() - 1
+		if self._index < 0: self._index = len(self._games) - 1
 
 		self._line1 = self._list[self._index].hostname
 
@@ -178,9 +230,6 @@ class UI_Adafruit(Thread):
 
 	_index = 0
 
-	# Currently selected menu/mode. Maybe supercede this with something better
-	_mode = None
-
 	def __init__(self, prefs, games):
 		super(UI_Adafruit, self).__init__()
 
@@ -201,8 +250,6 @@ class UI_Adafruit(Thread):
 		self._lcd.begin(16, 2)
 		self._lcd.message("CANTBoot Loading\n    Hold up.")
 
-		self._mode ="games" #set for games list by default
-
 		self._games = games
 
 	def handle_GameList_ScanEventMessage(self, message: GameList_ScanEventMessage):
@@ -222,70 +269,6 @@ class UI_Adafruit(Thread):
 				revision = item[1].strip()
 		return revision
 
-	def cb_menu_nodes_up(self):
-		#select prev node
-		return
-
-	def cb_menu_nodes_dn(self):
-		#select next node
-		return
-
-	def cb_menu_nodes_left(self):
-		#idk, rescan or something?
-		return
-
-	def cb_menu_nodes_right(self):
-		#node options... universal patches maybe?
-		return
-
-	def cb_menu_nodes_sel(self):
-		#goto games menu for node
-		return
-
-	# Input callbacks for games menu
-	def cb_menu_games_up(self):
-		if self._lcd.UP not in self._pressedButtons:
-			self.__logger.debug(self._games.len())
-			self._pressedButtons.append(self._lcd.UP)
-
-			self._index += 1
-			if self._index >= self._games.len(): self._index = 0
-
-			self._lcd.clear()
-			self._lcd.message(self._games[self._index].title)
-		elif self._lcd.UP in self._pressedButtons:
-			self._pressedButtons.remove(self._lcd.UP)
-		return
-
-	def cb_menu_games_dn(self):
-		if self._lcd.DOWN not in self._pressedButtons:
-			self._pressedButtons.append(self._lcd.DOWN)
-
-			self._index -= 1
-			if self._index < 0: self._index = self._games.len() - 1
-
-			self._lcd.clear()
-			self._lcd.message(self._games[self._index].title)
-		elif self._lcd.DOWN in self._pressedButtons:
-			self._pressedButtons.remove(self._lcd.DOWN)
-		return
-
-	def cb_menu_games_left(self):
-		#back?
-		return
-
-	def cb_menu_games_right(self):
-		#goto game options menu (patch select?)
-		return
-
-	def cb_menu_games_sel(self):
-
-		#Yell at main thread to set game
-		MBus.handle(Node_SetGameCommandMessage(payload=['0', self._games[self._index].file_checksum]))
-		#Yell at main to run the game on the node
-		MBus.handle(Node_LaunchGameCommandMessage(payload='0'))
-		return
-
 	# THE MEAT(tm)
 	def runui(self):
 		#TODO: display thingy while games list is loading/scanning
@@ -294,27 +277,8 @@ class UI_Adafruit(Thread):
 		self._lcd.clear()
 
 		self.__logger.debug(self._games.len())
-			#main loop
-		while 1:
-			if self._scandone:
-				# Handle button presses
-
-				# Handle UP
-				if self._lcd.buttonPressed(self._lcd.UP):
-					if self._mode == "games":
-						self.cb_menu_games_up()
-					elif self._mode == "nodes":
-						pass
-						
-				# Handle DOWN
-				if self._lcd.buttonPressed(self._lcd.DOWN):
-					if self._mode == "games":
-						self.cb_menu_games_dn()
-	
-				if self._lcd.buttonPressed(self._lcd.SELECT):
-					if self._mode == "games":
-						self.cb_menu_games_sel();
-
-				sleep(0.1)
+		
+		menu = UIAdaMainMenu(self._lcd)
+		menu.run_menu()
 
 		return
