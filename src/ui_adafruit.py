@@ -28,10 +28,36 @@ class TwoLineLcdMenu():
 	_prev_button = None
 	_pressed_buttons = []
 
-	_list = []
+	_list = None
 	_index = 0
 
 	_exit = False
+
+	@property
+	def mlist(self) -> list:
+		return self._list
+
+	@mlist.setter
+	def mlist(self, value : list):
+		self._list = value
+
+	@property
+	def mindex(self) -> int:
+		return self._index
+
+	@mindex.setter
+	def mindex(self, value : int):
+		self._index = value
+
+	@property
+	def line1(self) -> str:
+		return self._line1
+
+	@line1.setter
+	def line1(self, value : str):
+		self._line1 = value
+		self._line1_scroll_idx = 0
+		self._line1_outbuf = ''
 
 	def __init__(self, lcd):
 		self._lcd = lcd
@@ -47,17 +73,15 @@ class TwoLineLcdMenu():
 		#One press at a time, please
 		if self._lcd.UP in self._pressed_buttons:
 			self._pressed_buttons.remove(self._lcd.UP)
-			return
-
-		self._pressed_buttons.append(self._lcd.UP)
+		else:
+			self._pressed_buttons.append(self._lcd.UP)
 
 	def btn_press_dn(self):
 		#One press at a time, please
 		if self._lcd.DOWN in self._pressed_buttons: 
 			self._pressed_buttons.remove(self._lcd.DOWN)
-			pass
-
-		self._pressed_buttons.append(self._lcd.DOWN)
+		else:
+			self._pressed_buttons.append(self._lcd.DOWN)
 
 	def btn_press_left(self):
 		pass
@@ -85,8 +109,6 @@ class TwoLineLcdMenu():
 				self.btn_press_right()
 			elif self._lcd.buttonPressed(self._lcd.SELECT):
 				self.btn_press_sel()
-			else:
-				self._logger.error("unhandled button")
 
 			# FIXME: TEST THIS HORIZONTAL SCROLL WRAPPING STUFF
 			# I JUST BLIND-WROTE IT IN LIKE 5 MINUTES AND I HAVENT EATEN YET TODAY SO IT'S PROBABLY CRAP
@@ -133,48 +155,55 @@ class TwoLineLcdMenu():
 
 			self._logger.debug(tmpbuf)
 
+			# Don't overwork the display and the I/O. the LCD has its own buffer.
+			# Only render to it if something has changed.
+			do_render = False
+			if self._line1_outbuf != tmpbuf or self._line2_outbuf != self._line2:
+				do_render = True
+
 			self._line1_outbuf = tmpbuf
 			self._line2_outbuf = self._line2 # todo: wrap maybe idk
 
-			self.render()
+			if do_render: self.render()
 
-			sleep(0.3)
+			sleep(0.1)
 
 class UIAdaMainMenu(TwoLineLcdMenu):
 	def __init__(self, lcd):
 		super().__init__(lcd)
 
-		self._list = ['Nodes', 'Config']
+		self.mlist = ['Nodes', 'Config']
 
-		self._logger = logging.getLogger("UIAdaConfigMenu " + str(id(self)))
+		self._logger = logging.getLogger("UIAdaMainMenu " + str(id(self)))
 		self._logger.debug("init logger")
 
 	def btn_press_up(self):
 		super().btn_press_up()
-		if self._lcd.UP not in self._pressed_buttons: return
+		if self._lcd.UP in TwoLineLcdMenu._pressed_buttons: return
 
-		self._index += 1
-		if self._index >= self._list.len(): self._index = 0
+		self.mindex += 1
+		if self.mindex >= len(self.mlist): self.mindex = 0
 
-		self._line1 = self._list[self._index]
+		self.line1 = self.mlist[self.mindex]
 
 	def btn_press_dn(self):
 		super().btn_press_dn()
-		if self._lcd.DOWN not in self._pressed_buttons: return
+		if self._lcd.DOWN in TwoLineLcdMenu._pressed_buttons: return
 
-		self._index -= 1
-		if self._index < 0: self._index = self._list.len() - 1
+		self.mindex -= 1
+		self._logger.debug(self.mlist[0])
+		if self.mindex < 0: self.mindex = len(self.mlist) - 1
 
-		self._line1 = self._list[self._index]
+		self.line1 = self.mlist[self.mindex]
 
 	def btn_press_sel(self):
 		super().btn_press_sel()
-		if self._lcd.SELECT not in self._pressed_buttons: return
+		if self._lcd.SELECT in TwoLineLcdMenu._pressed_buttons: return
 
-		if self._list[self._index] == 'Nodes':
+		if self.mlist[self.mindex] == 'Nodes':
 			submenu = UIAdaNodeListMenu(self._lcd, nodeman.nodes)
 			submenu.run_menu()
-		elif self._list[self._index] == 'Config':
+		elif self.mlist[self.mindex] == 'Config':
 			submenu = UIAdaConfigMenu(self._lcd)
 			submenu.run_menu()
 
@@ -198,18 +227,18 @@ class UIAdaNodeListMenu(TwoLineLcdMenu):
 	def btn_press_up(self):
 		super().btn_press_up()
 
-		self._index += 1
-		if self._index >= len(self._list): self._index = 0
+		self.mindex += 1
+		if self.mindex >= len(self._list): self._index = 0
 
 		self._line1 = self._list[self._index].hostname
 
 	def btn_press_dn(self):
 		super().btn_press_dn()
 
-		self._index -= 1
-		if self._index < 0: self._index = len(self._games) - 1
+		self.mindex -= 1
+		if self.mindex < 0: self.mindex = len(self._games) - 1
 
-		self._line1 = self._list[self._index].hostname
+		TwoLineLcdMenu._line1 = self.mlist[self.mindex].hostname
 
 
 
@@ -257,7 +286,7 @@ class UI_Adafruit(Thread):
 		if message.payload == "donelol":
 			self._scandone = True
 
-			self._lcd.message(self._games[0].title)
+			self._lcd.message("Init Success")
 		else:
 			self._lcd.message("Scanning...\n" + message.payload[16:])
 
