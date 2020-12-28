@@ -111,6 +111,7 @@ def handle_ApplySysConfig(message: ApplySysConfig):
 def saveconftodisk():
 	logger.info("Saving configuration to disk...")
 	if cfg_use_parts: remount_rw(prefs['Partitions']['cfg_part'])
+	logger.debug(prefs['Partitions']['cfg_part'])
 
 	logger.debug("Saving nodes...")
 	nodeman.saveNodesToDisk(prefs['Directories']['cfg_dir'] + '/nodes')
@@ -153,8 +154,11 @@ def applysysconfig():
 ## MAIN SHITZ
 ######################################################################################################
 '''
-# set up node list
 
+#we need cfg rw while we load up
+if cfg_use_parts: remount_rw(prefs['Partitions']['cfg_part'])
+
+# set up node list
 nodeman = NodeManager(bool(prefs['Main']['autoboot']))
 nodeman.loadNodesFromDisk(prefs['Directories']['cfg_dir'] + '/nodes')
 
@@ -195,6 +199,9 @@ else:
 	wapp = UIAPI()
 	t = threading.Thread(target=wapp.start).start()
 	ui_threads.append(t)
+
+#ok done loading. remount ro to reduce likelyhood of data loss
+if cfg_use_parts: remount_ro(prefs['Partitions']['cfg_part'])
 
 # Set up event handlers
 MBus.add_handler(Node_SetGameCommandMessage, handle_Node_SetGameCommandMessage)

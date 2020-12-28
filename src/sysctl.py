@@ -76,7 +76,7 @@ def write_ifconfig(prefs):
 	eth0n = ipaddress.IPv4Interface(prefs.get('Network', 'eth0_ip')+"/"+prefs.get('Network', 'eth0_netmask'))
 	wlan0n = ipaddress.IPv4Interface(prefs.get('Network', 'wlan0_ip')+"/"+prefs.get('Network', 'wlan0_netmask'))
 
-	data.append("#-----Managed by ACNTBoot, don't touch\n")
+	data.append("#-----Managed by CANTBoot, don't touch\n")
 	data.append("auto lo\n")
 	data.append("iface lo inet loopback\n")
 
@@ -137,4 +137,14 @@ def write_iwconfig(prefs):
 		with open("/etc/dnsmasq.conf", "w") as outfile:
 			data="interface=wlan0\nlisten-address=%s\nbind-interfaces\n#server=8.8.8.8\n#domain-needed\nbogus-priv\ndhcp-range=%s,%s,24h" % (prefs.get('Network', 'wlan0_ip'), prefs.get('Network', 'wlan0_dhcp_low'), prefs.get('Network', 'wlan0_dhcp_high'))
 			outfile.write(data)
+			outfile.close()
+
+		fwdata = ''
+		with open("/etc/iptables/rules.v4.pytpl") as template:
+			data=template.read()
+			fwdata=data % (prefs.get('Network', 'wlan0_ip'), prefs.get('Network', 'wlan0_ip'))
+			template.close()
+
+		with open("/etc/iptables/rules.v4", "w") as outfile:
+			outfile.write(fwdata)
 			outfile.close()
