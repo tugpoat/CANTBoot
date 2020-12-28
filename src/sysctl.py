@@ -20,11 +20,11 @@ def set_ifconfig(iface : str, ip : str, mask : str):
 	os.system("sudo ifconfig ? ? netmask ?", [iface, ip, mask])
 
 def disable_sshd():
-	os.system("sudo service ssh stop")
+	os.system("sudo systemctl diaable ssh")
 	os.system("sudo service ssh disable")
 
 def enable_sshd():
-	os.system("sudo service ssh enable")
+	os.system("sudo systemctl enable ssh")
 	os.system("sudo service ssh start")
 
 def enable_ftpd():
@@ -36,23 +36,23 @@ def enable_ftpd():
 def disable_ftpd():
 	remount_ro('/mnt/roms')
 	remount_ro('/mnt/cfg')
-	os.system("sudo service vsftpd disable")
+	os.system("sudo systemctl disable vsftpd")
 	os.system("sudo service vsftpd stop")
 
 def disable_dnsmasq():
 	os.system("sudo service dnsmasq stop")
-	os.system("sudo service dnsmasq disable")
+	os.system("sudo systemctl disable dnsmasq")
 
 def enable_dnsmasq():
-	os.system("sudo service dnsmasq enable")
+	os.system("sudo systemctl enable dnsmasq")
 	os.system("sudo service dnsmasq start")
 
 def disable_hostapd():
 	os.system("sudo service hostapd stop")
-	os.system("sudo service hostapd disable")
+	os.system("sudo systemctl disable hostapd")
 
 def enable_hostapd():
-	os.system("sudo service hostapd enable")
+	os.system("sudo systemctl enable hostapd")
 	os.system("sudo service hostapd start")
 
 #FIXME: actually read from stdout
