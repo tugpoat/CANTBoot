@@ -207,7 +207,10 @@ if cfg_use_parts: remount_ro(prefs['Partitions']['cfg_part'])
 MBus.add_handler(Node_SetGameCommandMessage, handle_Node_SetGameCommandMessage)
 MBus.add_handler(Node_LaunchGameCommandMessage, handle_Node_LaunchGameCommandMessage)
 MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
-MBus.add_handler(ApplySysConfig, handle_ApplySysConfig)
+
+# Let's not even bother trying to touch the system if we're not running on a raspi.
+if on_raspi:
+	MBus.add_handler(ApplySysConfig, handle_ApplySysConfig)
 
 def signal_term_handler(signal, frame):
 	#TODO ensure clean exit
