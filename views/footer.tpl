@@ -1,5 +1,5 @@
-		<div id="status" class="footer container">
-		</div>
+		<!--<div id="status" class="footer container">
+		</div>-->
 		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 		<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>-->
 		<script src="/static/js/jquery.min.js"></script>

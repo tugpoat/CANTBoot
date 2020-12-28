@@ -125,10 +125,10 @@ In Progress
   * Interface for System Settings/Commands (Power off, Reboot, Manual GPIO Reset, etc.)
   * Live/in-place binary patching of ROMs
   * API Master/Slave modes for large networks and GPIO reset support for every node
+  * Catch exit signals and close everything properly 
 
 On Hold
 ----
-  * Catch exit signals and close everything properly
   * Unit tests and E2E tests
   * Set up build pipeline and automatic SD image generation
 
