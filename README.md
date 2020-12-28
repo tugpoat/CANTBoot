@@ -24,8 +24,8 @@ Requirements
  * Any of the following:
   - Sega NAOMI mainboard (Must use one of the following BIOS revisions: E, F, G, H. Region shouldn't matter)
   - Sega NAOMI 2 mainboard (Any BIOS revision will work)
-  - Sega Chihiro
-  - Triforce
+  - Sega Chihiro (TODO)
+  - Triforce (TODO)
 
  * NetDIMM cartridge w/ security PIC (NULL PIC recommended, but other PICs may work)
  * Raspberry Pi 3,4 (2 may work but will not be supported)
