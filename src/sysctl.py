@@ -2,6 +2,7 @@
 #requires provisions to be made in sudo/wheel config.
 
 import os
+import ipaddress
 
 def remount_rw(mountpoint : str):
 	os.system("sudo mount -o remount,rw "+mountpoint)
@@ -72,47 +73,51 @@ def write_ifconfig(prefs):
 		data=defaultconf.readlines()
 		defaultconf.close()
 
-	data.append("#-----Managed by ACNTBoot, don't touch")
-	data.append("auto lo")
-	data.append("iface lo inet loopback")
+	eth0n = ipaddress.IPv4Interface(prefs.get('Network', 'eth0_ip')+"/"+prefs.get('Network', 'eth0_netmask'))
+	wlan0n = ipaddress.IPv4Interface(prefs.get('Network', 'wlan0_ip')+"/"+prefs.get('Network', 'wlan0_netmask'))
 
+	data.append("#-----Managed by ACNTBoot, don't touch\n")
+	data.append("auto lo\n")
+	data.append("iface lo inet loopback\n")
 
-	with open ("/etc/network/interfaces", "rw") as outfile:
-
-		data.append("auto eth0")
+	with open ("/etc/network/interfaces", "w") as outfile:
+		data.append("\nauto eth0\n")
 		if prefs.get('Network', 'eth0_mode') == 'static':
-			data.append("iface eth0 inet static")
-			data.append("address ?", [prefs.get('Network', 'eth0_ip')])
-			data.append("netmask ?", [prefs.get('Network', 'eth0_netmask')])
+			data.append("iface eth0 inet static\n")
+			data.append("address "+str(eth0n.ip)+"\n")
+			data.append("netmask "+prefs.get('Network', 'eth0_netmask')+"\n")
 
 			#TODO: do bitwise operations to figure out the network and bcast from ip and mask.
 			#data.append("network ?", [])
-			data.append("network ?", [prefs.get('Network', 'eth0_network')])
-			data.append("broadcast ?", [prefs.get('Network', 'eth0_bcast')])
+			data.append("network "+str(eth0n.network.network_address)+"\n")
+			data.append("broadcast "+str(eth0n.network.broadcast_address)+"\n")
 		else:
-			data.append("iface eth0 inet auto")
+			data.append("iface eth0 inet auto\n")
 
-		data.append("allow-hotplug wlan0")
+		data.append("\nallow-hotplug wlan0\n")
 		# Don't allow DHCP if we're running as an AP.
-		if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_subnet') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
-			data.append("iface wlan0 inet auto")
+		if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_netmask') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
+			data.append("iface wlan0 inet auto\n")
 			#DHCP setting
 		else:
-			data.append("iface wlan0 inet static")
-			data.append("address ?", [prefs.get('Network', 'wlan0_ip')])
-			data.append("netmask ?", [prefs.get('Network', 'wlan0_netmask')])
-			data.append("network ?", [prefs.get('Network', 'wlan0_network')])
-			data.append("broadcast ?", [prefs.get('Network', 'wlan0_bcast')])
+			data.append("iface wlan0 inet static\n")
+			data.append("address "+str(wlan0n.ip)+"\n")
+			data.append("netmask "+prefs.get('Network', 'wlan0_netmask')+"\n")
+			data.append("network "+str(wlan0n.network.network_address)+"\n")
+			data.append("broadcast "+str(wlan0n.network.broadcast_address)+"\n")
 
-	outfile.writelines(data)
-	outfile.close()
+		outfile.writelines(data)
+
 
 #FIXME: remove the logic from this part later and clean it up. just get it working for now.
 def write_iwconfig(prefs):
 
+	#eth0n = ipaddress.IPv4Interface(prefs.get('Network', 'eth0_ip')+"/"+prefs.get('Network', 'eth0_netmask'))
+	#wlan0n = ipaddress.IPv4Interface(prefs.get('Network', 'wlan0_ip')+"/"+prefs.get('Network', 'wlan0_netmask'))
+
 	#client?
-	if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_subnet') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
-		with open("/etc/wpa_supplicant/wpa_supplicant.conf",  "rw") as outfile:
+	if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_netmask') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
+		with open("/etc/wpa_supplicant/wpa_supplicant.conf",  "w") as outfile:
 
 			data = "country=US\nctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\n\nnetwork={\nssid=\"%s\"\nscan_ssid=1\npsk=\"%s\"\nkey_mgmt=WPA-PSK\n}\n"  % (prefs.get('Network', 'wlan0_ssid'), prefs.get('Network', 'wlan0_psk'))
 
@@ -123,13 +128,13 @@ def write_iwconfig(prefs):
 		#not client. ap.
 
 		#hostapd
-		with open("/etc/hostapd/hostapd.conf",  "rw") as outfile:
-			data ="interface=wlan0\ndriver=nl80211\nsid=%s\n\nhw_mode=g\nchannel=6\nieee80211n=1\nwmm_enabled=1\nht_capab=[HT40][SHORT-GI-20][DSSS_CCK-40]\nmacaddr_acl=0\nauth_algs=1\nignore_broadcast_ssid=0\nwpa=2\nwpa_key_mgmt=WPA-PSK\nwpa_passphrase=%s\nrsn_pairwise=CCMP"  % (prefs.get('Network', 'wlan0_ssid'), prefs.get('Network', 'wlan0_psk'))
-			outfile.writelines(data)
+		with open("/etc/hostapd/hostapd.conf",  "w") as outfile:
+			data ="interface=wlan0\ndriver=nl80211\nssid=%s\n\nhw_mode=g\nchannel=6\nieee80211n=1\nwmm_enabled=1\nht_capab=[HT40][SHORT-GI-20][DSSS_CCK-40]\nmacaddr_acl=0\nauth_algs=1\nignore_broadcast_ssid=0\nwpa=2\nwpa_key_mgmt=WPA-PSK\nwpa_passphrase=%s\nrsn_pairwise=CCMP"  % (prefs.get('Network', 'wlan0_ssid'), prefs.get('Network', 'wlan0_psk'))
+			outfile.write(data)
 			outfile.close()
 
 		#dnsmasq
-		with open("/etc/dnsmasq.conf", "rw") as outfile:
+		with open("/etc/dnsmasq.conf", "w") as outfile:
 			data="interface=wlan0\nlisten-address=%s\nbind-interfaces\n#server=8.8.8.8\n#domain-needed\nbogus-priv\ndhcp-range=%s,%s,24h" % (prefs.get('Network', 'wlan0_ip'), prefs.get('Network', 'wlan0_dhcp_low'), prefs.get('Network', 'wlan0_dhcp_high'))
-			outfile.writelines(data)
+			outfile.write(data)
 			outfile.close()

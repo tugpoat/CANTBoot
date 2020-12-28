@@ -2,36 +2,39 @@
 import os, collections, signal, sys, subprocess, socket
 from Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 from threading import Thread
+from enum import Enum, auto
 from time import sleep
 
 from GameDescriptor import GameDescriptor
 from GameList import GameList, GameList_ScanEventMessage
 from Loader import Node_SetGameCommandMessage, Node_LaunchGameCommandMessage
 from mbus import *
+from main_events import *
 
-nodeman = None
 #TODO: break each menu out into its own class and just set an instance of the parent
 
 ##TODO: My brain isn't working well enough right now to implement this. I may or may not be on the right track.`
 class TwoLineLcdMenu():
 	_line1 = 'C==============3'
 	_line1_outbuf=''
+	_line1_rbuf=''
 	_line1_scroll_idx = 0
+	_line1_scroll_delay = 0
+
 	_line2 = '8==============D'
 	_line2_outbuf=''
+	_line2_rbuf=''
 	_line2_scroll_idx = 0
 
-	_parent_menu = None
-	_sub_menu = None
+	_nextmenu = None
 
 	_lcd = None
-	_prev_button = None
 	_pressed_buttons = []
 
 	_list = None
 	_index = 0
 
-	_exit = False
+	_exitmenu = False
 
 	@property
 	def mlist(self) -> list:
@@ -55,9 +58,32 @@ class TwoLineLcdMenu():
 
 	@line1.setter
 	def line1(self, value : str):
-		self._line1 = value
+		self._line1 = str(value)
 		self._line1_scroll_idx = 0
 		self._line1_outbuf = ''
+		self._line1_scroll_delay = 0
+
+	@property
+	def line2(self) -> str:
+		return self._line2
+
+	@line2.setter
+	def line2(self, value : str):
+		self._line2 = str(value)
+		self._line2_scroll_idx = 0
+		self._line2_outbuf = ''
+
+	@property
+	def exitmenu(self) -> bool:
+		return self._exitmenu
+
+	@exitmenu.setter
+	def exitmenu(self, value : bool):
+		self._exitmenu = value
+
+	@property
+	def nextmenu(self):
+		return self._nextmenu
 
 	def __init__(self, lcd):
 		self._lcd = lcd
@@ -66,8 +92,14 @@ class TwoLineLcdMenu():
 		self._logger.debug("init logger")
 
 	def render(self):
-		self._lcd.clear()
-		self._lcd.message(self._line1_outbuf + "\n" + self._line2_outbuf)
+		self._lcd.setCursor(0,0)
+		if self._line1_outbuf.ljust(16) != self._line1_rbuf:
+			self._line1_rbuf = self._line1_outbuf.ljust(16)
+
+		if self._line2_outbuf.ljust(16) != self._line2_rbuf:
+			self._line2_rbuf = self._line2_outbuf.ljust(16)
+
+		self._lcd.message(self._line1_rbuf + "\n" + self._line2_rbuf)
 
 	def btn_press_up(self):
 		#One press at a time, please
@@ -98,7 +130,9 @@ class TwoLineLcdMenu():
 		# Also because we're guaranteed to be working with more than enough memory/cpu resources on any platform we will be running this code on
 		# Since python treats all objects as references, we can just pass all the LCD and MessageBus objects around and it's fine
 		# Therefore, code readability > efficiency for this module.
-		while self._exit == False:
+		while self.exitmenu == False:
+
+			# POLL BUTTONS!
 			if self._lcd.buttonPressed(self._lcd.UP):
 				self.btn_press_up()
 			elif self._lcd.buttonPressed(self._lcd.DOWN):
@@ -110,65 +144,80 @@ class TwoLineLcdMenu():
 			elif self._lcd.buttonPressed(self._lcd.SELECT):
 				self.btn_press_sel()
 
-			# FIXME: TEST THIS HORIZONTAL SCROLL WRAPPING STUFF
-			# I JUST BLIND-WROTE IT IN LIKE 5 MINUTES AND I HAVENT EATEN YET TODAY SO IT'S PROBABLY CRAP
 
-			#build output buffer for line 1
-			if len(self._line1) > 16:
+			# Just set this up to a default and because I never know how tf python is scoped
+			window_end_idx = 16
 
-				#get the window end index inside of our string buffer
+			if len(self._line1) > 16 and self._line1_scroll_delay < 5:
+				# We don't want to scroll it right away, let's pause for a bit
+				self._line1_scroll_delay += 1
+			elif len(self._line1) > 16 and self._line1_scroll_delay > 4:
+				# OK We have waited a bit and we're going to scroll the line.
+
+				# Get the window end index inside of our string buffer
 				window_end_idx = self._line1_scroll_idx+16
 
 				#set this up just in case
-				wrap_idx = 0
+				#wrap_idx = 0
 
 				# If the window end is past the end of the string buffer, 
 				# then use the end of the string buffer for our window end index
-				if window_end_idx > len(self._line1)-1:
+
+				# aka have we reached the end of our content?
+				if window_end_idx > len(self._line1):
 					# we've gone beyond the end of our string.
 					# get the 0+n index of characters we can wrap by
-					wrap_idx = window_end_idx - len(self._line1) - 2 # Leave room for a whitespace
+					#wrap_idx = window_end_idx - len(self._line1) - 2 # Leave room for a whitespace
 
 					#the end of our window is the end of our content string.
-					window_end_idx = len(self._line1) - 1
-
-					self._logger.debug("start_idx="+self._line1_scroll_idx+",wrap_idx="+wrap_idx+",window_end_idx="+window_end_idx)
+					window_end_idx = len(self._line1)
 
 					window = self._line1[self._line1_scroll_idx:window_end_idx]
 
+					'''
+					#wrap line
+					self._logger.debug("start_idx="+str(self._line1_scroll_idx)+",wrap_idx="+str(wrap_idx)+",window_end_idx="+str(window_end_idx))
 					wrap = " " + self._line1[0:wrap_idx]
 
 					self._logger.debug("wrap="+wrap+",window="+window)
 
 					tmpbuf = window+wrap
+					'''
+
+					# Reset scroll index and delay counter if we have waited after scrolling
+					if self._line1_scroll_delay > 8:
+						self._line1_scroll_idx = 0
+						self._line1_scroll_delay = 0
+					else:
+						# wait some more if not
+						self._line1_scroll_delay += 1
 				else:
-					# Otherwise just use the end idx we calculated above
-					tmpbuf =self._line1[self._line1_scroll_idx:window_end_idx]
+					self._line1_scroll_idx += 1 #we will scroll one character every interval until we reach the end of the string.
 
-				self._line1_scroll_idx += 1 #we will scroll one character every interval (todo: maybe some kind of refresh counter?)
+			#use the end idx we calculated above
+			tmpbuf = self._line1[self._line1_scroll_idx:window_end_idx]
 
-				# Reset index to 0 when we pass the end of the string
-				if self._line1_scroll_idx >= len(self._line1):
-					self._line1_scroll_idx = 0
-			else:
-				tmpbuf = self._line1
+			#self._logger.debug(tmpbuf)
 
-			self._logger.debug(tmpbuf)
+			self._line1_outbuf = tmpbuf.ljust(16)
+			self._line2_outbuf = self._line2.ljust(16)
 
-			# Don't overwork the display and the I/O. the LCD has its own buffer.
-			# Only render to it if something has changed.
-			do_render = False
-			if self._line1_outbuf != tmpbuf or self._line2_outbuf != self._line2:
-				do_render = True
+			self.render()
 
-			self._line1_outbuf = tmpbuf
-			self._line2_outbuf = self._line2 # todo: wrap maybe idk
+			# If I really cared I'd have separate polling intervals for input and output but whatever idgaf this is fine
+			sleep(0.2)
 
-			if do_render: self.render()
+		return [self.nextmenu, self.mindex]
 
-			sleep(0.1)
+
+class UIAdaMenus(Enum):
+	main = auto()
+	nodes = auto()
+	games = auto()
+	config = auto()
 
 class UIAdaMainMenu(TwoLineLcdMenu):
+
 	def __init__(self, lcd):
 		super().__init__(lcd)
 
@@ -176,6 +225,11 @@ class UIAdaMainMenu(TwoLineLcdMenu):
 
 		self._logger = logging.getLogger("UIAdaMainMenu " + str(id(self)))
 		self._logger.debug("init logger")
+
+		MBus.add_handler(FOAD, self.die)
+
+	def die(self, data):
+		self.exitmenu = True
 
 	def btn_press_up(self):
 		super().btn_press_up()
@@ -201,11 +255,11 @@ class UIAdaMainMenu(TwoLineLcdMenu):
 		if self._lcd.SELECT in TwoLineLcdMenu._pressed_buttons: return
 
 		if self.mlist[self.mindex] == 'Nodes':
-			submenu = UIAdaNodeListMenu(self._lcd, nodeman.nodes)
-			submenu.run_menu()
+			self.nextmenu = UIAdaMenus.nodes
+			self.exitmenu = True
 		elif self.mlist[self.mindex] == 'Config':
-			submenu = UIAdaConfigMenu(self._lcd)
-			submenu.run_menu()
+			self.nextmenu = UIAdaMenus.config
+			self.exitmenu = True
 
 class UIAdaConfigMenu(TwoLineLcdMenu):
 	def __init__(self, lcd):
@@ -214,38 +268,97 @@ class UIAdaConfigMenu(TwoLineLcdMenu):
 		self._logger = logging.getLogger("UIAdaConfigMenu " + str(id(self)))
 		self._logger.debug("init logger")
 
-class UIAdaNodeListMenu(TwoLineLcdMenu):
+		self.line1 = "N/A"
+		self.line2 = "Left: Exit menu"
 
+		MBus.add_handler(FOAD, self.die)
+
+	def die(self, data):
+		self.exitmenu = True
+
+	def btn_press_left(self):
+		self.nextmenu = UIAdaMenus.main
+		self.exitmenu = True
+
+class UIAdaNodesMenu(TwoLineLcdMenu):
 	def __init__(self, lcd, nodelist):
 		super().__init__(lcd)
 
 		self._logger = logging.getLogger("UIAdaNodeMenu " + str(id(self)))
 		self._logger.debug("init logger")
 
-		self._list = nodelist
+		self.mlist = nodelist
+
+		MBus.add_handler(FOAD, self.die)
+
+	def die(self, data):
+		self.exitmenu = True
 
 	def btn_press_up(self):
 		super().btn_press_up()
 
 		self.mindex += 1
-		if self.mindex >= len(self._list): self._index = 0
+		if self.mindex >= len(self.mlist): self.mindex = 0
 
-		self._line1 = self._list[self._index].hostname
+		self.line1 = self._list[self.mindex].hostname
+
 
 	def btn_press_dn(self):
 		super().btn_press_dn()
 
 		self.mindex -= 1
-		if self.mindex < 0: self.mindex = len(self._games) - 1
+		if self.mindex < 0: self.mindex = len(self.mlist) - 1
 
-		TwoLineLcdMenu._line1 = self.mlist[self.mindex].hostname
+		self.line1 = self.mlist[self.mindex].hostname
 
+	def btn_press_sel(self):
+		super().btn_press_sel()
+		if self._lcd.SELECT in TwoLineLcdMenu._pressed_buttons: return
 
+		self.nextmenu = UIAdaMenus.games
+		self.exitmenu = True
 
-class GamesMenu(TwoLineLcdMenu):
-	_games = None
-	pass
+class UIAdaGamesMenu(TwoLineLcdMenu):
+	def __init__(self, lcd, gameslist):
+		super().__init__(lcd)
 
+		self._logger = logging.getLogger("UIAdaNodeMenu " + str(id(self)))
+		self._logger.debug("init logger")
+
+		self.mlist = gameslist
+		self.line1 = self.mlist[self.mindex].title
+		self.line2 = str(round(self.mlist[self.mindex].file_size / 1048576, 2)) + "MiB"
+
+		MBus.add_handler(FOAD, self.die)
+
+	def die(self, data):
+		self.exitmenu = True
+
+	def btn_press_up(self):
+		super().btn_press_up()
+
+		self.mindex += 1
+		if self.mindex >= len(self.mlist): self.mindex = 0
+
+		self.line1 = self.mlist[self.mindex].title
+		self.line2 = str(round(self.mlist[self.mindex].file_size / 1048576, 2)) + "MiB"
+
+	def btn_press_dn(self):
+		super().btn_press_dn()
+
+		self.mindex -= 1
+		if self.mindex < 0: self.mindex = len(self.mlist) - 1
+
+		self.line1 = self.mlist[self.mindex].title
+		self.line2 = str(round(self.mlist[self.mindex].file_size / 1048576, 2)) + "MiB"
+
+	def btn_press_sel(self):
+		super().btn_press_sel()
+		# TODO: This is a simple test. Flesh everything out.
+		#Yell at main thread to set game
+		MBus.handle(Node_SetGameCommandMessage(payload=['0', self.mlist[self.mindex].file_checksum]))
+		#Yell at main to run the game on the node
+		MBus.handle(Node_LaunchGameCommandMessage(payload='0'))
 
 ##TODO: Throw most of this out in favor of the above model
 class UI_Adafruit(Thread):
@@ -253,33 +366,48 @@ class UI_Adafruit(Thread):
 	_pi_rev = None
 	_lcd = None
 
+	menu = None
 	_scandone = False
 
 	_pressedButtons = []
 
 	_index = 0
 
-	def __init__(self, prefs, games):
+
+	# Simple lookup dict for menu class names
+	_menus = {
+		UIAdaMenus.main : UIAdaMainMenu,
+		UIAdaMenus.nodes : UIAdaNodesMenu,
+		UIAdaMenus.games : UIAdaGamesMenu,
+		UIAdaMenus.config : UIAdaConfigMenu
+	}
+
+	def __init__(self, prefs, nodeman, games):
 		super(UI_Adafruit, self).__init__()
 
 		self.__logger = logging.getLogger("UI_Adafruit " + str(id(self)))
 		self.__logger.debug("init logger")
-		# We need to know the hw revision apparently.
-		# piforcetools did this so I'll do it too
-		self._pi_rev = self.get_hw_rev();
 
-		if self._pi_rev.startswith('a'):
-			self._lcd = Adafruit_CharLCDPlate(busnum = 1)
-		else:
-			self._lcd = Adafruit_CharLCDPlate()
+		self._lcd = Adafruit_CharLCDPlate()
 
 		MBus.add_handler(GameList_ScanEventMessage, self.handle_GameList_ScanEventMessage)
+		MBus.add_handler(FOAD, self.die)
 
 		# Let the user know that we're doing things
 		self._lcd.begin(16, 2)
 		self._lcd.message("CANTBoot Loading\n    Hold up.")
 
 		self._games = games
+
+		self._nodes = nodeman.nodes
+
+	def die(self, data):
+		print("ohfuck")
+		try:
+			menu.exitmenu = True
+			sleep(0.5)
+		except:
+			pass
 
 	def handle_GameList_ScanEventMessage(self, message: GameList_ScanEventMessage):
 		self._lcd.clear()
@@ -290,24 +418,20 @@ class UI_Adafruit(Thread):
 		else:
 			self._lcd.message("Scanning...\n" + message.payload[16:])
 
-	def get_hw_rev(self):
-		cpuinfo = open("/proc/cpuinfo", "r")
-		for line in cpuinfo:
-			item = line.split(':', 1)
-			if item[0].strip() == "Revision":
-				revision = item[1].strip()
-		return revision
-
 	# THE MEAT(tm)
 	def runui(self):
 		#TODO: display thingy while games list is loading/scanning
 
-		#if scanning complete but no games found or if configuration is invalid, alert user
-		self._lcd.clear()
-
-		self.__logger.debug(self._games.len())
-		
-		menu = UIAdaMainMenu(self._lcd)
+		menu = UIAdaGamesMenu(self._lcd, self._games)
 		menu.run_menu()
 
 		return
+		'''
+		self.__logger.debug(self._games.len())
+		prevmenu = UIAdaMenus.main
+		menu = UIAdaMainMenu(self._lcd)
+		while 1:
+			menuret = menu.run_menu()
+			menu = self._menus[menuret[0]]
+			selected = menuret[1]
+		'''

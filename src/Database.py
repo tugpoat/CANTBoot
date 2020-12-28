@@ -1,5 +1,8 @@
 import sqlite3
 import enum
+import sys
+from mbus import *
+from main_events import FOAD
 
 '''
 SQLite3 abstraction for database functionality needed by the application.
@@ -16,6 +19,12 @@ class ACNTBootDatabase:
 		except:
 			print("failed to connect to sqlite db")
 			return
+
+		MBus.add_handler(FOAD, self.die)
+
+	def die(self, data):
+		print("ohfuck")
+		self._sqlite.close()
 
 	def getGameList(self):
 		return self._sqlite.execute("SELECT id, title FROM games").fetchall()

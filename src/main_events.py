@@ -6,3 +6,5 @@ class SaveConfigToDisk():
 class ApplySysConfig():
 	pass
 
+class FOAD():
+	pass

@@ -6,6 +6,8 @@ import copy
 import logging
 import os
 import argparse
+import signal
+import sys
 
 from GameDescriptor import GameDescriptor
 from GameList import *
@@ -65,12 +67,16 @@ if not on_raspi and cfg_use_parts:
 
 cfg_api_mode = str(prefs['Main']['api_mode'])
 
+db = None
+
 #TODO if api slave skip all the following and call a different thingy
 '''
 ######################################################################################################
 ## Event Handlers
 ######################################################################################################
 '''
+
+
 def handle_Node_SetGameCommandMessage(message: Node_SetGameCommandMessage):
 	logger.debug("handling SetGameCommandMessage %s %s", message.payload[0], message.payload[1])
 	if message.payload[0] == '0' and message.payload[1] == '0':
@@ -106,9 +112,13 @@ def saveconftodisk():
 	logger.info("Saving configuration to disk...")
 	if cfg_use_parts: remount_rw(prefs['Partitions']['cfg_part'])
 
+	logger.debug("Saving nodes...")
 	nodeman.saveNodesToDisk(prefs['Directories']['cfg_dir'] + '/nodes')
+
+	logger.debug("Saving rom list...")
 	games_list.exportList()
 
+	logger.debug("Saving config...")
 	with open(prefs['Directories']['cfg_dir'] + '/settings.cfg', 'w') as prefs_file:
 		prefs.write(prefs_file)
 
@@ -124,7 +134,7 @@ def applysysconfig():
 	logger.debug("writing wlan config")
 	write_iwconfig(prefs)
 
-	if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_subnet') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
+	if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_netmask') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
 		#wifi client
 		logger.debug("wifi client. disabling dnsmasq and hostapd.")
 		disable_dnsmasq()
@@ -148,6 +158,8 @@ def applysysconfig():
 nodeman = NodeManager(bool(prefs['Main']['autoboot']))
 nodeman.loadNodesFromDisk(prefs['Directories']['cfg_dir'] + '/nodes')
 
+ui_threads = []
+
 if cfg_api_mode != 'slave':
 
 	# set up database
@@ -160,8 +172,9 @@ if cfg_api_mode != 'slave':
 	if prefs['Main']['adafruit_ui'] == 'True' and on_raspi == True:
 		from ui_adafruit import UI_Adafruit
 		try:
-			adafapp = UI_Adafruit(prefs, games_list)
+			adafapp = UI_Adafruit(prefs, nodeman, games_list)
 			t = threading.Thread(target=adafapp.runui).start()
+			ui_threads.append(t)
 		except Exception as ex:
 			logger.error("Error spawning Adafruit UI: " + repr(ex))
 
@@ -171,6 +184,7 @@ if cfg_api_mode != 'slave':
 	if prefs['Main']['web_ui'] == 'True':
 		wapp = UIWeb_Bottle('Web UI', games_list, nodeman, prefs)
 		t = threading.Thread(target=wapp.start).start()
+		ui_threads.append(t)
 
 	#FIXME: Having this after UI loading without notifying the user what's going on is bad.
 	games_list.scanForNewGames(db)
@@ -180,12 +194,28 @@ else:
 	from ui_api import UIAPI
 	wapp = UIAPI()
 	t = threading.Thread(target=wapp.start).start()
+	ui_threads.append(t)
 
 # Set up event handlers
 MBus.add_handler(Node_SetGameCommandMessage, handle_Node_SetGameCommandMessage)
 MBus.add_handler(Node_LaunchGameCommandMessage, handle_Node_LaunchGameCommandMessage)
 MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
 MBus.add_handler(ApplySysConfig, handle_ApplySysConfig)
+
+def signal_term_handler(signal, frame):
+	#TODO ensure clean exit
+    logger.info('got SIGINT or SIGTERM')
+    MBus.handle(FOAD())
+
+    for t in ui_threads:
+    	t.join()
+
+    saveconftodisk()
+
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_term_handler)
+signal.signal(signal.SIGTERM, signal_term_handler)
 
 while 1:
 	nodeman.tickLoaders()

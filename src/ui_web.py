@@ -1,4 +1,5 @@
 import os
+import sys
 import configparser
 import signal
 import string
@@ -12,7 +13,7 @@ from Database import ACNTBootDatabase
 from GameList import *
 
 from mbus import *
-from main_events import SaveConfigToDisk, ApplySysConfig
+from main_events import SaveConfigToDisk, ApplySysConfig, FOAD
 from Loader import *
 
 
@@ -56,6 +57,8 @@ class UIWeb_Bottle(Bottle):
 
 		self.route('/gpio_reset', method="GET", callback=self.do_gpio_reset)
 
+		MBus.add_handler(FOAD, self.die)
+
 	def __init__(self, name, gameslist, nodeman, prefs):
 		super(UIWeb_Bottle, self).__init__()
 		self._beaker = beaker.middleware.SessionMiddleware(self, session_opts)
@@ -90,9 +93,17 @@ class UIWeb_Bottle(Bottle):
 
 		self.route('/gpio_reset', method="GET", callback=self.do_gpio_reset)
 
+		MBus.add_handler(FOAD, self.die)
+
 	def start(self):
 		self._db = ACNTBootDatabase('db.sqlite')
 		self.run(host='0.0.0.0', port=8000, debug=True, quiet=False)
+
+	def die(self, data):
+		#TODO: ensure clean exit
+		print("ohfuck")
+		sys.stderr.close()
+		self = None
 
 	def serve_static(self, filepath):
 		if 'images/games' in filepath and not os.path.isfile('static/'+filepath):
@@ -269,8 +280,8 @@ class UIWeb_Bottle(Bottle):
 			wlan0_ssid=wlan0_ssid,
 			wlan0_psk=wlan0_psk,
 			wlan0_netmask=wlan0_netmask,
-			wlan_dhcp_low=wlan_dhcp_low,
-			wlan_dhcp_high=wlan_dhcp_high,
+			wlan0_dhcp_low=wlan0_dhcp_low,
+			wlan0_dhcp_high=wlan0_dhcp_high,
 			games_directory=games_directory)
 
 	def apply_appconfig(self):

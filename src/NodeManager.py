@@ -29,7 +29,7 @@ class NodeManager():
 		loader_class = Loader
 
 		# Valid for this endpoint?
-		if not self.validateGameDescriptor(node, gd):
+		if not self.validateGameDescriptor(node, gd, False):
 			self.__logger.error("Won't boot " + gd.filename + " on " + self.nodes[n].node_id)
 			return
 			
