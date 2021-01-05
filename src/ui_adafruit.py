@@ -11,9 +11,9 @@ from Loader import Node_SetGameCommandMessage, Node_LaunchGameCommandMessage
 from mbus import *
 from main_events import *
 
-#TODO: break each menu out into its own class and just set an instance of the parent
-
-##TODO: My brain isn't working well enough right now to implement this. I may or may not be on the right track.`
+'''
+Base 16x2 LCD Menu class. Shouldn't be used on its own
+'''
 class TwoLineLcdMenu():
 	_line1 = 'C==============3'
 	_line1_outbuf=''
@@ -209,13 +209,18 @@ class TwoLineLcdMenu():
 
 		return [self.nextmenu, self.mindex]
 
-
+'''
+Enum for the menus that we plan to use in this application
+'''
 class UIAdaMenus(Enum):
 	main = auto()
 	nodes = auto()
 	games = auto()
 	config = auto()
 
+'''
+Main Menu
+'''
 class UIAdaMainMenu(TwoLineLcdMenu):
 
 	def __init__(self, lcd):
@@ -261,6 +266,10 @@ class UIAdaMainMenu(TwoLineLcdMenu):
 			self.nextmenu = UIAdaMenus.config
 			self.exitmenu = True
 
+
+'''
+Config Menu
+'''
 class UIAdaConfigMenu(TwoLineLcdMenu):
 	def __init__(self, lcd):
 		super().__init__(lcd)
@@ -280,6 +289,10 @@ class UIAdaConfigMenu(TwoLineLcdMenu):
 		self.nextmenu = UIAdaMenus.main
 		self.exitmenu = True
 
+
+'''
+Node Selection menu
+'''
 class UIAdaNodesMenu(TwoLineLcdMenu):
 	def __init__(self, lcd, nodelist):
 		super().__init__(lcd)
@@ -318,6 +331,10 @@ class UIAdaNodesMenu(TwoLineLcdMenu):
 		self.nextmenu = UIAdaMenus.games
 		self.exitmenu = True
 
+
+'''
+Game selection menu. Normally selected after a node is selected.
+'''
 class UIAdaGamesMenu(TwoLineLcdMenu):
 	def __init__(self, lcd, gameslist):
 		super().__init__(lcd)
@@ -360,7 +377,11 @@ class UIAdaGamesMenu(TwoLineLcdMenu):
 		#Yell at main to run the game on the node
 		MBus.handle(Node_LaunchGameCommandMessage(payload='0'))
 
-##TODO: Throw most of this out in favor of the above model
+'''
+######################################################################################################
+## The Main UI Object/Thread/Whatever that runs the menus for this application
+######################################################################################################
+'''
 class UI_Adafruit(Thread):
 	_db = None
 	_pi_rev = None

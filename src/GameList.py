@@ -112,7 +112,7 @@ class GameList():
 				else:
 					# We were unable to retrieve information about this game from the database. 
 					# Just fill in whatever we can and pass it along.
-					print("\tUnable to identify " + file)
+					self.__logger.info("\tUnable to identify " + file)
 					tgame.game_id = 0
 					tgame.checksum_status = True
 					tgame.title = file

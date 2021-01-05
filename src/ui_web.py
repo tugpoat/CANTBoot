@@ -13,7 +13,7 @@ from Database import ACNTBootDatabase
 from GameList import *
 
 from mbus import *
-from main_events import SaveConfigToDisk, ApplySysConfig, FOAD
+from main_events import SaveConfigToDisk, ApplySysConfig, FOAD, FTPDEnableMessage
 from Loader import *
 
 
@@ -32,8 +32,9 @@ class UIWeb():
 	def start(self):
 		self._bottle.start()
 
+#FIXME: The way this operates does not gracefully exit on receiving SIGINT/SIGKILL/SIGTERM
 class UIWeb_Bottle(Bottle):
-	#FIXME: The Web UI opening its own DB connection is not ideal. correct this, it's un-necessary.
+	#FIXME: The Web UI opening its own DB connection is not ideal.
 	_db = None
 	_games = None
 	_nodeman = None
@@ -97,7 +98,7 @@ class UIWeb_Bottle(Bottle):
 
 	def start(self):
 		self._db = ACNTBootDatabase('db.sqlite')
-		self.run(host='0.0.0.0', port=8000, debug=True, quiet=False)
+		self.run(host='0.0.0.0', port=8000, debug=False, quiet=True)
 
 	def die(self, data):
 		#TODO: ensure clean exit
@@ -170,6 +171,11 @@ class UIWeb_Bottle(Bottle):
 		else:
 			autoboot =  ''
 
+		if self._prefs['System']['ftpd_enable'] == 'True':
+			ftpd_enable = 'checked'
+		else:
+			ftpd_enable = ''
+
 		#TODO: default settings are stupid, make them go away. maybe load them from the system if not present in settings.cfg
 		eth0_ip         =   self._prefs['Network']['eth0_ip']       or '192.168.0.1'
 		eth0_netmask    =   self._prefs['Network']['eth0_netmask']  or '255.255.255.0'
@@ -190,6 +196,7 @@ class UIWeb_Bottle(Bottle):
 			skip_checksum=skip_checksum,
 			autoboot=autoboot,
 			gpio_reset=gpio_reset,
+			ftpd_enable=ftpd_enable,
 			eth0_ip=eth0_ip,
 			eth0_netmask=eth0_netmask,
 			wlan0_mode=wlan0_mode,
@@ -206,6 +213,10 @@ class UIWeb_Bottle(Bottle):
 		autoboot        = request.forms.get('autoboot')
 		gpio_reset      = request.forms.get('gpio_reset')
 
+		ftpd_enable		= request.forms.get('ftpd_enable')
+
+		ftpd_user_pw	= request.forms.get('ftpd_user_pw')
+
 		if skip_checksum == 'on':
 			skip_checksum = 'True'
 		else:
@@ -221,9 +232,21 @@ class UIWeb_Bottle(Bottle):
 		else:
 			gpio_reset = 'False'
 
+		if ftpd_enable == 'on':
+			ftpd_enable = 'True'
+		else:
+			ftpd_enable = 'False'
+
 		self._prefs['Main']['skip_checksum']      =     skip_checksum
 		self._prefs['Main']['autoboot']           =     autoboot
 		self._prefs['Main']['gpio_reset']         =     gpio_reset
+
+		self._prefs['System']['ftpd_enable']	  =		ftpd_enable
+
+		if ftpd_enable == 'True' and len(ftpd_user_pw) > 3:
+			MBus.handle(FTPDEnableMessage(payload=ftpd_user_pw))
+		else:
+			MBus.handle(FTPDEnableMessage(payload=''))
 
 		#TODO: sanity checking on string values
 
@@ -261,18 +284,24 @@ class UIWeb_Bottle(Bottle):
 		if autoboot == 'True':
 			autoboot = 'checked'
 		else:
-			autboot = ''
+			autoboot = ''
 
 		if gpio_reset == 'True':
 			gpio_reset = 'checked'
 		else:
 			gpio_reset = ''
 
+		if ftpd_enable == 'True':
+			ftpd_enable = 'checked'
+		else:
+			ftpd_enable = ''
+
 		return template('config',
 			did_config=True,
 			skip_checksum=skip_checksum,
 			autoboot=autoboot,
 			gpio_reset=gpio_reset,
+			ftpd_enable=ftpd_enable,
 			eth0_ip=eth0_ip,
 			eth0_netmask=eth0_netmask,
 			wlan0_mode=wlan0_mode,

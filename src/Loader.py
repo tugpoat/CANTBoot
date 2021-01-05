@@ -325,7 +325,7 @@ class DIMMLoader(Loader):
 	# upload a file into DIMM memory, and optionally encrypt for the given key.
 	# note that the re-encryption is obsoleted by just setting a zero-key, which
 	# is a magic to disable the decryption.
-	def DIMM_UploadFile(self, name, key = None, progress_cb = None):
+	def DIMM_UploadFile(self, name, key = None, progress_cb = None, chunk_len=0x8000):
 		patchdata = self.compilePatchData()
 
 		crc = 0
@@ -335,14 +335,19 @@ class DIMMLoader(Loader):
 		if key:
 			d = DES.new(key[::-1], DES.MODE_ECB)
 
+
+		# Set up our patching flags, bookmarks, and iterators
 		patch_continue = 0
-		patched = False
-		patch_iter = iter(patchdata)
+		if len(patchdata) < 1:
+			# This will make the following loop never check for patch data or attempt to apply any.
+			# Because we don't have any patches to apply.
+			patched = False
+			next_patch = False
+		else:
+			patched = True #we want to load the first patch on the first iteration
+			patch_iter = iter(patchdata)
 
-		while True:
-
-			if not len(data):
-				break
+		while len(data) > 0:
 
 			# patch continue is set to the index of whatever patch data we need to continue on with the next chunk.
 			# if zero, we don't need to continue. load the next patch if we have already patched the one we were looking for.
@@ -354,16 +359,25 @@ class DIMMLoader(Loader):
 
 			#sys.stderr.write("%08x\r" % addr)
 			data = a.read(0x8000)
-			datalen = len(data)
 
-			if next_patch:
-				chunk_end_addr = addr + datalen
+			# Only process patch data if:
+			# 1. If we have patch data and the start address of the patch is within the chunk we are going to send
+			# 2. We have patch data and are continuing a patch from a previous chunk.
+			# Algorithm inside this if block is generic to both circumstances.
+			if next_patch and ((next_patch[0] >= addr and next_patch [0] <= addr + chunk_len) or patch_continue > 0):
+				chunk_end_addr = addr + chunk_len
 
+				# do some operations up front to save on processing.
 				patch_start_addr = next_patch[0]
 				patch_end_addr = next_patch[0] + len(next_patch[1]) * 0xff
 				patch_data_length = patch_end_addr - patch_start_addr
 
-				# patch data solely as far as the current chunk is concerned
+				# patch information solely as far as the current chunk is concerned follows.
+
+				# if we are not continuing with a patch, patch_continue will be 0, and therefore ignored. Neat!
+				# We're wasting a number of operations the circumstances that A: there is nothing to apply in this chunk and B: patch_continue is 0....
+				# However I am prioritizing readability and maintainability in this project as much as possible.
+
 				# address to start patching at within this chunk
 				chunk_patch_start_addr = next_patch[0] + (0xff * patch_continue)
 				# address to end patching at within this chunk
@@ -406,7 +420,7 @@ class DIMMLoader(Loader):
 
 			self.DIMM_Upload(addr, data, 0)
 			crc = zlib.crc32(data, crc)
-			addr += datalen
+			addr += chunk_len
 
 
 			# -- prm edit 2019/12/16
@@ -550,6 +564,9 @@ class DIMMLoader(Loader):
 
 		return biglist
 
+	# Firstly, line up our special flags so the state machine does what we want.
+	# Then, reboot the system so that it will accept a new upload using the configured method
+	# Lastly, give the state machine the green light to proceed
 	def bootGame(self) -> bool:
 		self._do_boot = True
 		self._do_keepalive = False
@@ -609,7 +626,7 @@ class DIMMLoader(Loader):
 		pass
 
 	def upload_pct_callback(self, percent_complete):
-		#TODO: deliver this number to UI and/or main thread via messagebus
+		# deliver this to UI and/or main thread(s) via messagebus
 		self._logger.debug("upload cb: " + str(percent_complete) + "%")
 		MBus.handle(Node_LoaderUploadPctMessage(payload=[self.node_id, str(percent_complete)]))
 

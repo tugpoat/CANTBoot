@@ -97,6 +97,11 @@ source.onmessage = function(event) {
 		$("#"+nodes[i].node_id+" .node-status").html(status);
 	}
 };
+
+$(document).ready(function(){
+	$("input:text[name='ftpd_user_pw']").attr('value', Math.random().toString(16).substr(2, 14));
+});
+
 /*
 //Node Status
 var node_status_evs = Array()

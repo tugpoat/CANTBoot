@@ -2,6 +2,8 @@
 #requires provisions to be made in sudo/wheel config.
 
 import os
+from subprocess import run, PIPE
+
 import ipaddress
 
 def remount_rw(mountpoint : str):
@@ -27,16 +29,19 @@ def enable_sshd():
 	os.system("sudo systemctl enable ssh")
 	os.system("sudo service ssh start")
 
-def enable_ftpd():
+def enable_ftpd(newpass):
 	remount_rw('/mnt/roms')
 	remount_rw('/mnt/cfg')
-	os.system("sudo service vsftpd enable")
+
+	#set new password for ftp user
+	p = run(['passwd', 'naomiftp'], stdout=PIPE,
+        input=newpass+"\n", encoding='ascii')
+
 	os.system("sudo service vsftpd start")
 
 def disable_ftpd():
 	remount_ro('/mnt/roms')
 	remount_ro('/mnt/cfg')
-	os.system("sudo systemctl disable vsftpd")
 	os.system("sudo service vsftpd stop")
 
 def disable_dnsmasq():

@@ -2,6 +2,7 @@ import socket
 import json
 import yaml
 import io
+import os
 import glob
 import binascii
 import copy
@@ -68,13 +69,23 @@ class NodeList():
 
 
 	def exportNodes(self, nodes_dir: str):
+		files_written = []
+		nodefiles = glob.glob(nodes_dir+'/*.yml')
+
 		for elem in self._nodes:
 			try:
 				# We have to do it this way because there's a loader object in there that spawns its own process.
 				# Can't cross our pickles, that'd be weird.
 				tmp = NodeDescriptor(elem)
+				files_written.append(nodes_dir+"/"+tmp.nickname+'.yml')
 				#print ("exporting to " + nodes_dir+"/"+tmp.nickname+'.yml')
 				with open(nodes_dir+"/"+tmp.nickname+'.yml', 'w') as ofs:
 					yaml.dump(tmp, ofs)
 			except Exception as ex:
+				succ = False
 				print(ex)
+
+		#We always export the full configuration. if any node files exist that weren't exported, the user deleted them
+		rm_files = set(files_written) ^ set(nodefiles)
+		for f in rm_files:
+			os.unlink(f)

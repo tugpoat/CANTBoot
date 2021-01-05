@@ -57,6 +57,8 @@ prefs_file.close()
 prefs['Directories']['cfg_dir'] = args.cfgdir
 prefs['Directories']['roms_dir'] = args.romsdir
 
+prefs['System']['ftpd_enable'] = 'False'
+
 cfg_debug = bool(prefs['Main']['debug'])
 cfg_use_parts = bool(prefs['Main']['use_parts'])
 
@@ -69,13 +71,11 @@ cfg_api_mode = str(prefs['Main']['api_mode'])
 
 db = None
 
-#TODO if api slave skip all the following and call a different thingy
 '''
 ######################################################################################################
 ## Event Handlers
 ######################################################################################################
 '''
-
 
 def handle_Node_SetGameCommandMessage(message: Node_SetGameCommandMessage):
 	logger.debug("handling SetGameCommandMessage %s %s", message.payload[0], message.payload[1])
@@ -99,6 +99,12 @@ def handle_Node_LaunchGameCommandMessage(message: Node_LaunchGameCommandMessage)
 		nodeman.launchgame(nodeid)
 	else:
 		nodeman.launchgame(message.payload)
+
+def handle_FTPDEnableMessage(message: FTPDEnableMessage):
+	if len(message.payload) < 3:
+		disable_ftpd()
+	else:
+		enable_ftpd(message.payload)
 
 def handle_SaveConfigToDisk(message: SaveConfigToDisk):
 	saveconftodisk()
@@ -200,7 +206,7 @@ else:
 	t = threading.Thread(target=wapp.start).start()
 	ui_threads.append(t)
 
-#ok done loading. remount ro to reduce likelyhood of data loss
+#ok done loading. remount ro to reduce likelihood of data loss
 if cfg_use_parts: remount_ro(prefs['Partitions']['cfg_part'])
 
 # Set up event handlers
@@ -210,21 +216,37 @@ MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
 
 # Let's not even bother trying to touch the system if we're not running on a raspi.
 if on_raspi:
+	MBus.add_handler(FTPDEnableMessage, handle_FTPDEnableMessage)
 	MBus.add_handler(ApplySysConfig, handle_ApplySysConfig)
 
+
+#TODO: Handle signals properly instead of what I'm doing now
+
+def signal_int_handler(signal, frame):
+	logger.info('got SIGINT')
+	saveconftodisk()
+
+def signal_kill_handler(signal, frame):
+	logger.info('got SIGKILL')
+	MBus.handle(FOAD())
+
+	for t in ui_threads:
+		t.join()
+
+	sys.exit(0)
+
 def signal_term_handler(signal, frame):
-	#TODO ensure clean exit
-    logger.info('got SIGINT or SIGTERM')
-    MBus.handle(FOAD())
+	logger.info('got SIGTERM')
+	saveconftodisk()
+	MBus.handle(FOAD())
 
-    for t in ui_threads:
-    	t.join()
+	for t in ui_threads:
+		t.join()
 
-    saveconftodisk()
+	sys.exit(0)
 
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_term_handler)
+signal.signal(signal.SIGINT, signal_int_handler)
+signal.signal(signal.SIGKILL, signal_int_handler)
 signal.signal(signal.SIGTERM, signal_term_handler)
 
 while 1:
