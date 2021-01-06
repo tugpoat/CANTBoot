@@ -135,10 +135,10 @@
 
 		<div class="row container">
 			<div class="col-md-2">
-				<button type="submit" class="btn btn-default">Save</button>
+				<button type="submit" class="btn btn-default">Save Settings</button>
 			</div>
             <div class="col-md-2">
-				<button class="btn btn-default btn-apply" id="btn-apply">Apply</button>
+				<button class="btn btn-default btn-apply" id="btn-apply">Apply Network Settings and Reboot</button>
 			</div>
 		</div>
 	</form>

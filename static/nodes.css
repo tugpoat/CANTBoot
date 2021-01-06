@@ -54,6 +54,20 @@ div.col0 .game-title {
 	margin-bottom: 0.6em;
 }
 
+.node .progressbar {
+
+    height:1em;
+	-webkit-appearance: none;
+	appearance: none;
+	width: 100%;
+	margin-bottom: 0.6em;
+}
+
+.progressbar > svg {
+                height: 100%;
+                display: block;
+}
+
 .node-control { 
 	display: block;
 }

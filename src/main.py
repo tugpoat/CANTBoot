@@ -245,10 +245,10 @@ def signal_term_handler(signal, frame):
 
 	sys.exit(0)
 
-signal.signal(signal.SIGINT, signal_int_handler)
-signal.signal(signal.SIGKILL, signal_int_handler)
+signal.signal(signal.SIGINT, signal_term_handler)
+#signal.signal(signal.SIGKILL, signal_kill_handler)
 signal.signal(signal.SIGTERM, signal_term_handler)
 
 while 1:
 	nodeman.tickLoaders()
-	time.sleep(0.01)
+	time.sleep(1)

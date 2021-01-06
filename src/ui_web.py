@@ -399,8 +399,10 @@ class UIWeb_Bottle(Bottle):
 		sobj = []
 		for n in self._nodeman.nodes:
 			n_state = str(self._nodeman.getLoaderState(n.node_id))
-			if n_state == str(LoaderState.TRANSFERRING): n_state += " " + str(n.loader_uploadpct) + "%"
-			sobj.append({'node_id': n.node_id, 'node_state': n_state})
+			
+			nsob = {'node_id': n.node_id, 'node_state': n_state, 'uploadpct': round(float(n.loader_uploadpct))}
+
+			sobj.append(nsob)
 
 		ret = 'data: ' + json.dumps({'nodes': sobj}) + "\n\n"
 		return ret

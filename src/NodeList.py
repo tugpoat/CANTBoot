@@ -86,6 +86,7 @@ class NodeList():
 				print(ex)
 
 		#We always export the full configuration. if any node files exist that weren't exported, the user deleted them
-		rm_files = set(files_written) ^ set(nodefiles)
+		rm_files = set(nodefiles) - set(files_written)
+
 		for f in rm_files:
 			os.unlink(f)

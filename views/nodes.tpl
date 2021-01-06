@@ -6,8 +6,9 @@
 	% if defined('nodes'):
 	<h4>DIMM Nodes</h4>
 	% for node in nodes:
-		<div class="label label-default node" id="{{node.node_id}}">
-			<progress max="100" value="692"></progress>
+		<div class="label label-default node" id="node_{{node.node_id}}">
+			<progress max="100"></progress>
+			<!--<div id="progress_{{node.node_id}}" class="progress"></div>-->
 			<div class="row">
 				<div class="col0">
 					<img class="system-logo" src="/static/images/systems/{{node.system[0]}}.png" alt="{{node.system[1]}}" />

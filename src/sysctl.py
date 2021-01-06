@@ -35,7 +35,7 @@ def enable_ftpd(newpass):
 
 	#set new password for ftp user
 	p = run(['passwd', 'naomiftp'], stdout=PIPE,
-        input=newpass+"\n", encoding='ascii')
+        input=newpass+"\n"+newpass+"\n", encoding='ascii')
 
 	os.system("sudo service vsftpd start")
 

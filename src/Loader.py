@@ -1,4 +1,6 @@
 import os
+import struct
+import socket
 import re
 import time
 import json
@@ -11,6 +13,7 @@ on_raspi=False
 if "arm" in os.uname().machine:
 	on_raspi=True
 	import RPi.GPIO as GPIO
+	GPIO.setwarnings(False)
 
 from enum import Enum
 from mbus import *
@@ -39,7 +42,7 @@ Container class for State messages, so that the node we're associated with can b
 class LoaderStateMsgObj():
 	def __init__(self, nid, st):
 		self.node_id = nid
-		self._state = LoaderState(st)
+		self.state = LoaderState(st)
 
 '''
 Message containers
@@ -66,6 +69,9 @@ class Loader:
 	host = None
 	port = None
 
+	_state = LoaderState.EXITED
+	_last_state = LoaderState.EXITED
+
 	@property
 	def node_id(self) -> str:
 		return self._node_id
@@ -80,7 +86,6 @@ class Loader:
 
 	@state.setter
 	def state(self, value : LoaderState):
-		self._logger.debug("set " + self.node_id + " state to " + str(value))
 		# Only update last state if it's different from what we're trying to set
 		# It should always be different, but might as well sanity-check
 		if self.last_state != value:
@@ -90,7 +95,9 @@ class Loader:
 			except:
 				pass
 
-		self._state = value
+		if self._state != value:
+			self._state = value
+			self._logger.debug("set " + self.node_id + " state to " + str(value))
 
 	@property
 	def last_state(self) -> LoaderState:
@@ -110,14 +117,10 @@ class Loader:
 
 	def __init__(self, node_id : str, abs_path: str, host: str, port: int):
 		self.node_id: str = node_id
-		self.rom_path: str = abs_path
 		self.host: str = host
 		self.port: int = port
-		self._tick = time.time()
-		self._wait_tick = time.time()
-		self.enableGPIOReset = True
 		self.last_state = LoaderState.WAITING # doesn't matter what this is on init as long as it's different from self._state
-		self._state = LoaderState.EXITED # This should be EXITED so it doesn't automatically try and load games unless we tell it to
+		self.state = LoaderState.EXITED # This should be EXITED so it doesn't automatically try and load games unless we tell it to
 
 	def tick(self):
 		pass
@@ -164,9 +167,9 @@ class DIMMLoader(Loader):
 		self.port: int = port
 		self._tick = time.time()
 		self._wait_tick = time.time()
-		self.enableGPIOReset = True
+		self.enableGPIOReset = False
 		self.last_state = LoaderState.WAITING # doesn't matter what this is on init as long as it's different from self._state
-		self._state = LoaderState.EXITED # This should be EXITED so it doesn't automatically try and load games unless we tell it to
+		self.state = LoaderState.EXITED # This should be EXITED so it doesn't automatically try and load games unless we tell it to
 
 	@property
 	def enableGPIOReset(self) -> bool:
@@ -200,7 +203,7 @@ class DIMMLoader(Loader):
 		self._logger.info("Connecting to " + ip + ":" + str(port))
 		try:
 			self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			self._s.settimeout(0.25)
+			self._s.settimeout(4)
 			self._s.connect((ip, port))
 			self._s.settimeout(None)
 			self._is_connected = True
@@ -326,7 +329,10 @@ class DIMMLoader(Loader):
 	# note that the re-encryption is obsoleted by just setting a zero-key, which
 	# is a magic to disable the decryption.
 	def DIMM_UploadFile(self, name, key = None, progress_cb = None, chunk_len=0x8000):
+		self._logger.debug("DIMM_UploadFile")
 		patchdata = self.compilePatchData()
+
+		data = 'hi'
 
 		crc = 0
 		f_sz = os.stat(name).st_size
@@ -587,7 +593,7 @@ class DIMMLoader(Loader):
 
 		# This state has a built-in 2 second delay to reconnect.
 		# Should be enough time for the system to get started enough for us to work with it.
-		self._state = LoaderState.CONNECTING
+		self.state = LoaderState.CONNECTING
 		return ret
 
 	def doDIMMReset(self):
@@ -604,14 +610,15 @@ class DIMMLoader(Loader):
 			GPIO.output(40,0)
 
 	def tick(self):
+		#self._logger.debug("tick")
 		self._tick = time.time()
 		try:
-			_func = self._states.get(self._state, lambda self: self.INVALID)
+			_func = self._states.get(self.state, lambda self: self.INVALID)
 			_func(self)
 		except:
 			pass
 		#If we're not waiting, let's make sure our times stay in sync
-		if self._state != LoaderState.WAITING and self._state != LoaderState.KEEPALIVE:
+		if self.state != LoaderState.WAITING and self.state != LoaderState.KEEPALIVE:
 			self._wait_tick = self._tick
 
 		#each state should only run once as each one will update the state machine (except keepalive)
@@ -637,11 +644,11 @@ class DIMMLoader(Loader):
 		return
 
 	def connection_lost(self):
-		self._state = LoaderState.WAITING
+		self.state = LoaderState.WAITING
 		return
 
 	def connection_failed(self):
-		self._state = LoaderState.WAITING
+		self.state = LoaderState.WAITING
 		return
 	
 	def patching_failed(self):
@@ -657,25 +664,26 @@ class DIMMLoader(Loader):
 		#Wait 2 seconds between connection attempts
 		if int(self._tick - self._wait_tick) > 2:
 			self._logger.debug(str(self._tick) + " " + str(self._wait_tick) + " " + str(self._tick - self._wait_tick))
-			self._state = LoaderState.CONNECTING
+			self.state = LoaderState.CONNECTING
 
 	def connecting(self):
+		self._logger.debug("connecting")
 		# Open a connection to endpoint
 		try:
-			if not self.connect(self.host, self.port):
-				self._state = LoaderState.CONNECTION_FAILED
+			if not self.connect(self.host, int(self.port)):
+				self.state = LoaderState.CONNECTION_FAILED
 				return
 
 			if self._do_boot:
-				self._state = LoaderState.TRANSFERRING
+				self.state = LoaderState.TRANSFERRING
 			elif self._do_keepalive:
-				self._state = LoaderState.KEEPALIVE
+				self.state = LoaderState.KEEPALIVE
 			else:
-				self._state = LoaderState.CONNECTED
+				self.state = LoaderState.CONNECTED
 
 		except Exception as ex:
 			self._logger.error(repr(ex))
-			self._state = LoaderState.CONNECTION_FAILED
+			self.state = LoaderState.CONNECTION_FAILED
 
 	def connected(self):
 		self._logger.info("Connected")
@@ -698,16 +706,16 @@ class DIMMLoader(Loader):
 		except Exception as ex:
 			self._logger.error(repr(ex))
 			#self._logger.debug("Connection timed out or something. reconnecting.")
-			self._state = LoaderState.CONNECTING
+			self.state = LoaderState.CONNECTING
 			return
 
 		if self._do_boot:
-			self._state = LoaderState.BOOTING
+			self.state = LoaderState.BOOTING
 
 	def booting(self):
 		# restart the endpoint system, this will boot into the game we just sent
 		self.HOST_Restart()
-		self._state = LoaderState.KEEPALIVE
+		self.state = LoaderState.KEEPALIVE
 		self._do_boot = False # Finished booting. we don't want to reboot into the game automatically if we lose connection
 
 	def keepalive(self):
@@ -725,7 +733,7 @@ class DIMMLoader(Loader):
 		return
 
 	#Additional translation for functions
-	states = {
+	_states = {
 		LoaderState.BOOT_FAILED : boot_failed,
 		LoaderState.TRANSFER_FAILED : transfer_failed,
 		LoaderState.CONNECTION_LOST : connection_lost,

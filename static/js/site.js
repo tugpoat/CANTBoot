@@ -81,20 +81,20 @@ $('#rescan-games').click(function(event) {
 var source = new EventSource("/nodes/status");
 source.onmessage = function(event) {
 	var obj = JSON.parse(event.data);
-	console.log(obj.nodes.length)
 	nodes = obj.nodes;
 	for (i = 0; i < nodes.length; i++) {
+	
 	    var status = '';
 		if (nodes[i].node_state != '') {
 			status += nodes[i].node_state + "\n";
 		}
-		if (nodes[i].uploadpct) {
-			status += ' uploading: ' + nodes[i].uploadpct + "%\n" ;
-			$("#"+nodes[i].node_id+">progress").attr('value', nodes[i].uploadpct)
+		if (nodes[i].uploadpct > 0) {
+			$("#node_"+nodes[i].node_id+" > progress").val(nodes[i].uploadpct);
+			if (nodes[i].node_state == 'LoaderState.TRANSFERRING') status += " " + nodes[i].uploadpct + "%";
 		}
-		console.log(status)
+		//console.log(status);
 
-		$("#"+nodes[i].node_id+" .node-status").html(status);
+		$("#node_"+nodes[i].node_id+" .node-status").html(status);
 	}
 };
 
