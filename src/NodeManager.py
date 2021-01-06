@@ -118,7 +118,7 @@ class NodeManager():
 			#    nd.__logger.debug("controls ok")
 
 			if not gd.getDIMMRAMReq is None:
-				if nd.dimm_ram[1].strip('MB') < gd.getDIMMRAMReq[1].strip('MB'):
+				if int(nd.dimm_ram[1].strip('MB')) < int(gd.getDIMMRAMReq[1].strip('MB')):
 					#nd.__logger.debug('Not enough RAM in NetDIMM node to load game, ' + gd.getDIMMRAMReq()[1] + "required")
 					bootable = False
 				#else:
