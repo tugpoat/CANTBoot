@@ -388,6 +388,9 @@ class UI_Adafruit(Thread):
 	_lcd = None
 
 	menu = None
+	prevmenu = None
+	nextmenu = None
+
 	_scandone = False
 
 	_pressedButtons = []
@@ -444,7 +447,20 @@ class UI_Adafruit(Thread):
 		#TODO: display thingy while games list is loading/scanning
 
 		menu = UIAdaGamesMenu(self._lcd, self._games)
-		menu.run_menu()
+
+		while 1:
+			prevmenu = nextmenu
+			if nextmenu == UIAdaMenus.main:
+				menu = UIAdaMainMenu(self._lcd)
+			elif nextmenu == UIAdaMenus.nodes:
+				menu = UIAdaNodesMenu(self._lcd, self._nodes)
+			elif nextmenu == UIAdaMenus.games:
+				menu = UIAdaGamesMenu(self._lcd, self._games)
+			menuret = menu.run_menu()
+			nextmenu = menuret[0]
+
+			#process return values here and determine if we need to do anything special, e.g. load a game
+
 
 		return
 		'''
