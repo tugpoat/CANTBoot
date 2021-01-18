@@ -456,6 +456,7 @@ class UI_Adafruit(Thread):
 				menu = UIAdaNodesMenu(self._lcd, self._nodes)
 			elif nextmenu == UIAdaMenus.games:
 				menu = UIAdaGamesMenu(self._lcd, self._games)
+				
 			menuret = menu.run_menu()
 			nextmenu = menuret[0]
 

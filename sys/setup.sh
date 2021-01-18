@@ -3,6 +3,8 @@ BLKDEV="/dev/sda"
 CFG_PART_NUM=3
 PART_NUM=$(parted $BLKDEV -ms unit s p | tail -n 1 | cut -f 1 -d:)
 
+echo "attempting to resize roms partition"
+
 #just in case
 umount $BLKDEV$CFG_PART_NUM
 umount $BLKDEV$PART_NUM
@@ -17,16 +19,19 @@ if [[ $checkval -eq "Free Space" ]]; then
 	new_size="$((($part_size+$free_sectors)*512))"
 	fatresize $BLKDEV$PART_NUM -s $new_size
 else
+	echo "there was a problem. this is a very descriptive error message. continuing anyways."
 	#error
 fi
 
 mkdosfs -F 32 -I $BLKDEV$CFG_PART_NUM
 mount $BLKDEV$CFG_PART_NUM -o rw /mnt/cfg
 cp -r /home/naomi/CANTBoot/cfg/* /mnt/cfg
-mount $BLKDEV$PART_NUM -o rw /mnt/roms
+umount $BLKDEV$CFG_PART_NUM
+#mount $BLKDEV$PART_NUM -o rw /mnt/roms
 
 
 #stop initial setup things from running next time
-systemctl cantbootsetup disable
-
-update-rc.d vsftpd remove
+systemctl disable cantbootsetup.service
+echo "resized roms partition. rebooting"
+reboot
+#update-rc.d vsftpd remove
