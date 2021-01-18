@@ -1,3 +1,4 @@
+#!/bin/bash
 #extend roms parttion to end of disk
 BLKDEV="/dev/sda"
 CFG_PART_NUM=3
