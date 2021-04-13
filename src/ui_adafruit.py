@@ -235,6 +235,10 @@ class UIAdaMainMenu(TwoLineLcdMenu):
 		MBus.add_handler(FOAD, self.die)
 
 	def die(self, data):
+		self.line1="Goodbye George<3"
+		self.line2=""
+		sleep(2)
+		self.line1 = ""
 		self.exitmenu = True
 
 	def btn_press_up(self):
@@ -358,17 +362,16 @@ class UIAdaGamesMenu(TwoLineLcdMenu):
 	def btn_press_up(self):
 		super().btn_press_up()
 
-		self.mindex += 1
-		if self.mindex >= len(self.mlist): self.mindex = 0
+		self.mindex -= 1
+		if self.mindex < 0: self.mindex = len(self.mlist) - 1
 
 		self.line1 = self.mlist[self.mindex].title
 		self.line2 = str(round(self.mlist[self.mindex].file_size / 1048576, 2)) + "MiB"
 
 	def btn_press_dn(self):
 		super().btn_press_dn()
-
-		self.mindex -= 1
-		if self.mindex < 0: self.mindex = len(self.mlist) - 1
+		self.mindex += 1
+		if self.mindex >= len(self.mlist): self.mindex = 0
 
 		self.line1 = self.mlist[self.mindex].title
 		self.line2 = str(round(self.mlist[self.mindex].file_size / 1048576, 2)) + "MiB"
@@ -380,6 +383,7 @@ class UIAdaGamesMenu(TwoLineLcdMenu):
 		MBus.handle(Node_SetGameCommandMessage(payload=['0', self.mlist[self.mindex].file_checksum]))
 		#Yell at main to run the game on the node
 		MBus.handle(Node_LaunchGameCommandMessage(payload='0'))
+		self.line1 = "Booting..."
 
 '''
 ######################################################################################################
@@ -451,15 +455,17 @@ class UI_Adafruit(Thread):
 		#TODO: display thingy while games list is loading/scanning
 
 		menu = UIAdaGamesMenu(self._lcd, self._games)
+		nextmenu = None
 
 		while 1:
-			prevmenu = nextmenu
-			if nextmenu == UIAdaMenus.main:
-				menu = UIAdaMainMenu(self._lcd)
-			elif nextmenu == UIAdaMenus.nodes:
-				menu = UIAdaNodesMenu(self._lcd, self._nodes)
-			elif nextmenu == UIAdaMenus.games:
-				menu = UIAdaGamesMenu(self._lcd, self._games)
+			if nextmenu:
+				prevmenu = nextmenu
+				if nextmenu == UIAdaMenus.main:
+					menu = UIAdaMainMenu(self._lcd)
+				elif nextmenu == UIAdaMenus.nodes:
+					menu = UIAdaNodesMenu(self._lcd, self._nodes)
+				elif nextmenu == UIAdaMenus.games:
+					menu = UIAdaGamesMenu(self._lcd, self._games)
 
 			menuret = menu.run_menu()
 			nextmenu = menuret[0]

@@ -45,6 +45,11 @@
 				</div>
 			</div>
 		</div>
+		<div class="row container">
+		<div class="col-md-2">
+				<button type="submit" class="btn btn-default">Save Settings</button>
+			</div>
+		</div>
 		
 		<h2>Network</h2>
 		
