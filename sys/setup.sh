@@ -1,18 +1,21 @@
 #!/bin/bash
 #extend roms parttion to end of disk
-BLKDEV="/dev/sda"
+BLKDEV="/dev/mmcblk0"
 CFG_PART_NUM=3
 ROMS_PART_NUM=$(parted $BLKDEV -ms unit s p | tail -n 1 | cut -f 1 -d:)
 
 echo "attempting to resize roms partition"
 
+out=$(parted $BLKDEV --script u s print free)
+checkval=$(echo $out | awk '{print $(NF-1),$NF}')
+
+BLKDEV="${BLKDEV}p"
+
 #just in case
 umount $BLKDEV$CFG_PART_NUM
 umount $BLKDEV$ROMS_PART_NUM
 
-out=$(parted $BLKDEV --script u s print free)
-checkval=$(echo $out | awk '{print $(NF-1),$NF}')
-echo $checkval
+
 if [ "$checkval" == "Free Space" ]; then
 	#we have free space at the end of the disk to expand into
 	part_size=$(echo $out | awk '{print $(NF-8)}' | tr -d -c 0-9)
@@ -23,7 +26,7 @@ if [ "$checkval" == "Free Space" ]; then
 	echo "new partsize=$new_size"
 	fatresize $BLKDEV$ROMS_PART_NUM -s $new_size
 else
-	echo "there was a problem. this is a very descriptive error message. continuing anyways."
+	echo "there was a problem with resizing the roms partition. this is a very descriptive error message. continuing anyways."
 	#error
 fi
 
@@ -36,6 +39,7 @@ umount $BLKDEV$CFG_PART_NUM
 
 #stop initial setup things from running next time
 systemctl disable cantbootsetup.service
+systemctl enable CANTBoot.service
 echo "resized roms partition. rebooting"
 reboot
 #update-rc.d vsftpd remove
