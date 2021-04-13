@@ -235,10 +235,6 @@ class UIAdaMainMenu(TwoLineLcdMenu):
 		MBus.add_handler(FOAD, self.die)
 
 	def die(self, data):
-		self.line1="Goodbye George<3"
-		self.line2=""
-		sleep(2)
-		self.line1 = ""
 		self.exitmenu = True
 
 	def btn_press_up(self):
@@ -434,7 +430,10 @@ class UI_Adafruit(Thread):
 		self._nodes = nodeman.nodes
 
 	def die(self, data):
-		print("ohfuck")
+		self.line1="Goodbye George<3"
+		self.line2=""
+		sleep(2)
+		self.line1 = ""
 		try:
 			menu.exitmenu = True
 			sleep(0.5)
