@@ -1,5 +1,5 @@
 [Unit]
-Description=CANTBoot
+Description=CANTBoot Initial Setup
 Before=local-fs.target
 
 [Service]
@@ -8,5 +8,3 @@ User=root
 WorkingDirectory=/
 ExecStart=/home/naomi/CANTBoot/sys/setup.sh
 
-[Install]
-WantedBy=multi-user.target
