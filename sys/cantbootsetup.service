@@ -1,6 +1,6 @@
 [Unit]
 Description=CANTBoot Initial Setup
-Before=local-fs.target
+After=default.target
 
 [Service]
 Type=simple
