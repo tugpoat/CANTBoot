@@ -92,6 +92,7 @@ class TwoLineLcdMenu():
 		self._logger.debug("init logger")
 
 	def render(self):
+		#TODO: only render changed characters instead of the whole thing when a line changes
 		self._lcd.setCursor(0,0)
 		if self._line1_outbuf.ljust(16) != self._line1_rbuf:
 			self._line1_rbuf = self._line1_outbuf.ljust(16)
@@ -456,7 +457,7 @@ class UI_Adafruit(Thread):
 				menu = UIAdaNodesMenu(self._lcd, self._nodes)
 			elif nextmenu == UIAdaMenus.games:
 				menu = UIAdaGamesMenu(self._lcd, self._games)
-				
+
 			menuret = menu.run_menu()
 			nextmenu = menuret[0]
 

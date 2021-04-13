@@ -82,7 +82,6 @@ class NodeList():
 				with open(nodes_dir+"/"+tmp.nickname+'.yml', 'w') as ofs:
 					yaml.dump(tmp, ofs)
 			except Exception as ex:
-				succ = False
 				print(ex)
 
 		#We always export the full configuration. if any node files exist that weren't exported, the user deleted them
