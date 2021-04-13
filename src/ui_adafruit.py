@@ -344,6 +344,9 @@ class UIAdaGamesMenu(TwoLineLcdMenu):
 		self._logger.debug("init logger")
 
 		self.mlist = gameslist
+		
+		if len(self.mlist) < 1: self.line2 = "No games! :("
+
 		self.line1 = self.mlist[self.mindex].title
 		self.line2 = str(round(self.mlist[self.mindex].file_size / 1048576, 2)) + "MiB"
 
