@@ -22,7 +22,7 @@ def set_ifconfig(iface : str, ip : str, mask : str):
 	os.system("sudo ifconfig ? ? netmask ?", [iface, ip, mask])
 
 def disable_sshd():
-	os.system("sudo systemctl diaable ssh")
+	os.system("sudo systemctl disable ssh")
 	os.system("sudo service ssh disable")
 
 def enable_sshd():
