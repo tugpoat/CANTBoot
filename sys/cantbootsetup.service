@@ -8,3 +8,5 @@ User=root
 WorkingDirectory=/
 ExecStart=/home/naomi/CANTBoot/sys/setup.sh
 
+[Install]
+WantedBy=multi-user.target
