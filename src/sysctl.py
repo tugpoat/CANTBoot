@@ -140,7 +140,7 @@ def write_iwconfig(prefs):
 
 		#dnsmasq
 		with open("/etc/dnsmasq.conf", "w") as outfile:
-			data="interface=wlan0\nlisten-address=%s\nbind-interfaces\n#server=8.8.8.8\n#domain-needed\nbogus-priv\ndhcp-range=%s,%s,24h" % (prefs.get('Network', 'wlan0_ip'), prefs.get('Network', 'wlan0_dhcp_low'), prefs.get('Network', 'wlan0_dhcp_high'))
+			data="interface=wlan0\nlisten-address=%s\nbind-interfaces\n#server=8.8.8.8\n#domain-needed\nbogus-priv\ndhcp-range=%s,%s,24h\naddress=/#/%s\n" % (prefs.get('Network', 'wlan0_ip'), prefs.get('Network', 'wlan0_dhcp_low'), prefs.get('Network', 'wlan0_dhcp_high'), prefs.get('Network', 'wlan0_ip'))
 			outfile.write(data)
 			outfile.close()
 
