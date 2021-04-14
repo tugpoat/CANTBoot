@@ -589,21 +589,18 @@ class DIMMLoader(Loader):
 		# TODO: I don't think either of these functions will actually cause a disconnect, so we should be good to go
 		# Although there probably isn't any harm in just creating a new connection.
 		# Should investigate it through testing.
+		self._logger.info("NetDIMM Reset")
+		self.doDIMMReset()
 		if on_raspi and self.enableGPIOReset:
 			self._logger.info("GPIO Reset")
 			self.doGPIOReset()
-			ret = True
-		else:
-			self._logger.info("NetDIMM Reset")
-			self.doDIMMReset()
-			ret = True
 
 		self.disconnect()
 
 		# This state has a built-in 2 second delay to reconnect.
 		# Should be enough time for the system to get started enough for us to work with it.
 		self.state = LoaderState.CONNECTING
-		return ret
+		return True
 
 	def doDIMMReset(self):
 		self.HOST_Restart()
@@ -713,6 +710,7 @@ class DIMMLoader(Loader):
 			self._logger.info("Uploading " + self.rom_path)
 			# uploads file. Also sets "dimm information" (file length and crc32)
 			self.DIMM_UploadFile(self.rom_path, None, self.upload_pct_callback)
+			self._logger.info("Upload completed.")
 			self._do_transfer = False # Boot game next time
 		except Exception as ex:
 			self._logger.error(repr(ex))
@@ -723,13 +721,16 @@ class DIMMLoader(Loader):
 
 	def booting(self):
 		try:
+			self._logger.info("Rebooting into game")
+
 			# restart the endpoint system, this will boot into the game we just sent
+			self._logger.info("NetDIMM Reset")
+			self.doDIMMReset()
+
 			if on_raspi and self.enableGPIOReset:
 				self._logger.info("GPIO Reset")
 				self.doGPIOReset()
-			else:
-				self._logger.info("NetDIMM Reset")
-				self.doDIMMReset()
+				
 
 			self.state = LoaderState.KEEPALIVE
 			self._do_boot = False # Finished booting. we don't want to reboot into the game automatically if we lose connection
@@ -741,7 +742,7 @@ class DIMMLoader(Loader):
 
 
 	def keepalive(self):
-		if int(self._tick - self._wait_tick) > 10:
+		if int(self._tick - self._wait_tick) > 100:
 			try:
 				self._logger.debug("trying keepalive")
 				# set time limit to 10h. According to some reports, this does not work.
