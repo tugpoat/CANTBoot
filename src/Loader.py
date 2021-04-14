@@ -147,9 +147,10 @@ class DIMMLoader(Loader):
 	_tick = 0
 	_wait_tick = 0
 
+	_do_transfer = False
 	_do_boot = False
-	_enableFastboot = True
 	_do_keepalive = False
+	_enableFastboot = True
 
 	_patches = []
 
@@ -197,7 +198,7 @@ class DIMMLoader(Loader):
 	def connect(self, ip : str, port : int) -> bool:
 
 		if self.is_connected and self._s != None:
-			self._logger.debug("Called connect() with existant socket. Disconnecting.")
+			self._logger.debug("Called connect() with existant socket. Disconnecting and Reconnecting.")
 			self.disconnect()
 
 		self._logger.info("Connecting to " + ip + ":" + str(port))
@@ -214,6 +215,9 @@ class DIMMLoader(Loader):
 			return False
 
 		return True
+
+	def reconnect(self) -> bool:
+		return self.connect(self.host, int(self.port))
 
 	def disconnect(self):
 		self._s.close()
@@ -574,10 +578,13 @@ class DIMMLoader(Loader):
 	# Then, reboot the system so that it will accept a new upload using the configured method
 	# Lastly, give the state machine the green light to proceed
 	def bootGame(self) -> bool:
+		self._do_transfer = True
 		self._do_boot = True
 		self._do_keepalive = False
 
 		ret = False
+
+		self.connect(self.host, int(self.port))
 
 		# TODO: I don't think either of these functions will actually cause a disconnect, so we should be good to go
 		# Although there probably isn't any harm in just creating a new connection.
@@ -586,10 +593,12 @@ class DIMMLoader(Loader):
 			self._logger.info("GPIO Reset")
 			self.doGPIOReset()
 			ret = True
-		elif self.is_connected:
+		else:
 			self._logger.info("NetDIMM Reset")
 			self.doDIMMReset()
 			ret = True
+
+		self.disconnect()
 
 		# This state has a built-in 2 second delay to reconnect.
 		# Should be enough time for the system to get started enough for us to work with it.
@@ -597,8 +606,7 @@ class DIMMLoader(Loader):
 		return ret
 
 	def doDIMMReset(self):
-		if self.is_connected:
-			self.HOST_Restart()
+		self.HOST_Restart()
 
 	def doGPIOReset(self):
 		# No sense in doing anything if we're not running on something that supports the RPi GPIO lib
@@ -616,7 +624,8 @@ class DIMMLoader(Loader):
 			_func = self._states.get(self.state, lambda self: self.INVALID)
 			_func(self)
 		except:
-			pass
+			self._logger.debug("call failed: " + _func)
+
 		#If we're not waiting, let's make sure our times stay in sync
 		if self.state != LoaderState.WAITING and self.state != LoaderState.KEEPALIVE:
 			self._wait_tick = self._tick
@@ -634,7 +643,7 @@ class DIMMLoader(Loader):
 
 	def upload_pct_callback(self, percent_complete):
 		# deliver this to UI and/or main thread(s) via messagebus
-		self._logger.debug("upload cb: " + str(percent_complete) + "%")
+		#self._logger.debug("upload cb: " + str(percent_complete) + "%")
 		MBus.handle(Node_LoaderUploadPctMessage(payload=[self.node_id, str(percent_complete)]))
 
 	def boot_failed(self):
@@ -667,15 +676,17 @@ class DIMMLoader(Loader):
 			self.state = LoaderState.CONNECTING
 
 	def connecting(self):
-		self._logger.debug("connecting")
 		# Open a connection to endpoint
 		try:
 			if not self.connect(self.host, int(self.port)):
 				self.state = LoaderState.CONNECTION_FAILED
 				return
 
-			if self._do_boot:
+			#branch our state machine according to flags
+			if self._do_transfer:
 				self.state = LoaderState.TRANSFERRING
+			elif self._do_boot:
+				self.state = LoaderState.BOOTING
 			elif self._do_keepalive:
 				self.state = LoaderState.KEEPALIVE
 			else:
@@ -686,7 +697,6 @@ class DIMMLoader(Loader):
 			self.state = LoaderState.CONNECTION_FAILED
 
 	def connected(self):
-		self._logger.info("Connected")
 		return
 
 	def transferring(self):
@@ -703,32 +713,45 @@ class DIMMLoader(Loader):
 			self._logger.info("Uploading " + self.rom_path)
 			# uploads file. Also sets "dimm information" (file length and crc32)
 			self.DIMM_UploadFile(self.rom_path, None, self.upload_pct_callback)
+			self._do_transfer = False # Boot game next time
 		except Exception as ex:
 			self._logger.error(repr(ex))
 			#self._logger.debug("Connection timed out or something. reconnecting.")
-			self.state = LoaderState.CONNECTING
-			return
 
-		if self._do_boot:
-			self.state = LoaderState.BOOTING
+		#Force a reconnect on exception or if we've finished uploading
+		self.state = LoaderState.CONNECTION_LOST
 
 	def booting(self):
-		# restart the endpoint system, this will boot into the game we just sent
-		self.HOST_Restart()
-		self.state = LoaderState.KEEPALIVE
-		self._do_boot = False # Finished booting. we don't want to reboot into the game automatically if we lose connection
+		try:
+			# restart the endpoint system, this will boot into the game we just sent
+			if on_raspi and self.enableGPIOReset:
+				self._logger.info("GPIO Reset")
+				self.doGPIOReset()
+			else:
+				self._logger.info("NetDIMM Reset")
+				self.doDIMMReset()
+
+			self.state = LoaderState.KEEPALIVE
+			self._do_boot = False # Finished booting. we don't want to reboot into the game automatically if we lose connection
+			self._do_keepalive = True # Do keepalive next time
+		except Exception as ex:
+				self._logger.error(repr(ex))
+				#We lost our connection. Return to waiting state and attempt again once the DIMM is reachable.
+				self.state = LoaderState.CONNECTION_LOST
+
 
 	def keepalive(self):
 		if int(self._tick - self._wait_tick) > 10:
 			try:
+				self._logger.debug("trying keepalive")
 				# set time limit to 10h. According to some reports, this does not work.
 				self.TIME_SetLimit(10*60*1000)
 				self._logger.info("Sent keepalive!")
 				self._wait_tick = self._tick
 			except Exception as ex:
-				self._do_keepalive = True # return to keepalive if we lose connection
+				self._logger.error(repr(ex))
 				#We lost our connection. Return to waiting state and attempt again once the DIMM is reachable.
-				self._states = LoaderState.CONNECTION_LOST
+				self.state = LoaderState.CONNECTION_LOST
 
 		return
 
