@@ -189,8 +189,6 @@ class UIWeb_Bottle(Bottle):
 		wlan0_dhcp_low = self._prefs['Network']['wlan0_dhcp_low']  or '10.0.0.100'
 		wlan0_dhcp_high = self._prefs['Network']['wlan0_dhcp_high']  or '10.0.0.200'
 
-
-		games_directory =   self._prefs['Directories']['roms_dir']       or 'games'
 		#render
 		return template('config',
 			skip_checksum=skip_checksum,
@@ -205,8 +203,7 @@ class UIWeb_Bottle(Bottle):
 			wlan0_psk=wlan0_psk,
 			wlan0_netmask=wlan0_netmask,
 			wlan0_dhcp_low=wlan0_dhcp_low,
-			wlan0_dhcp_high=wlan0_dhcp_high,
-			games_directory=games_directory)
+			wlan0_dhcp_high=wlan0_dhcp_high)
 
 	def do_appconfig(self):
 		skip_checksum   = request.forms.get('skip_checksum')
@@ -270,8 +267,6 @@ class UIWeb_Bottle(Bottle):
 		self._prefs['Network']['wlan0_dhcp_low']       =     wlan0_dhcp_low       =   request.forms.get('wlan0_dhcp_low')
 		self._prefs['Network']['wlan0_dhcp_high']       =     wlan0_dhcp_high       =   request.forms.get('wlan0_dhcp_high')
 
-		self._prefs['Directories']['roms']         =     games_directory =   request.forms.get('games_directory')
-
 		#Save config to disk
 		MBus.handle(SaveConfigToDisk())
 
@@ -310,8 +305,7 @@ class UIWeb_Bottle(Bottle):
 			wlan0_psk=wlan0_psk,
 			wlan0_netmask=wlan0_netmask,
 			wlan0_dhcp_low=wlan0_dhcp_low,
-			wlan0_dhcp_high=wlan0_dhcp_high,
-			games_directory=games_directory)
+			wlan0_dhcp_high=wlan0_dhcp_high)
 
 	def apply_appconfig(self):
 		#yell at the main thread to reconfigure the network and reboob

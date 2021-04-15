@@ -1,3 +1,4 @@
+
 		<div class="row container">
 			<h3>eth0</h3>
 			<div class="form-group">
@@ -53,7 +54,7 @@
 					<input type="text" class="form-control" name="wlan0_netmask" value="{{wlan0_netmask}}" placeholder="Subnet Mask" />
 				</div>
 			</div>
-
+			
 			<div class="form-group">
 				<label class="col-sm-2 control-label">DHCP Low</label>
 				<div class="col-sm-3">
@@ -63,4 +64,3 @@
 				<div class="col-sm-3">
 					<input type="text" class="form-control" name="wlan0_dhcp_high" value="{{wlan0_dhcp_high}}" placeholder="10.0.0.200" />
 			</div>
-		</div>
