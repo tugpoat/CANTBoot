@@ -345,6 +345,7 @@ class DIMMLoader(Loader):
 		if key:
 			d = DES.new(key[::-1], DES.MODE_ECB)
 
+		prg_counter = 0
 
 		# Set up our patching flags, bookmarks, and iterators
 		patch_continue = 0
@@ -432,11 +433,12 @@ class DIMMLoader(Loader):
 			crc = zlib.crc32(data, crc)
 			addr += chunk_len
 
+			prg_counter += 1
 
-			# -- prm edit 2019/12/16
-			#Callback for percent progress
-			if callable(progress_cb):
-				progress_cb(round((addr / f_sz) * 100, 2))
+			if prg_counter > 10:
+				if callable(progress_cb):
+					progress_cb(round((addr / f_sz) * 100, 2))
+				prg_counter = 0
 
 		a.close()
 		crc = ~crc
