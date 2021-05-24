@@ -60,6 +60,22 @@ def enable_hostapd():
 	os.system("sudo systemctl enable hostapd")
 	os.system("sudo service hostapd start")
 
+def disable_wpasupplicant():
+	os.system("sudo systemctl disable wpa_supplicant")
+	os.system("sudo service wpa_supplicant stop")
+
+
+def disable_wpasupplicant():
+	os.system("sudo systemctl enable wpa_supplicant")
+	os.system("sudo service wpa_supplicant start")
+
+
+def iptables_ap():
+	pass
+
+def iptables_client():
+	pass
+
 #FIXME: actually read from stdout
 def get_ifstate(iface : str):
 	#get output from ifconfig to check up on live configuration data/state
@@ -69,6 +85,7 @@ def get_ifstate(iface : str):
 def get_wlanstate(iface : str):
 	#get output from iwconfig to check up on live state
 	os.system("sudo iwconfig "+iface)
+
 
 
 #FIXME: remove the logic from this part later and clean it up. just get it working for now.
@@ -92,8 +109,6 @@ def write_ifconfig(prefs):
 			data.append("address "+str(eth0n.ip)+"\n")
 			data.append("netmask "+prefs.get('Network', 'eth0_netmask')+"\n")
 
-			#TODO: do bitwise operations to figure out the network and bcast from ip and mask.
-			#data.append("network ?", [])
 			data.append("network "+str(eth0n.network.network_address)+"\n")
 			data.append("broadcast "+str(eth0n.network.broadcast_address)+"\n")
 		else:
@@ -124,7 +139,7 @@ def write_iwconfig(prefs):
 	if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_netmask') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
 		with open("/etc/wpa_supplicant/wpa_supplicant.conf",  "w") as outfile:
 
-			data = "country=US\nctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\n\nnetwork={\nssid=\"%s\"\nscan_ssid=1\npsk=\"%s\"\nkey_mgmt=WPA-PSK\n}\n"  % (prefs.get('Network', 'wlan0_ssid'), prefs.get('Network', 'wlan0_psk'))
+			data = "country=US\nctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\n\nnetwork={\nssid=\"%s\"\npsk=\"%s\"}\n"  % (prefs.get('Network', 'wlan0_ssid'), prefs.get('Network', 'wlan0_psk'))
 
 			outfile.writelines(data)
 			outfile.close()
