@@ -336,7 +336,7 @@ class DIMMLoader(Loader):
 		self._logger.debug("DIMM_UploadFile")
 		patchdata = self.compilePatchData()
 
-		data = 'hi'
+		data = 'hi' #init with length > 0 so we enter the loop
 
 		crc = 0
 		f_sz = os.stat(name).st_size
@@ -433,8 +433,9 @@ class DIMMLoader(Loader):
 			crc = zlib.crc32(data, crc)
 			addr += chunk_len
 
+			# It is faster to use a counter than to do a modulus operation every time we xfer a chunk.
+			# Definitely not the biggest bottleneck in this function by any means but I'd like to save where I can
 			prg_counter += 1
-
 			if prg_counter > 10:
 				if callable(progress_cb):
 					progress_cb(round((addr / f_sz) * 100, 2))

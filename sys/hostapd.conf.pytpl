@@ -1,3 +1,5 @@
+# Managed by CANTBoot, don't touch
+#
 # is the name of the WiFi interface we configured above
 interface=wlan0
 
@@ -5,7 +7,7 @@ interface=wlan0
 driver=nl80211
 
 # This is the name of the network
-ssid={wlan0_ssid}
+ssid=$ssid
 
 # Use the 2.4GHz band
 hw_mode=g
@@ -38,7 +40,7 @@ wpa=2
 wpa_key_mgmt=WPA-PSK
 
 # The network passphrase
-wpa_passphrase={wlan0_psk}
+wpa_passphrase=$psk
 
 # Use AES, instead of TKIP
 rsn_pairwise=CCMP
