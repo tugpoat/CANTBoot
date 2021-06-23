@@ -146,11 +146,15 @@ def applysysconfig():
 		logger.debug("wifi client. disabling dnsmasq and hostapd.")
 		disable_dnsmasq()
 		disable_hostapd()
+		enable_wpasupplicant()
+		iptables_client()
 	else:
 		#wifi ap
 		logger.debug("wifi ap. enabling dnsmasq and hostapd.")
+		disable_wpasupplicant()
 		enable_dnsmasq()
 		enable_hostapd()
+		iptables_ap()
 		
 	logger.info("Done. rebooting system.")
 	reboot_system()
@@ -217,7 +221,8 @@ MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
 # Let's not even bother trying to touch the system if we're not running on a raspi.
 if on_raspi:
 	MBus.add_handler(FTPDEnableMessage, handle_FTPDEnableMessage)
-	MBus.add_handler(ApplySysConfig, handle_ApplySysConfig)
+
+MBus.add_handler(ApplySysConfig, handle_ApplySysConfig)
 
 
 #TODO: Handle signals properly instead of what I'm doing now
