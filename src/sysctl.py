@@ -3,6 +3,7 @@
 
 import os
 from subprocess import run, PIPE
+from string import Template
 
 import ipaddress
 
@@ -60,6 +61,22 @@ def enable_hostapd():
 	os.system("sudo systemctl enable hostapd")
 	os.system("sudo service hostapd start")
 
+def disable_wpasupplicant():
+	os.system("sudo systemctl disable wpa_supplicant")
+	os.system("sudo service wpa_supplicant stop")
+
+
+def disable_wpasupplicant():
+	os.system("sudo systemctl enable wpa_supplicant")
+	os.system("sudo service wpa_supplicant start")
+
+
+def iptables_ap():
+	pass
+
+def iptables_client():
+	pass
+
 #FIXME: actually read from stdout
 def get_ifstate(iface : str):
 	#get output from ifconfig to check up on live configuration data/state
@@ -69,6 +86,7 @@ def get_ifstate(iface : str):
 def get_wlanstate(iface : str):
 	#get output from iwconfig to check up on live state
 	os.system("sudo iwconfig "+iface)
+
 
 
 #FIXME: remove the logic from this part later and clean it up. just get it working for now.
@@ -81,6 +99,14 @@ def write_ifconfig(prefs):
 	eth0n = ipaddress.IPv4Interface(prefs.get('Network', 'eth0_ip')+"/"+prefs.get('Network', 'eth0_netmask'))
 	wlan0n = ipaddress.IPv4Interface(prefs.get('Network', 'wlan0_ip')+"/"+prefs.get('Network', 'wlan0_netmask'))
 
+	td = {
+		'eth0_ip': str(eth0n.ip),
+		'eth0_mask': prefs.get('Network', 'eth0_netmask'),
+		'eth0_netw': str(eth0n.network.network_address),
+		'eth0_bcast': str(eth0n.network.broadcast_address),
+
+	}
+
 	data.append("#-----Managed by CANTBoot, don't touch\n")
 	data.append("auto lo\n")
 	data.append("iface lo inet loopback\n")
@@ -92,8 +118,6 @@ def write_ifconfig(prefs):
 			data.append("address "+str(eth0n.ip)+"\n")
 			data.append("netmask "+prefs.get('Network', 'eth0_netmask')+"\n")
 
-			#TODO: do bitwise operations to figure out the network and bcast from ip and mask.
-			#data.append("network ?", [])
 			data.append("network "+str(eth0n.network.network_address)+"\n")
 			data.append("broadcast "+str(eth0n.network.broadcast_address)+"\n")
 		else:
@@ -119,37 +143,26 @@ def write_iwconfig(prefs):
 
 	#eth0n = ipaddress.IPv4Interface(prefs.get('Network', 'eth0_ip')+"/"+prefs.get('Network', 'eth0_netmask'))
 	#wlan0n = ipaddress.IPv4Interface(prefs.get('Network', 'wlan0_ip')+"/"+prefs.get('Network', 'wlan0_netmask'))
+	td: {
+		'ip': prefs.get('Network', 'wlan0_ip'),
+		'dhcplow': prefs.get('Network', 'wlan0_dhcp_low'),
+		'dhcphigh': prefs.get('Network', 'wlan0_dhcp_high'),
+		'ssid': prefs.get('Network', 'wlan0_ssid'),
+		'psk': prefs.get('Network', 'wlan0_psk')
+	}
+
+	files = ['/etc/hostapd/hostapd.conf', '/etc/dnsmasq.conf', '/etc/iptables/rules.v4']
 
 	#client?
 	if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_netmask') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
-		with open("/etc/wpa_supplicant/wpa_supplicant.conf",  "w") as outfile:
+		files.append('/etc/wpa_supplicant/wpa_supplicant.conf')
 
-			data = "country=US\nctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\n\nnetwork={\nssid=\"%s\"\nscan_ssid=1\npsk=\"%s\"\nkey_mgmt=WPA-PSK\n}\n"  % (prefs.get('Network', 'wlan0_ssid'), prefs.get('Network', 'wlan0_psk'))
+	for f in files:
+		with open(f + '.pytpl') as tin:
+			data = Template(tin.read())
+			data = data.substitute(td)
+			with open(f, "w") as outfile:
+				outfile.write(data)
+				outfile.close()
 
-			outfile.writelines(data)
-			outfile.close()
-	else:
-
-		#not client. ap.
-
-		#hostapd
-		with open("/etc/hostapd/hostapd.conf",  "w") as outfile:
-			data ="interface=wlan0\ndriver=nl80211\nssid=%s\n\nhw_mode=g\nchannel=6\nieee80211n=1\nwmm_enabled=1\nht_capab=[HT40][SHORT-GI-20][DSSS_CCK-40]\nmacaddr_acl=0\nauth_algs=1\nignore_broadcast_ssid=0\nwpa=2\nwpa_key_mgmt=WPA-PSK\nwpa_passphrase=%s\nrsn_pairwise=CCMP"  % (prefs.get('Network', 'wlan0_ssid'), prefs.get('Network', 'wlan0_psk'))
-			outfile.write(data)
-			outfile.close()
-
-		#dnsmasq
-		with open("/etc/dnsmasq.conf", "w") as outfile:
-			data="interface=wlan0\nlisten-address=%s\nbind-interfaces\n#server=8.8.8.8\n#domain-needed\nbogus-priv\ndhcp-range=%s,%s,24h\naddress=/#/%s\n" % (prefs.get('Network', 'wlan0_ip'), prefs.get('Network', 'wlan0_dhcp_low'), prefs.get('Network', 'wlan0_dhcp_high'), prefs.get('Network', 'wlan0_ip'))
-			outfile.write(data)
-			outfile.close()
-
-		fwdata = ''
-		with open("/etc/iptables/rules.v4.pytpl") as template:
-			data=template.read()
-			fwdata=data % (prefs.get('Network', 'wlan0_ip'), prefs.get('Network', 'wlan0_ip'))
-			template.close()
-
-		with open("/etc/iptables/rules.v4", "w") as outfile:
-			outfile.write(fwdata)
-			outfile.close()
+			tin.close()

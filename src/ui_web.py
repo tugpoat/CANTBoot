@@ -171,6 +171,11 @@ class UIWeb_Bottle(Bottle):
 		else:
 			autoboot =  ''
 
+		if self._prefs['Main']['fastboot_enable'] == 'True':
+			fastboot_enable = 'checked'
+		else:
+			fastboot_enable = ''
+
 		if self._prefs['System']['ftpd_enable'] == 'True':
 			ftpd_enable = 'checked'
 		else:
@@ -189,13 +194,12 @@ class UIWeb_Bottle(Bottle):
 		wlan0_dhcp_low = self._prefs['Network']['wlan0_dhcp_low']  or '10.0.0.100'
 		wlan0_dhcp_high = self._prefs['Network']['wlan0_dhcp_high']  or '10.0.0.200'
 
-
-		games_directory =   self._prefs['Directories']['roms_dir']       or 'games'
 		#render
 		return template('config',
 			skip_checksum=skip_checksum,
 			autoboot=autoboot,
 			gpio_reset=gpio_reset,
+			fastboot_enable=fastboot_enable,
 			ftpd_enable=ftpd_enable,
 			eth0_ip=eth0_ip,
 			eth0_netmask=eth0_netmask,
@@ -205,13 +209,13 @@ class UIWeb_Bottle(Bottle):
 			wlan0_psk=wlan0_psk,
 			wlan0_netmask=wlan0_netmask,
 			wlan0_dhcp_low=wlan0_dhcp_low,
-			wlan0_dhcp_high=wlan0_dhcp_high,
-			games_directory=games_directory)
+			wlan0_dhcp_high=wlan0_dhcp_high)
 
 	def do_appconfig(self):
 		skip_checksum   = request.forms.get('skip_checksum')
 		autoboot        = request.forms.get('autoboot')
 		gpio_reset      = request.forms.get('gpio_reset')
+		fastboot_enable = request.forms.get('fastboot_enable')
 
 		ftpd_enable		= request.forms.get('ftpd_enable')
 
@@ -232,16 +236,22 @@ class UIWeb_Bottle(Bottle):
 		else:
 			gpio_reset = 'False'
 
+		if fastboot_enable == 'on':
+			fastboot_enable = 'True'
+		else:
+			fastboot_enable = 'False'
+
 		if ftpd_enable == 'on':
 			ftpd_enable = 'True'
 		else:
 			ftpd_enable = 'False'
 
-		self._prefs['Main']['skip_checksum']      =     skip_checksum
-		self._prefs['Main']['autoboot']           =     autoboot
-		self._prefs['Main']['gpio_reset']         =     gpio_reset
+		self._prefs['Main']['skip_checksum']	= skip_checksum
+		self._prefs['Main']['autoboot']			= autoboot
+		self._prefs['Main']['gpio_reset']		= gpio_reset
+		self._prefs['Main']['fastboot_enable']	= fastboot_enable
 
-		self._prefs['System']['ftpd_enable']	  =		ftpd_enable
+		self._prefs['System']['ftpd_enable']	= ftpd_enable
 
 		if ftpd_enable == 'True' and len(ftpd_user_pw) > 3:
 			MBus.handle(FTPDEnableMessage(payload=ftpd_user_pw))
@@ -268,9 +278,7 @@ class UIWeb_Bottle(Bottle):
 		self._prefs['Network']['wlan0_psk']       =     wlan0_psk       =   request.forms.get('wlan0_psk')
 
 		self._prefs['Network']['wlan0_dhcp_low']       =     wlan0_dhcp_low       =   request.forms.get('wlan0_dhcp_low')
-		self._prefs['Network']['wlan0_dhcp_high']       =     wlan0_dhcp_high       =   request.forms.get('wlan0_dhcp_high')
-
-		self._prefs['Directories']['roms']         =     games_directory =   request.forms.get('games_directory')
+		self._prefs['Network']['wlan0_dhcp_high']      =     wlan0_dhcp_high      =   request.forms.get('wlan0_dhcp_high')
 
 		#Save config to disk
 		MBus.handle(SaveConfigToDisk())
@@ -291,6 +299,11 @@ class UIWeb_Bottle(Bottle):
 		else:
 			gpio_reset = ''
 
+		if fastboot_enable == 'True':
+			fastboot_enable = 'checked'
+		else:
+			fastboot_enable = ''
+
 		if ftpd_enable == 'True':
 			ftpd_enable = 'checked'
 		else:
@@ -301,6 +314,7 @@ class UIWeb_Bottle(Bottle):
 			skip_checksum=skip_checksum,
 			autoboot=autoboot,
 			gpio_reset=gpio_reset,
+			fastboot_enable=fastboot_enable,
 			ftpd_enable=ftpd_enable,
 			eth0_ip=eth0_ip,
 			eth0_netmask=eth0_netmask,
@@ -310,8 +324,7 @@ class UIWeb_Bottle(Bottle):
 			wlan0_psk=wlan0_psk,
 			wlan0_netmask=wlan0_netmask,
 			wlan0_dhcp_low=wlan0_dhcp_low,
-			wlan0_dhcp_high=wlan0_dhcp_high,
-			games_directory=games_directory)
+			wlan0_dhcp_high=wlan0_dhcp_high)
 
 	def apply_appconfig(self):
 		#yell at the main thread to reconfigure the network and reboob

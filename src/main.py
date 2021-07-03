@@ -59,6 +59,12 @@ prefs['Directories']['roms_dir'] = args.romsdir
 
 prefs['System']['ftpd_enable'] = 'False'
 
+if prefs['System']['sysctl_enable'] == 'True':
+	if prefs['System']['sshd_enable'] == 'True':
+		enable_sshd()
+	else:
+		disable_sshd()
+
 cfg_debug = bool(prefs['Main']['debug'])
 cfg_use_parts = bool(prefs['Main']['use_parts'])
 
@@ -70,6 +76,7 @@ if not on_raspi and cfg_use_parts:
 cfg_api_mode = str(prefs['Main']['api_mode'])
 
 db = None
+
 
 '''
 ######################################################################################################
@@ -146,11 +153,15 @@ def applysysconfig():
 		logger.debug("wifi client. disabling dnsmasq and hostapd.")
 		disable_dnsmasq()
 		disable_hostapd()
+		enable_wpasupplicant()
+		iptables_client()
 	else:
 		#wifi ap
 		logger.debug("wifi ap. enabling dnsmasq and hostapd.")
+		disable_wpasupplicant()
 		enable_dnsmasq()
 		enable_hostapd()
+		iptables_ap()
 		
 	logger.info("Done. rebooting system.")
 	reboot_system()
@@ -197,6 +208,7 @@ if cfg_api_mode != 'slave':
 		ui_threads.append(t)
 
 	#FIXME: Having this after UI loading without notifying the user what's going on is bad.
+	games_list.verifyFiles()
 	games_list.scanForNewGames(db)
 
 else:
@@ -217,7 +229,8 @@ MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
 # Let's not even bother trying to touch the system if we're not running on a raspi.
 if on_raspi:
 	MBus.add_handler(FTPDEnableMessage, handle_FTPDEnableMessage)
-	MBus.add_handler(ApplySysConfig, handle_ApplySysConfig)
+
+MBus.add_handler(ApplySysConfig, handle_ApplySysConfig)
 
 
 #TODO: Handle signals properly instead of what I'm doing now

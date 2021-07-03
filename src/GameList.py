@@ -73,8 +73,11 @@ class GameList():
 			self.__logger.error(repr(ex))
 
 	def verifyFiles(self):
-		#TODO: Run thru list and hash check everything.
-		print("sup")
+		#TODO: Run thru list and ensure that the files in our list exist.
+		for elem in self._games:
+			if not os.path.isfile(self._games_dir+"/"+elem.filename):
+				self.__logger.debug('File '+elem.filename+' does not exist, removing from game list')
+				self._games.remove(elem)
 
 	def scanForNewGames(self, database):
 		old_len = len(self._games)

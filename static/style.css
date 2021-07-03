@@ -30,6 +30,12 @@ body {
   text-align: center;
 }
 
+
+
 .error {
 	background: #f26565;
+}
+
+.col-sm-1 {
+	width: 5em;
 }

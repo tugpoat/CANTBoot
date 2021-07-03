@@ -141,7 +141,7 @@ class GameDescriptor(yaml.YAMLObject):
 			fp.close()
 			return title
 		except Exception as ex:
-			print('gettitle failed'+repl(ex))
+			print('gettitle failed'+repr(ex))
 			# TODO: thing
 
 	@property
