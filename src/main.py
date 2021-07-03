@@ -148,20 +148,26 @@ def applysysconfig():
 	logger.debug("writing wlan config")
 	write_iwconfig(prefs)
 
-	if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_netmask') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
-		#wifi client
-		logger.debug("wifi client. disabling dnsmasq and hostapd.")
-		disable_dnsmasq()
+	if prefs.get('Network', 'wlan0_mode') == 'disabled':
+		#disable wifi
 		disable_hostapd()
-		enable_wpasupplicant()
+		disable_wpasupplicant()
 		iptables_client()
 	else:
-		#wifi ap
-		logger.debug("wifi ap. enabling dnsmasq and hostapd.")
-		disable_wpasupplicant()
-		enable_dnsmasq()
-		enable_hostapd()
-		iptables_ap()
+		if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_netmask') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
+			#wifi client
+			logger.debug("wifi client. disabling dnsmasq and hostapd.")
+			disable_dnsmasq()
+			disable_hostapd()
+			enable_wpasupplicant()
+			iptables_client()
+		else:
+			#wifi ap
+			logger.debug("wifi ap. enabling dnsmasq and hostapd.")
+			disable_wpasupplicant()
+			enable_dnsmasq()
+			enable_hostapd()
+			iptables_ap()
 		
 	logger.info("Done. rebooting system.")
 	reboot_system()

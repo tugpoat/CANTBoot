@@ -122,18 +122,19 @@ def write_ifconfig(prefs):
 			data.append("broadcast "+str(eth0n.network.broadcast_address)+"\n")
 		else:
 			data.append("iface eth0 inet auto\n")
-
-		data.append("\nallow-hotplug wlan0\n")
-		# Don't allow DHCP if we're running as an AP.
-		if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_netmask') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
-			data.append("iface wlan0 inet auto\n")
-			#DHCP setting
-		else:
-			data.append("iface wlan0 inet static\n")
-			data.append("address "+str(wlan0n.ip)+"\n")
-			data.append("netmask "+prefs.get('Network', 'wlan0_netmask')+"\n")
-			data.append("network "+str(wlan0n.network.network_address)+"\n")
-			data.append("broadcast "+str(wlan0n.network.broadcast_address)+"\n")
+			
+		if prefs.get('Network', 'wlan0_mode').lower() != 'disabled':
+			data.append("\nallow-hotplug wlan0\n")
+			# Don't allow DHCP if we're running as an AP.
+			if (prefs.get('Network', 'wlan0_ip').lower() == 'dhcp' or prefs.get('Network', 'wlan0_netmask').lower() == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
+				data.append("iface wlan0 inet auto\n")
+				#DHCP setting
+			else:
+				data.append("iface wlan0 inet static\n")
+				data.append("address "+str(wlan0n.ip)+"\n")
+				data.append("netmask "+prefs.get('Network', 'wlan0_netmask')+"\n")
+				data.append("network "+str(wlan0n.network.network_address)+"\n")
+				data.append("broadcast "+str(wlan0n.network.broadcast_address)+"\n")
 
 		outfile.writelines(data)
 
