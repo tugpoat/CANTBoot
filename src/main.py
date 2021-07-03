@@ -59,10 +59,11 @@ prefs['Directories']['roms_dir'] = args.romsdir
 
 prefs['System']['ftpd_enable'] = 'False'
 
-if prefs['System']['sysctl_enable'] == 'True' and prefs['System']['sshd_enable'] == 'True':
-	enable_sshd()
-else:
-	disable_sshd()
+if prefs['System']['sysctl_enable'] == 'True':
+	if prefs['System']['sshd_enable'] == 'True':
+		enable_sshd()
+	else:
+		disable_sshd()
 
 cfg_debug = bool(prefs['Main']['debug'])
 cfg_use_parts = bool(prefs['Main']['use_parts'])

@@ -441,7 +441,7 @@ class DIMMLoader(Loader):
 			# It is faster to use a counter than to do a modulus operation every time we xfer a chunk.
 			# Definitely not the biggest bottleneck in this function by any means but I'd like to save where I can
 			prg_counter += 1
-			if prg_counter > 10:
+			if prg_counter > 100:
 				if callable(progress_cb):
 					progress_cb(round((addr / f_sz) * 100, 2))
 				prg_counter = 0
