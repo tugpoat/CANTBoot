@@ -126,7 +126,7 @@ def write_ifconfig(prefs):
 		if prefs.get('Network', 'wlan0_mode').lower() != 'disabled':
 			data.append("\nallow-hotplug wlan0\n")
 			# Don't allow DHCP if we're running as an AP.
-			if (prefs.get('Network', 'wlan0_ip').lower() == 'dhcp' or prefs.get('Network', 'wlan0_netmask').lower() == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
+			if prefs.get('Network', 'wlan0_mode') == 'client':
 				data.append("iface wlan0 inet auto\n")
 				#DHCP setting
 			else:
@@ -144,10 +144,10 @@ def write_iwconfig(prefs):
 
 	#eth0n = ipaddress.IPv4Interface(prefs.get('Network', 'eth0_ip')+"/"+prefs.get('Network', 'eth0_netmask'))
 	#wlan0n = ipaddress.IPv4Interface(prefs.get('Network', 'wlan0_ip')+"/"+prefs.get('Network', 'wlan0_netmask'))
-	td: {
+	td = {
 		'ip': prefs.get('Network', 'wlan0_ip'),
-		'dhcplow': prefs.get('Network', 'wlan0_dhcp_low'),
-		'dhcphigh': prefs.get('Network', 'wlan0_dhcp_high'),
+		'dhcp_low': prefs.get('Network', 'wlan0_dhcp_low'),
+		'dhcp_high': prefs.get('Network', 'wlan0_dhcp_high'),
 		'ssid': prefs.get('Network', 'wlan0_ssid'),
 		'psk': prefs.get('Network', 'wlan0_psk')
 	}

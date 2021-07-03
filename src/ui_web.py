@@ -191,6 +191,11 @@ class UIWeb_Bottle(Bottle):
 		wlan0_ssid      =   self._prefs['Network']['wlan0_ssid']    or 'NAOMI'
 		wlan0_psk       =   self._prefs['Network']['wlan0_psk']     or 'segarocks'
 
+		if self._prefs['Network']['wlan0_dhcp_client'] == 'True':
+			wlan0_dhcp_client = 'checked'
+		else:
+			wlan0_dhcp_client = ''
+
 		wlan0_dhcp_low = self._prefs['Network']['wlan0_dhcp_low']  or '10.0.0.100'
 		wlan0_dhcp_high = self._prefs['Network']['wlan0_dhcp_high']  or '10.0.0.200'
 
@@ -204,6 +209,7 @@ class UIWeb_Bottle(Bottle):
 			eth0_ip=eth0_ip,
 			eth0_netmask=eth0_netmask,
 			wlan0_mode=wlan0_mode,
+			wlan0_dhcp_client=wlan0_dhcp_client,
 			wlan0_ip=wlan0_ip,
 			wlan0_ssid=wlan0_ssid,
 			wlan0_psk=wlan0_psk,
@@ -280,10 +286,19 @@ class UIWeb_Bottle(Bottle):
 		self._prefs['Network']['wlan0_dhcp_low']       =     wlan0_dhcp_low       =   request.forms.get('wlan0_dhcp_low')
 		self._prefs['Network']['wlan0_dhcp_high']      =     wlan0_dhcp_high      =   request.forms.get('wlan0_dhcp_high')
 
+		wlan0_dhcp_client = request.forms.get('wlan0_dhcp_client')
+		if wlan0_dhcp_client == 'on':
+			wlan0_dhcp_client = 'True'
+		else:
+			wlan0_dhcp_client = 'False'
+
+		self._prefs['Network']['wlan0_dhcp_client'] = wlan0_dhcp_client
+
 		#Save config to disk
 		MBus.handle(SaveConfigToDisk())
 
 
+		#re-fuckulate for template
 		if skip_checksum == 'True':
 			skip_checksum = 'checked'
 		else:
@@ -309,6 +324,12 @@ class UIWeb_Bottle(Bottle):
 		else:
 			ftpd_enable = ''
 
+
+		if wlan0_dhcp_client == 'True':
+			wlan0_dhcp_client = 'checked'
+		else:
+			wlan0_dhcp_client = ''
+
 		return template('config',
 			did_config=True,
 			skip_checksum=skip_checksum,
@@ -320,6 +341,7 @@ class UIWeb_Bottle(Bottle):
 			eth0_netmask=eth0_netmask,
 			wlan0_mode=wlan0_mode,
 			wlan0_ip=wlan0_ip,
+			wlan0_dhcp_client=wlan0_dhcp_client,
 			wlan0_ssid=wlan0_ssid,
 			wlan0_psk=wlan0_psk,
 			wlan0_netmask=wlan0_netmask,
