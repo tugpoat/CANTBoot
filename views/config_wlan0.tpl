@@ -3,8 +3,9 @@
 					<label class="col-sm-2 control-label">Radio Mode</label>
 					<div class="col-sm-3">
 						<select class="form-control" id="wlan0_mode_select" name="wlan0_mode">
-							<option value="wlan0_mode_ap" {{"selected" if wlan0_mode == "AP" else ""}}>AP</option>
-							<option value="wlan0_mode_client" {{"selected" if wlan0_mode == "Client" else ""}}>Client</option>
+							<option value="wlan0_mode_ap" {{"selected" if wlan0_mode == "ap" else ""}}>AP</option>
+							<option value="wlan0_mode_client" {{"selected" if wlan0_mode == "client" else ""}}>Client</option>
+							<option value="wlan0_mode_disabled" {{"selected" if wlan0_mode == "disabled" else ""}}>Disabled</option>
 						</select>
 					</div>
 				</div>
@@ -27,7 +28,7 @@
 					<div class="form-group">
 						<label class="col-sm-2 control-label">Use DHCP</label>
 						<div class="col-sm-1">
-							<input type="checkbox" id="wlan0_dhcp_client" class="form-control" name="wlan0_dhcp_client" />
+							<input type="checkbox" id="wlan0_dhcp_client" class="form-control" name="wlan0_dhcp_client" {{wlan0_dhcp_client}} />
 						</div>
 					</div>
 				</div>

@@ -66,7 +66,7 @@ def disable_wpasupplicant():
 	os.system("sudo service wpa_supplicant stop")
 
 
-def disable_wpasupplicant():
+def enable_wpasupplicant():
 	os.system("sudo systemctl enable wpa_supplicant")
 	os.system("sudo service wpa_supplicant start")
 
@@ -126,7 +126,7 @@ def write_ifconfig(prefs):
 		if prefs.get('Network', 'wlan0_mode').lower() != 'disabled':
 			data.append("\nallow-hotplug wlan0\n")
 			# Don't allow DHCP if we're running as an AP.
-			if prefs.get('Network', 'wlan0_mode') == 'client':
+			if prefs.get('Network', 'wlan0_mode') == 'client' and prefs.get('Network', 'wlan0_dhcp_client') == 'True':
 				data.append("iface wlan0 inet auto\n")
 				#DHCP setting
 			else:
@@ -152,11 +152,13 @@ def write_iwconfig(prefs):
 		'psk': prefs.get('Network', 'wlan0_psk')
 	}
 
-	files = ['/etc/hostapd/hostapd.conf', '/etc/dnsmasq.conf', '/etc/iptables/rules.v4']
+	files = ['/etc/dnsmasq.conf', '/etc/iptables/rules.v4']
 
 	#client?
-	if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_netmask') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
+	if prefs.get('Network', 'wlan0_mode') == 'client':
 		files.append('/etc/wpa_supplicant/wpa_supplicant.conf')
+	elif prefs.get('Network', 'wlan0_mode') == 'ap':
+		files.append('/etc/hostapd/hostapd.conf')
 
 	for f in files:
 		with open(f + '.pytpl') as tin:

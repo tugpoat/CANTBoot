@@ -154,7 +154,7 @@ def applysysconfig():
 		disable_wpasupplicant()
 		iptables_client()
 	else:
-		if (prefs.get('Network', 'wlan0_ip') == 'dhcp' or prefs.get('Network', 'wlan0_netmask') == 'dhcp') and prefs.get('Network', 'wlan0_mode') == 'client':
+		if prefs.get('Network', 'wlan0_mode') == 'client':
 			#wifi client
 			logger.debug("wifi client. disabling dnsmasq and hostapd.")
 			disable_dnsmasq()
@@ -186,6 +186,9 @@ nodeman = NodeManager(bool(prefs['Main']['autoboot']))
 nodeman.loadNodesFromDisk(prefs['Directories']['cfg_dir'] + '/nodes')
 
 ui_threads = []
+
+
+## check to see if we are a slave node. if we are, we don't need most of the things we would normally run.
 
 if cfg_api_mode != 'slave':
 

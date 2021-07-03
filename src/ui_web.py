@@ -271,13 +271,13 @@ class UIWeb_Bottle(Bottle):
 
 		wlan0_mode = request.forms.get('wlan0_mode') 
 		if wlan0_mode == 'wlan0_mode_client':
-			wlan0_mode = 'Client'
+			wlan0_mode = 'client'
 		else:
-			wlan0_mode = 'AP'
+			wlan0_mode = 'ap'
 
 		#TODO: sanity checking on string values
 
-		self._prefs['Network']['wlan0_mode']      =     wlan0_mode.lower()
+		self._prefs['Network']['wlan0_mode']      =     wlan0_mode
 		self._prefs['Network']['wlan0_ip']        =     wlan0_ip        =   request.forms.get('wlan0_ip').lower()
 		self._prefs['Network']['wlan0_netmask']   =     wlan0_netmask   =   request.forms.get('wlan0_netmask')
 		self._prefs['Network']['wlan0_ssid']      =     wlan0_ssid      =   request.forms.get('wlan0_ssid')
