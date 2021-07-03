@@ -271,8 +271,8 @@ class UIWeb_Bottle(Bottle):
 
 		#TODO: sanity checking on string values
 
-		self._prefs['Network']['wlan0_mode']      =     wlan0_mode
-		self._prefs['Network']['wlan0_ip']        =     wlan0_ip        =   request.forms.get('wlan0_ip')
+		self._prefs['Network']['wlan0_mode']      =     wlan0_mode.lower()
+		self._prefs['Network']['wlan0_ip']        =     wlan0_ip        =   request.forms.get('wlan0_ip').lower()
 		self._prefs['Network']['wlan0_netmask']   =     wlan0_netmask   =   request.forms.get('wlan0_netmask')
 		self._prefs['Network']['wlan0_ssid']      =     wlan0_ssid      =   request.forms.get('wlan0_ssid')
 		self._prefs['Network']['wlan0_psk']       =     wlan0_psk       =   request.forms.get('wlan0_psk')

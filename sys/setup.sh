@@ -40,6 +40,6 @@ umount $BLKDEV$CFG_PART_NUM
 #stop initial setup things from running next time
 systemctl disable cantbootsetup.service
 systemctl enable CANTBoot.service
-echo "resized roms partition. rebooting"
+echo "resized roms partition and set up default config. rebooting"
 reboot
 #update-rc.d vsftpd remove
