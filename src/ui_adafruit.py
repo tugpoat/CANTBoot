@@ -453,7 +453,7 @@ class UI_Adafruit(Thread):
 	def runui(self):
 		#TODO: display thingy while games list is loading/scanning
 
-		menu = UIAdaGamesMenu(self._lcd, self._games)
+		menu = UIAdaNodeMenu(self._lcd, self._games)
 		nextmenu = None
 
 		while 1:

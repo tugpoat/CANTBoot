@@ -40,7 +40,7 @@ class LoaderState(Enum):
 Container class for State messages, so that the node we're associated with can be looked up
 '''
 class LoaderStateMsgObj():
-	def __init__(self, nid, st):
+	def __init__(self, nid: int, st: LoaderState):
 		self.node_id = nid
 		self.state = LoaderState(st)
 
@@ -339,8 +339,13 @@ class DIMMLoader(Loader):
 		data = 'hi' #init with length > 0 so we enter the loop
 
 		crc = 0
-		f_sz = os.stat(name).st_size
-		a = open(name, "rb")
+		try:
+			f_sz = os.stat(name).st_size
+			a = open(name, "rb")
+		except FileNotFoundError as ex:
+			self._logger.info(ex.repr())
+			return
+
 		addr = 0
 		if key:
 			d = DES.new(key[::-1], DES.MODE_ECB)
@@ -670,8 +675,8 @@ class DIMMLoader(Loader):
 		return
 
 	def waiting(self):
-		#Wait 2 seconds between connection attempts
-		if int(self._tick - self._wait_tick) > 2:
+		#Wait 10 seconds between connection attempts
+		if int(self._tick - self._wait_tick) > 10:
 			self._logger.debug(str(self._tick) + " " + str(self._wait_tick) + " " + str(self._tick - self._wait_tick))
 			self.state = LoaderState.CONNECTING
 

@@ -59,6 +59,11 @@ prefs['Directories']['roms_dir'] = args.romsdir
 
 prefs['System']['ftpd_enable'] = 'False'
 
+if prefs['System']['sysctl_enable'] == 'True' and prefs['System']['sshd_enable'] == 'True':
+	enable_sshd()
+else:
+	disable_sshd()
+
 cfg_debug = bool(prefs['Main']['debug'])
 cfg_use_parts = bool(prefs['Main']['use_parts'])
 
@@ -70,6 +75,7 @@ if not on_raspi and cfg_use_parts:
 cfg_api_mode = str(prefs['Main']['api_mode'])
 
 db = None
+
 
 '''
 ######################################################################################################
@@ -201,6 +207,7 @@ if cfg_api_mode != 'slave':
 		ui_threads.append(t)
 
 	#FIXME: Having this after UI loading without notifying the user what's going on is bad.
+	games_list.verifyFiles()
 	games_list.scanForNewGames(db)
 
 else:

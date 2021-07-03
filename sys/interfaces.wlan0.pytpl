@@ -1,0 +1,6 @@
+allow-hotplug wlan0
+iface wlan0 inet $wlan0_ipmode
+address $wlan0_ip
+netmask $wlan0_mask
+network $wlan0_netw
+broadcast $wlan0_bcast
