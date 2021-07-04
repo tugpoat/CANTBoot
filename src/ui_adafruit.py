@@ -302,6 +302,10 @@ class UIAdaNodesMenu(TwoLineLcdMenu):
 		self._logger.debug("init logger")
 
 		self.mlist = nodelist
+		if len(self.mlist) < 1: 
+			self.line2 = "No nodes! :("
+		else:
+			self.line1 = self.mlist[0].hostname
 
 		MBus.add_handler(FOAD, self.die)
 
@@ -314,7 +318,7 @@ class UIAdaNodesMenu(TwoLineLcdMenu):
 		self.mindex += 1
 		if self.mindex >= len(self.mlist): self.mindex = 0
 
-		self.line1 = self._list[self.mindex].hostname
+		self.line1 = self.mlist[self.mindex].hostname
 
 
 	def btn_press_dn(self):
@@ -337,7 +341,7 @@ class UIAdaNodesMenu(TwoLineLcdMenu):
 Game selection menu. Normally selected after a node is selected.
 '''
 class UIAdaGamesMenu(TwoLineLcdMenu):
-	def __init__(self, lcd, gameslist):
+	def __init__(self, lcd, gameslist, sel_node : str):
 		super().__init__(lcd)
 
 		self._logger = logging.getLogger("UIAdaNodeMenu " + str(id(self)))
@@ -345,10 +349,11 @@ class UIAdaGamesMenu(TwoLineLcdMenu):
 
 		self.mlist = gameslist
 		
-		if len(self.mlist) < 1: self.line2 = "No games! :("
-
-		self.line1 = self.mlist[self.mindex].title
-		self.line2 = str(round(self.mlist[self.mindex].file_size / 1048576, 2)) + "MiB"
+		if len(self.mlist) < 1: 
+			self.line2 = "No games! :("
+		else:
+			self.line1 = self.mlist[self.mindex].title
+			self.line2 = str(round(self.mlist[self.mindex].file_size / 1048576, 2)) + "MiB"
 
 		MBus.add_handler(FOAD, self.die)
 
@@ -453,7 +458,7 @@ class UI_Adafruit(Thread):
 	def runui(self):
 		#TODO: display thingy while games list is loading/scanning
 
-		menu = UIAdaNodeMenu(self._lcd, self._nodes)
+		menu = UIAdaGamesMenu(self._lcd, self._games, '0')
 		nextmenu = None
 
 		while 1:
@@ -464,10 +469,12 @@ class UI_Adafruit(Thread):
 				elif nextmenu == UIAdaMenus.nodes:
 					menu = UIAdaNodesMenu(self._lcd, self._nodes)
 				elif nextmenu == UIAdaMenus.games:
-					menu = UIAdaGamesMenu(self._lcd, self._games)
+					#menu = UIAdaGamesMenu(self._lcd, self._games, self._nodes[sel_idx].node_id)
+					menu = UIAdaGamesMenu(self._lcd, self._games, '0')
 
 			menuret = menu.run_menu()
 			nextmenu = menuret[0]
+			sel_idx = menuret[1]
 
 			#process return values here and determine if we need to do anything special, e.g. load a game
 

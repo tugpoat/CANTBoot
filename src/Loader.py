@@ -586,13 +586,13 @@ class DIMMLoader(Loader):
 	# Then, reboot the system so that it will accept a new upload using the configured method
 	# Lastly, give the state machine the green light to proceed
 	def bootGame(self) -> bool:
+		if not self.connect(self.host, int(self.port)):
+			return False
+
+
 		self._do_transfer = True
 		self._do_boot = True
 		self._do_keepalive = False
-
-		ret = False
-
-		self.connect(self.host, int(self.port))
 
 		# TODO: I don't think either of these functions will actually cause a disconnect, so we should be good to go
 		# Although there probably isn't any harm in just creating a new connection.
