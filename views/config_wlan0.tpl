@@ -5,7 +5,8 @@
 						<select class="form-control" id="wlan0_mode_select" name="wlan0_mode">
 							<option value="wlan0_mode_ap" {{"selected" if wlan0_mode == "ap" else ""}}>AP</option>
 							<option value="wlan0_mode_client" {{"selected" if wlan0_mode == "client" else ""}}>Client</option>
-							<option value="wlan0_mode_disabled" {{"selected" if wlan0_mode == "disabled" else ""}}>Disabled</option>
+							<!-- Doesn't work right now -->
+							<!--<option value="wlan0_mode_disabled" {{"selected" if wlan0_mode == "disabled" else ""}}>Disabled</option>-->
 						</select>
 					</div>
 				</div>
