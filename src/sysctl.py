@@ -72,10 +72,24 @@ def enable_wpasupplicant():
 
 
 def iptables_ap():
-	pass
+	eth0n = ipaddress.IPv4Interface(prefs.get('Network', 'eth0_ip')+"/"+prefs.get('Network', 'eth0_netmask'))
+	wlan0n = ipaddress.IPv4Interface(prefs.get('Network', 'wlan0_ip')+"/"+prefs.get('Network', 'wlan0_netmask'))
+	td = {
+		'ip': prefs.get('Network', 'wlan0_ip'),
+	}
+	with open('/etc/iptables/rules.v4.pytpl') as tin:
+		data = Template(tin.read())
+		data = data.substitute(td)
+		with open('/etc/iptables/rules.v4', 'w') as outfile:
+				outfile.write(data)
+				outfile.close()
+		tin.close()
+
+	os.system('iptables-restore < /etc/iptables/rules.v4')
 
 def iptables_client():
-	pass
+	os.system('iptables -F')
+	os.system('iptables -t nat -F')
 
 #FIXME: actually read from stdout
 def get_ifstate(iface : str):

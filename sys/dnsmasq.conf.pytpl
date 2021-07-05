@@ -6,4 +6,4 @@ domain-needed        # Don't forward short names
 bogus-priv           # Never forward addresses in the non-routed address spaces.  
 dhcp-range=$dhcp_low,$dhcp_high,12h # Assign IP addresses between 172.24.1.50 and 172.24.1.150 with a 12 hour lease time 
 address=/#/$ip
-#except-interfaces=eth0,lo
+except-interfaces=eth0,lo

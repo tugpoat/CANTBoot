@@ -405,6 +405,8 @@ class UIWeb_Bottle(Bottle):
 				# if self._nodeman.nodes[node_id].nickname != str(request.forms.get('nickname')): #TODO: remove old file
 
 				self._nodeman.nodes[node_id].nickname = str(request.forms.get('nickname'))
+				self._nodeman.nodes[node_id].hostname = str(request.forms.get('node_ip'))
+				self._nodeman.nodes[node_id].port = int(request.forms.get('node_port'))
 				self._nodeman.nodes[node_id].system = make_tuple(request.forms.get('system'))
 				self._nodeman.nodes[node_id].controls = make_tuple(request.forms.get('control-type'))
 				self._nodeman.nodes[node_id].monitor = make_tuple(request.forms.get('monitor-type'))
