@@ -167,7 +167,7 @@ def applysysconfig():
 			disable_wpasupplicant()
 			enable_dnsmasq()
 			enable_hostapd()
-			iptables_ap()
+			iptables_ap(prefs)
 		
 	logger.info("Done. rebooting system.")
 	reboot_system()

@@ -71,7 +71,7 @@ def enable_wpasupplicant():
 	os.system("sudo service wpa_supplicant start")
 
 
-def iptables_ap():
+def iptables_ap(prefs):
 	eth0n = ipaddress.IPv4Interface(prefs.get('Network', 'eth0_ip')+"/"+prefs.get('Network', 'eth0_netmask'))
 	wlan0n = ipaddress.IPv4Interface(prefs.get('Network', 'wlan0_ip')+"/"+prefs.get('Network', 'wlan0_netmask'))
 	td = {
