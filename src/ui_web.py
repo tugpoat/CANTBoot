@@ -98,7 +98,7 @@ class UIWeb_Bottle(Bottle):
 
 	def start(self):
 		self._db = ACNTBootDatabase('db.sqlite')
-		self.run(host='0.0.0.0', port=80, debug=False, quiet=True)
+		self.run(host='0.0.0.0', port=8000, debug=False, quiet=True)
 
 	def die(self, data):
 		#TODO: ensure clean exit
@@ -405,16 +405,14 @@ class UIWeb_Bottle(Bottle):
 				# if self._nodeman.nodes[node_id].nickname != str(request.forms.get('nickname')): #TODO: remove old file
 
 				self._nodeman.nodes[node_id].nickname = str(request.forms.get('nickname'))
-				self._nodeman.nodes[node_id].hostname = str(request.forms.get('node_ip'))
 				self._nodeman.nodes[node_id].port = int(request.forms.get('node_port'))
 				self._nodeman.nodes[node_id].system = make_tuple(request.forms.get('system'))
 				self._nodeman.nodes[node_id].controls = make_tuple(request.forms.get('control-type'))
 				self._nodeman.nodes[node_id].monitor = make_tuple(request.forms.get('monitor-type'))
 				self._nodeman.nodes[node_id].dimm_ram = make_tuple(request.forms.get('dimm-ram'))
+				self._nodeman.nodes[node_id].hostname = str(request.forms.get('node_ip'))
 
 				MBus.handle(SaveConfigToDisk())
-				
-				return self.node_edit(node_id, True)
 
 		#kick em back to the index
 		return self.nodes()
