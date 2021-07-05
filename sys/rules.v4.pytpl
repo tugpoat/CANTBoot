@@ -15,7 +15,6 @@ COMMIT
 :INPUT ACCEPT [2094:835370]
 :POSTROUTING ACCEPT [81:5587]
 :OUTPUT ACCEPT [81:5587]
--A PREROUTING -p tcp -m tcp --dport 80 -j DNAT --to-destination $ip:8000
 -A PREROUTING -p tcp -m tcp --dport 53 -j DNAT --to-destination $ip
 -A PREROUTING -p udp -m udp --dport 53 -j DNAT --to-destination $ip
 COMMIT
