@@ -98,7 +98,7 @@ class UIWeb_Bottle(Bottle):
 
 	def start(self):
 		self._db = ACNTBootDatabase('db.sqlite')
-		self.run(host='0.0.0.0', port=8000, debug=False, quiet=True)
+		self.run(host='0.0.0.0', port=80, debug=False, quiet=True)
 
 	def die(self, data):
 		#TODO: ensure clean exit
