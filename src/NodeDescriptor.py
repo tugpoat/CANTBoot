@@ -35,6 +35,7 @@ class NodeDescriptor(yaml.YAMLObject):
 	dimm_ram = None
 	game = None
 	loader_uploadpct=0
+	filter_games=True
 
 	#Python doesn't support constructor overloading
 	def __init__(self, hostname = None, port = None):

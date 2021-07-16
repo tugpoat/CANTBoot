@@ -5,6 +5,14 @@
 
 	% if defined('games'):
 	<h4>Choose a game to play</h4>
+	<form id="filtergames" class="form-horizontal" action="/games/{{node.node_id}}" method="POST" role="form">
+		<div id="chk-gamesfilter" class="form-group">
+			<label class="control-label">Filter by Node Configuration</label>
+			<div class="col-sm-1">
+				<input type="checkbox" class="form-control" name="filter_games" {{filter_games}} />
+			</div>
+		</div>
+	</form>
 	% for game in games:
 	<a class="edit-link" href="/games/edit/{{game.file_checksum}}"><span class="glyphicon glyphicon-edit"></span></a>
 		<div class="label label-default game {{game.checksum_status}}">

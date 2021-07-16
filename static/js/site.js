@@ -60,6 +60,9 @@ $('#gpio_reboot').click(function() {
 	});
 })
 
+$('#chk-gamesfilter').click(function(event) {
+	$('#filtergames').submit()
+})
 
 $('#rescan-games').click(function(event) {
 	event.preventDefault();
@@ -75,6 +78,8 @@ $('#rescan-games').click(function(event) {
 		}
 	});
 });
+
+
 
 //Status bar
 

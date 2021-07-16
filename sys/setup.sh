@@ -30,7 +30,7 @@ else
 	#error
 fi
 
-mkdosfs -F 32 -I $BLKDEV$CFG_PART_NUM
+mkdosfs -F 32 -I $BLKDEV$CFG_PART_NUM -n CONFIG
 mount $BLKDEV$CFG_PART_NUM -o rw /mnt/cfg
 cp -r /home/naomi/CANTBoot/cfg/* /mnt/cfg
 umount $BLKDEV$CFG_PART_NUM

@@ -82,6 +82,7 @@ class UIWeb_Bottle(Bottle):
 		self.route('/launch/<node_id>', method="GET", callback=self.launch)
 
 		self.route('/games/<node_id>', method="GET", callback=self.games)
+		self.route('/games/<node_id>', method="POST", callback=self.games_post)
 		self.route('/games/edit/<fhash>', method="GET", callback=self.game_edit)
 		self.route('/games/edit/<fhash>', method="POST", callback=self.game_do_edit)
 
@@ -98,7 +99,7 @@ class UIWeb_Bottle(Bottle):
 
 	def start(self):
 		self._db = ACNTBootDatabase('db.sqlite')
-		self.run(host='0.0.0.0', port=80, debug=False, quiet=True)
+		self.run(host='0.0.0.0', port=8000, debug=False, quiet=True)
 
 	def die(self, data):
 		#TODO: ensure clean exit
@@ -120,13 +121,28 @@ class UIWeb_Bottle(Bottle):
 	def games(self, node_id : str):
 		node = self._nodeman.nodes[node_id]
 		tmplist = []
+		bsfilter_list = ''
 
-		for g in self._games:
-			if not self._nodeman.validateGameDescriptor(node, g):
-				continue
-			tmplist.append(copy.deepcopy(g))
+		if node.filter_games == True:
+			bsfilter_list = 'checked'
+			for g in self._games:
+				if not self._nodeman.validateGameDescriptor(node, g):
+					continue
+				tmplist.append(copy.deepcopy(g))
+		else:
+			tmplist = self._games #pass the reference, no worries
 
-		return template('games', node=node, games=tmplist)
+		return template('games', node=node, games=tmplist, filter_games=bsfilter_list)
+
+	#Handle filtration boolean setting
+	def games_post(self, node_id: str):
+		if self._nodeman.nodes[node_id]:
+			if request.forms.get('filter_games') == 'on':
+				self._nodeman.nodes[node_id].filter_games = True
+			else:
+				self._nodeman.nodes[node_id].filter_games = False
+
+		return self.games(node_id)
 
 	def game_edit(self, fhash : str):
 		outgames = self._db.getGameList()
@@ -387,7 +403,7 @@ class UIWeb_Bottle(Bottle):
 
 		return template('nodes', nodes=self._nodeman.nodes)
 
-	def node_edit(self,node_id, did_edit=False):
+	def node_edit(self,node_id : str, did_edit=False):
 		node = self._nodeman.nodes[node_id]
 		systems = self._db.getSystems()
 		controls = self._db.getControlTypes()
