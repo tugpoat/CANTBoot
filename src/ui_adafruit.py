@@ -7,7 +7,7 @@ from time import sleep
 
 from GameDescriptor import GameDescriptor
 from GameList import GameList, GameList_ScanEventMessage
-from Loader import Node_SetGameCommandMessage, Node_LaunchGameCommandMessage
+from Loader import Node_SetGameCommandMessage, Node_LaunchGameCommandMessage, Node_LoaderStateMessage, Node_LoaderUploadPctMessage, LoaderState, LoaderStateMsgObj
 from mbus import *
 from main_events import *
 
@@ -278,8 +278,10 @@ class UIAdaConfigMenu(TwoLineLcdMenu):
 		self._logger = logging.getLogger("UIAdaConfigMenu " + str(id(self)))
 		self._logger.debug("init logger")
 
+		self.mlist = ['Filter games by monitor', '']
+
 		self.line1 = "N/A"
-		self.line2 = "Left: Exit menu"
+		self.line2 = "L:Exit U/D:toggle"
 
 		MBus.add_handler(FOAD, self.die)
 
@@ -305,7 +307,8 @@ class UIAdaNodesMenu(TwoLineLcdMenu):
 		if len(self.mlist) < 1: 
 			self.line2 = "No nodes! :("
 		else:
-			self.line1 = self.mlist[0].hostname
+			self.line1 = self.mlist[0].nickname
+			self.line2 = self.mlist[0].hostname
 
 		MBus.add_handler(FOAD, self.die)
 
@@ -318,7 +321,8 @@ class UIAdaNodesMenu(TwoLineLcdMenu):
 		self.mindex += 1
 		if self.mindex >= len(self.mlist): self.mindex = 0
 
-		self.line1 = self.mlist[self.mindex].hostname
+		self.line1 = self.mlist[self.mindex].nickname
+		self.line2 = self.mlist[self.mindex].hostname
 
 
 	def btn_press_dn(self):
@@ -327,7 +331,15 @@ class UIAdaNodesMenu(TwoLineLcdMenu):
 		self.mindex -= 1
 		if self.mindex < 0: self.mindex = len(self.mlist) - 1
 
-		self.line1 = self.mlist[self.mindex].hostname
+		self.line1 = self.mlist[self.mindex].nickname
+		self.line2 = self.mlist[self.mindex].hostname
+
+	def btn_press_right(self):
+		super.btn_press_right()
+		self.line1 = "TODO: PING"
+		self.line2 = "Sorry :("
+
+		#TODO: ping node
 
 	def btn_press_sel(self):
 		super().btn_press_sel()
@@ -341,13 +353,27 @@ class UIAdaNodesMenu(TwoLineLcdMenu):
 Game selection menu. Normally selected after a node is selected.
 '''
 class UIAdaGamesMenu(TwoLineLcdMenu):
+	_node_id = '0'
+	_is_booting = False
+	_nodestate = None
+
 	def __init__(self, lcd, gameslist, sel_node : str):
 		super().__init__(lcd)
 
 		self._logger = logging.getLogger("UIAdaNodeMenu " + str(id(self)))
 		self._logger.debug("init logger")
 
+		MBus.add_handler(GameList_ScanEventMessage, self.handle_GameList_ScanEventMessage)
+		MBus.add_handler(Node_LoaderStateMessage, self.handle_LoaderStateMessage)
+		MBus.add_handler(Node_LoaderUploadPctMessage, self.handle_LoaderUploadPctMessage)
+
+		MBus.add_handler(FOAD, self.die)
+
+		#defined in parent
 		self.mlist = gameslist
+
+		#non-inherited
+		self.node_id = sel_node
 		
 		if len(self.mlist) < 1: 
 			self.line2 = "No games! :("
@@ -355,7 +381,39 @@ class UIAdaGamesMenu(TwoLineLcdMenu):
 			self.line1 = self.mlist[self.mindex].title
 			self.line2 = str(round(self.mlist[self.mindex].file_size / 1048576, 2)) + "MiB"
 
-		MBus.add_handler(FOAD, self.die)
+	def handle_GameList_ScanEventMessage(self, message: GameList_ScanEventMessage):
+		self._lcd.clear()
+		if message.payload == "donelol":
+			self._scandone = True
+			self.line1 = self.mlist[self.mindex].title
+			self.line2 = str(round(self.mlist[self.mindex].file_size / 1048576, 2)) + "MiB"
+		else:
+			self.line1= message.payload
+			self.line2 ='Scanning...'
+
+	def handle_LoaderStateMessage(self, message: Node_LoaderStateMessage):
+		# Only process if it's related to the node we are working with right now
+
+		# Turn that long enum into something that will fit on a 16x2 character LCD
+		if message.payload[0] == self._node_id:
+			if  message.payload[1] == LoaderState.WAITING:
+				self._nodestate = 'waiting'
+			else if message.payload[1] == LoaderState.TRANSFERRING:
+				self._nodestate = 'xfering'
+			else if message.payload[1] == LoaderState.BOOTING:
+				self._nodestate = 'booting'
+			else if message.payload[1] == LoaderState.KEEPALIVE:
+				self._nodestate = 'done'
+				self.line2 = '                '
+
+	def handle_LoaderUploadPctMessage(self, message: Node_LoaderUploadPctMessage):
+		# We should only be outputting upload stats for the node we are working with, 
+		# and only if that node is actually uploading.
+		if self._nodestate == LoaderState.TRANSFERRING and message.payload[0] == self._node_id:
+			tmp = "%s%" % (str(round(float(message.payload[1]))))
+			tmp = tmp.rjust(16)
+			tmp[7:] = self._nodestate
+			self.line2 = tmp
 
 	def die(self, data):
 		self.exitmenu = True
@@ -381,10 +439,11 @@ class UIAdaGamesMenu(TwoLineLcdMenu):
 		super().btn_press_sel()
 		# TODO: This is a simple test. Flesh everything out.
 		#Yell at main thread to set game
-		MBus.handle(Node_SetGameCommandMessage(payload=['0', self.mlist[self.mindex].file_checksum]))
+		MBus.handle(Node_SetGameCommandMessage(payload=[node_id, self.mlist[self.mindex].file_checksum]))
 		#Yell at main to run the game on the node
-		MBus.handle(Node_LaunchGameCommandMessage(payload='0'))
+		MBus.handle(Node_LaunchGameCommandMessage(payload=node_id))
 		self.line1 = "Booting..."
+		self._is_booting = True
 
 '''
 ######################################################################################################
@@ -451,13 +510,9 @@ class UI_Adafruit(Thread):
 			self._scandone = True
 
 			self._lcd.message("Init Success")
-		else:
-			self._lcd.message("Scanning...\n" + message.payload[16:])
 
 	# THE MEAT(tm)
 	def runui(self):
-		#TODO: display thingy while games list is loading/scanning
-
 		menu = UIAdaGamesMenu(self._lcd, self._games, '0')
 		nextmenu = None
 
@@ -469,7 +524,7 @@ class UI_Adafruit(Thread):
 				elif nextmenu == UIAdaMenus.nodes:
 					menu = UIAdaNodesMenu(self._lcd, self._nodes)
 				elif nextmenu == UIAdaMenus.games:
-					#menu = UIAdaGamesMenu(self._lcd, self._games, self._nodes[sel_idx].node_id)
+					menu = UIAdaGamesMenu(self._lcd, self._games, self._nodes[sel_idx].node_id)
 					menu = UIAdaGamesMenu(self._lcd, self._games, '0')
 
 			menuret = menu.run_menu()
