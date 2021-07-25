@@ -350,7 +350,7 @@ class UIAdaNodesMenu(TwoLineLcdMenu):
 
 
 '''
-Game selection menu. Normally selected after a node is selected.
+Game selection menu. Normally instantiated after a node is selected.
 '''
 class UIAdaGamesMenu(TwoLineLcdMenu):
 	_node_id = '0'
@@ -363,7 +363,6 @@ class UIAdaGamesMenu(TwoLineLcdMenu):
 		self._logger = logging.getLogger("UIAdaNodeMenu " + str(id(self)))
 		self._logger.debug("init logger")
 
-		MBus.add_handler(GameList_ScanEventMessage, self.handle_GameList_ScanEventMessage)
 		MBus.add_handler(Node_LoaderStateMessage, self.handle_LoaderStateMessage)
 		MBus.add_handler(Node_LoaderUploadPctMessage, self.handle_LoaderUploadPctMessage)
 
@@ -380,16 +379,6 @@ class UIAdaGamesMenu(TwoLineLcdMenu):
 		else:
 			self.line1 = self.mlist[self.mindex].title
 			self.line2 = str(round(self.mlist[self.mindex].file_size / 1048576, 2)) + "MiB"
-
-	def handle_GameList_ScanEventMessage(self, message: GameList_ScanEventMessage):
-		self._lcd.clear()
-		if message.payload == "donelol":
-			self._scandone = True
-			self.line1 = self.mlist[self.mindex].title
-			self.line2 = str(round(self.mlist[self.mindex].file_size / 1048576, 2)) + "MiB"
-		else:
-			self.line1= message.payload
-			self.line2 ='Scanning...'
 
 	def handle_LoaderStateMessage(self, message: Node_LoaderStateMessage):
 		# Only process if it's related to the node we are working with right now
@@ -508,33 +497,41 @@ class UI_Adafruit(Thread):
 		self._lcd.clear()
 		if message.payload == "donelol":
 			self._scandone = True
-
 			self._lcd.message("Init Success")
+		else:
+			self.line1= message.payload
+			self.line2 ='Scanning...'
 
 	# THE MEAT(tm)
 	def runui(self):
-		menu = UIAdaGamesMenu(self._lcd, self._games, '0')
+
+		sel_idx = 0
 		nextmenu = None
 
 		while 1:
-			if nextmenu:
-				prevmenu = nextmenu
-				if nextmenu == UIAdaMenus.main:
-					menu = UIAdaMainMenu(self._lcd)
-				elif nextmenu == UIAdaMenus.nodes:
-					menu = UIAdaNodesMenu(self._lcd, self._nodes)
-				elif nextmenu == UIAdaMenus.games:
-					menu = UIAdaGamesMenu(self._lcd, self._games, self._nodes[sel_idx].node_id)
-					menu = UIAdaGamesMenu(self._lcd, self._games, '0')
+			# Don't do anything until we've booted up successfully
+			if self._scandone:
+				menu = UIAdaNodesMenu(self._lcd, self._nodes)
 
-			menuret = menu.run_menu()
-			nextmenu = menuret[0]
-			sel_idx = menuret[1]
+					if nextmenu:
+						prevmenu = nextmenu
+						if nextmenu == UIAdaMenus.main:
+							menu = UIAdaMainMenu(self._lcd)
+						elif nextmenu == UIAdaMenus.nodes:
+							menu = UIAdaNodesMenu(self._lcd, self._nodes)
+						elif nextmenu == UIAdaMenus.games:
+							menu = UIAdaGamesMenu(self._lcd, self._games, self._nodes[sel_idx].node_id)
+							#menu = UIAdaGamesMenu(self._lcd, self._games, '0')
 
-			#process return values here and determine if we need to do anything special, e.g. load a game
+					menuret = menu.run_menu()
+					nextmenu = menuret[0]
+					sel_idx = menuret[1]
 
+					#process return values here and determine if we need to do anything special, e.g. load a game
+			else:
+				# We're not done booting, hang on a second (literally).
+				sleep(1)
 
-		return
 		'''
 		self.__logger.debug(self._games.len())
 		prevmenu = UIAdaMenus.main

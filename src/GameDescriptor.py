@@ -122,6 +122,12 @@ class GameDescriptor(yaml.YAMLObject):
 	def __file_get_title(self) -> str:
 		'Get game title from rom file.'
 		try:
+
+			#TODO: fetch identifier for:
+			#NAOMI
+			#NAOMI2
+			#Chihiro
+			#Triforce
 			fp = open(self.filepath, 'rb')
 			# We only care about the japanese title
 			fp.seek(0x30)
@@ -134,6 +140,8 @@ class GameDescriptor(yaml.YAMLObject):
 			'''
 			if title == "AWNAOMI":
 				_naomi2_cv = True #Flag it as a conversion
+				self.setSystem((2, 'NAOMI2')) # Atomiswave conversions only work on NAOMI 2
+
 				#Let's seek past the loader stub and snag the real title.
 				fp.seek(0xFF30)
 				title = fp.read(32).decode('utf-8').strip(' ')
@@ -156,7 +164,7 @@ class GameDescriptor(yaml.YAMLObject):
 			elif header_magic[:6] == 'Naomi2':
 				return 'NAOMI2'
 			elif header_magic[:4] == 'FATX':
-				return 'CHIHIRO'
+				return 'Chihiro'
 			# TODO: Triforce has some weird, maybe game-specific junk at offset 0x0. Can probably do title detection with that.
 			#elif header_magic == 'TRIFORCE':
 			#	return 'TRIFORCE'
@@ -190,7 +198,7 @@ class GameDescriptor(yaml.YAMLObject):
 
 	@property
 	def isValid(self) -> bool:
-		return (self.system_name in ['NAOMI', 'NAOMI2', 'CHIHIRO', 'TRIFORCE'])
+		return (self.system_name in ['NAOMI', 'NAOMI2', 'Atomiswave', 'Chihiro', 'Triforce'])
 
 	@property
 	def serialize(self) -> str:

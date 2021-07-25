@@ -23,7 +23,7 @@ Requirements
 ### Hardware:
  * Any of the following:
   - Sega NAOMI mainboard (Must use one of the following BIOS revisions: E, F, G, H. Region shouldn't matter)
-  - Sega NAOMI 2 mainboard (Any BIOS revision will work)
+  - Sega NAOMI 2 mainboard (BIOS revision A or later)
   - Sega Chihiro (TODO)
   - Triforce (TODO)
 
