@@ -2,6 +2,7 @@ import logging
 from NodeList import NodeList
 from NodeDescriptor import NodeDescriptor
 from GameDescriptor import GameDescriptor
+from GameList import GameList_ScanEventMessage
 from Loader import *
 from main_events import *
 import traceback
@@ -18,6 +19,7 @@ class NodeManager():
 		self._loaders = LoaderList()
 
 		MBus.add_handler(Node_LoaderUploadPctMessage, self.handle_LoaderUploadPctMessage)
+		MBus.add_handler(GameList_ScanEventMessage, self.handle_GameList_ScanEventMessage)
 
 	'''
 	Associates a GameDescriptor object with a NodeDescriptor object.
@@ -148,6 +150,11 @@ class NodeManager():
 
 	def saveNodesToDisk(self, nodes_dir: str):
 		self.nodes.exportNodes(nodes_dir)
+
+	def handle_GameList_ScanEventMessage(self, message: GameList_ScanEventMessage):
+		if message.payload == 'donelol' and self._autoboot == True:
+			for l in self._loaders:
+				l.bootGame()
 
 	def handle_LoaderUploadPctMessage(self, message: Node_LoaderUploadPctMessage):
 		self.nodes[message.payload[0]].loader_uploadpct = message.payload[1]
