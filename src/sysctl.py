@@ -108,6 +108,7 @@ def get_wlanstate(iface : str):
 	os.system("sudo iwconfig "+iface)
 
 
+####################################################################################################################
 
 #FIXME: remove the logic from this part later and clean it up. just get it working for now.
 def write_ifconfig(prefs):
@@ -158,8 +159,6 @@ def write_ifconfig(prefs):
 
 		outfile.writelines(data)
 
-
-#FIXME: remove the logic from this part later and clean it up. just get it working for now.
 def write_iwconfig(prefs):
 
 	#eth0n = ipaddress.IPv4Interface(prefs.get('Network', 'eth0_ip')+"/"+prefs.get('Network', 'eth0_netmask'))

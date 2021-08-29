@@ -12,7 +12,7 @@ class ACNTBootDatabase:
 	_sqlite = None
 	_dbfile = None
 
-	def __init__(self, dbfile):
+	def __init__(self, dbfile: str):
 		self._dbfile = dbfile
 		try:
 			self._sqlite = sqlite3.connect(self._dbfile)
@@ -26,47 +26,61 @@ class ACNTBootDatabase:
 		print("ohfuck")
 		self._sqlite.close()
 
-	def getGameList(self):
+	def getGameList(self) -> list:
 		return self._sqlite.execute("SELECT id, title FROM games").fetchall()
 
-	def getGameInformation(self, header_title):
+	def getGameInformation(self, header_title: str) -> list:
 		return self._sqlite.execute("SELECT id, title FROM games WHERE header_title = ? LIMIT 1", [header_title]).fetchone()
 
-	def getGameInformationById(self, game_id):
+	def getGameInformationByIdent(self, header_ident: str) -> list:
+		result = self._sqlite.execute("SELECT id, title FROM games WHERE header_ident = ?", [header_ident])
+		if self._sqlite.rowcount > 1:
+			return result.fetchall()
+		else:
+			result.fetchone()
+
+	def getGameInformationById(self, game_id: int) -> list:
 		return self._sqlite.execute("SELECT id, title FROM games WHERE id = ? LIMIT 1", [game_id]).fetchone()
 
-	def getAttributes(self):
+	def getAttributes(self) -> list:
 		return self._sqlite.execute("SELECT * FROM attributes").fetchall()
 
-	def getSystems(self):
+	def getSystems(self) -> list:
 		return self._sqlite.execute("SELECT id, name from systems").fetchall()
 
-	def getControlTypes(self):
+	def getControlTypes(self) -> list:
 		return self._sqlite.execute("SELECT id, value FROM attributes_values WHERE attribute_id=1").fetchall()
 
-	def getPlayers(self):
+	def getPlayers(self) -> list:
 		return self._sqlite.execute("SELECT id, value FROM attributes_values WHERE attribute_id=2").fetchall()
 
-	def getMonitorTypes(self):
+	def getMonitorTypes(self) -> list:
 		return self._sqlite.execute("SELECT id, value FROM attributes_values WHERE attribute_id=3").fetchall()
 
-	def getDIMMResetValues(self):
+	def getDIMMResetValues(self) -> list:
 		return self._sqlite.execute("SELECT id, value FROM attributes_values WHERE attribute_id=4").fetchall()
 
-	def getDIMMRAMValues(self):
+	def getDIMMRAMValues(self) -> list:
 		return self._sqlite.execute("SELECT id, value FROM attributes_values WHERE attribute_id=5").fetchall()
 
-	def getSystemFromName(self, name):
+	def getSystemFromName(self, name: str) -> list:
 		return self._sqlite.execute("SELECT * from systems where systems.name = ?", [name]).fetchone()
 		
-	def getGameSystem(self, game_id):
+	def getGameSystem(self, game_id: int) -> list:
 		return self._sqlite.execute("SELECT systems.id as id, systems.name as name FROM systems JOIN games ON games.system_id=systems.id WHERE games.id = ? LIMIT 1", [game_id]).fetchone()
 
-	def getGameAttributes(self, game_id):
+	def getGameAttributes(self, game_id: int) -> list:
 		return self._sqlite.execute("SELECT attributes_values.id as id, attributes.name as name, attributes_values.value as value FROM game_attributes JOIN attributes ON game_attributes.attribute_id=attributes.id JOIN attributes_values ON attributes_values_id=attributes_values.id WHERE game_id = ?", [game_id]).fetchall()
 
-	def getGameAttribute(self, game_id, attribute_id):
+	def getGameAttribute(self, game_id: int, attribute_id: int) -> list:
 		return self._sqlite.execute("SELECT atributes_values.id as value_id, attributes.name as name, attributes_values.value as value FROM game_attributes JOIN attributes ON game_attributes.attribute_id=attributes.id JOIN attributes_values ON attributes_values_id=attributes_values.id WHERE game_attributes.game_id=? AND attribute_id=? LIMIT 1", [game_id], [attribute_id]).fetchone()
-
-	def getValuesForAttribute(self, attribute_id):
+	
+	def getValuesForAttribute(self, attribute_id: int) -> list:
 		return self._sqlite.execute("SELECT id, value from attributes_values WHERE attribute_id= ?", [attribute_id]).fetchall()
+
+	def getGameKnownChecksums(self, game_id: int) -> list:
+		pass
+
+	def validateGameChecksum(game_id: int, checksum: str) -> bool:
+		pass
+

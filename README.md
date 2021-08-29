@@ -117,15 +117,16 @@ DONE
  * Redo Web UI for multinode
  * GPIO Reset
  * Redo Web UI for multinode (add/delete functionality)
+ * Web Interface for Network Configuration (WiFi SSID, PSK, IP, DNS options, etc.)
 
 In Progress
 ----
+  * Overhaul title detection and audit system
   * Adafruit UI
-  * Interface for Network Configuration (WiFi SSID, PSK, IP, DNS options, etc.)
-  * Interface for System Settings/Commands (Power off, Reboot, Manual GPIO Reset, etc.)
+  * Web Interface for System Settings/Commands (Power off, Reboot, Manual GPIO Reset, etc.)
   * Live/in-place binary patching of ROMs
   * API Master/Slave modes for large networks and GPIO reset support for every node
-  * Catch exit signals and close everything properly 
+  * Catch exit signals and close everything properly (Bottle is abysmal at this)
 
 On Hold
 ----

@@ -17,6 +17,8 @@ class GameDescriptor(yaml.YAMLObject):
 	system_name = None
 	rom_title = None
 
+	_rom_ident = None
+
 	# For Atomiswave conversions
 	_naomi2_cv = False
 
@@ -57,14 +59,13 @@ class GameDescriptor(yaml.YAMLObject):
 		try:
 			# Open the file up and get all the info we need from the header data
 			self.file_size = os.stat(filepath).st_size
-			self.system_name = self.__file_get_target_system
-			self.rom_title = self.__file_get_title
+			self._identify_rom()
 
 			#don't waste time or cpu checksumming an invalid file
 			if self.isValid:
 				# Checksum the file if we want to do that
 				if not skip_checksum:
-					self.file_checksum = self.__checksum
+					self.file_checksum = self._checksum
 
 		except Exception as ex:
 			print('failed to construct GameDescriptor'+repr(ex))
@@ -116,10 +117,67 @@ class GameDescriptor(yaml.YAMLObject):
 				self._monitor = (a[0], a[2])
 			if a[1] == 'DIMM RAM':
 				self._dimm_ram = (a[0], a[2])
-	
+
+
+	def _identify_rom(self) -> bool:
+		'Identify and validate a netboot image'
+		try:
+			fp = open(self.filepath, 'rb')
+
+			header_magic = fp.read(8)
+
+			if header_magic[:5] == 'NAOMI' or header_magic[:6] == 'Naomi2':
+				self.system_name = header_magic.strip().ucase()
+				# NAOMI game ident offset: 0x134
+				# NAOMI2 game ident offset: 0x134
+				fp.seek(0x134)
+				self._rom_ident = fp.read(4).strip()
+
+				# OK now check to see if it's one of Darksoft's Atomiswave conversions
+				fp.seek(0x30)
+				title = fp.read(32).strip(' ')
+				if title == "AWNAOMI":
+					self._naomi2_cv = True #Flag it as a conversion
+			else if header_magic[:4] == 'FATX':
+				# Probably Chihiro, since it's a FATX image. 
+				# Let's double-check though, some dingus might be trying to load an XBOX image onto a Chihiro.
+				fp.seek(0x15020)
+				header_magic = fp.read(4)
+				if not header_magic == 'XBAM':
+					#Not valid rom
+					fp.close()
+					return False
+
+				self.system_name = 'Chihiro'
+
+				# Chihiro game ident offset: 0x15030
+				fp.seek(0x15030)
+				self._rom_ident = fp.read(4).strip()
+			else:
+				#The rom didn't seem like any system other than triforce. Let's make sure it's actually a triforce rom
+				fp.seek(0x800020)
+				header_magic = fp.read(4)
+				if not header magic == 'GCAM':
+					#Not valid rom
+					fp.close()
+					return False
+
+				self.system_name = 'Triforce'
+				# Triforce game ident offset: 0x800030
+				fp.seek(0x800030)
+				self._rom_ident = fp.read(4).strip()
+
+			fp.close()
+			return True
+			
+		except Exception as ex:
+			fp.close()
+			print('__identify_rom failed'+repr(ex))
+			return False
+			# TODO: thing
 
 	@property
-	def __file_get_title(self) -> str:
+	def _file_get_title(self) -> str:
 		'Get game title from rom file.'
 		try:
 
@@ -140,7 +198,6 @@ class GameDescriptor(yaml.YAMLObject):
 			'''
 			if title == "AWNAOMI":
 				_naomi2_cv = True #Flag it as a conversion
-				self.setSystem((2, 'NAOMI2')) # Atomiswave conversions only work on NAOMI 2
 
 				#Let's seek past the loader stub and snag the real title.
 				fp.seek(0xFF30)
@@ -153,7 +210,7 @@ class GameDescriptor(yaml.YAMLObject):
 			# TODO: thing
 
 	@property
-	def __file_get_target_system(self) -> str:
+	def _file_get_target_system(self) -> str:
 		'Get the system that this game is meant to run on from the header'
 		try:
 			fp = open(self.filepath, 'rb')
@@ -176,7 +233,7 @@ class GameDescriptor(yaml.YAMLObject):
 			return False
 
 	@property
-	def __checksum(self) -> str:
+	def _checksum(self) -> str:
 		try:
 			m = hashlib.md5()
 			with open(self.filepath, 'rb') as fh:
