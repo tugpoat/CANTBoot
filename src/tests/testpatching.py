@@ -102,7 +102,8 @@ class TestPatching:
         prg_counter = 0
 
 
-        #FIXME: PATCH ROUTINE HAS HUGE PROBLEM AND ASSUMES THAT THERE IS ONE PATCH PER CHUNK
+        #FIXME: PATCHING ROUTINE IS GROSS, REFACTOR IT
+        #IT APPEARS TO WORK NOW THOUGH :)
 
 
         # Set up our patching flags, bookmarks, and iterators
@@ -118,7 +119,7 @@ class TestPatching:
 
         #TODO: This is a gross way to track continuations.
         chunk_patches = []
-        continues = []
+        continues = {}
 
         while len(data) > 0:
 
@@ -129,17 +130,21 @@ class TestPatching:
 
             chunk_patch_iter = iter(patchdata)
             #TODO: comment this out for release. no sense in slowing this down with debug output.
-            print("loading next patch.")
-                next_patch = next(patch_iter)
+            #print("loading next patch.")
+            next_patch = next(chunk_patch_iter)
+            while next_patch :
                 patch_start_addr = list(next_patch.keys())[0]
+                #print("%08x1" % patch_start_addr)
                 if (patch_start_addr >= addr and patch_start_addr < addr + chunk_len):
                     chunk_patches.append(next_patch)
-                    print("adding patch to chunk %08x" % patch_start_addr)
-
-                if len(chunk_patches > 0):
+                    print("adding patch at addr %08x" % patch_start_addr)
+                try:
+                    next_patch = next(chunk_patch_iter)
+                except StopIteration as ex:
+                    break
+            
+            if len(chunk_patches) > 0:
                     patched = False
-
-               
 
             #print("%08x\r" % addr)
             data = a.read(0x8000)
@@ -159,7 +164,7 @@ class TestPatching:
                 patch_start_addr = list(chunk_patch.keys())[0]
                 patch_continue = 0
 
-                if continues[patch_start_addr]:
+                if patch_start_addr in dict.keys(continues):
                     patch_continue = continues[patch_start_addr]
 
                 if chunk_patch and ((patch_start_addr  >= addr and patch_start_addr <= addr + chunk_len) or patch_continue > 0):
@@ -168,11 +173,6 @@ class TestPatching:
                     patch_check_val = list(next_patch.values())[0][0]
                     patch_bytes = bytes.fromhex(list(next_patch.values())[0][1])
                     chunk_end_addr = addr + chunk_len
-
-                    print("%08x " % patch_start_addr)
-                    print("%08x " % addr)
-                    print(patch_check_val)
-                    print(patch_bytes)
 
                     # do some operations up front to save on processing.
                     #patch_start_addr = next_patch[0]
@@ -195,17 +195,15 @@ class TestPatching:
                     # number of bytes to patch within this chunk
                     chunk_patch_data_nbytes = int(chunk_patch_data_length / 0xff)
 
-                    print(chunk_patch_data_nbytes)
-
                     #TODO: comment these out for release. no sense in slowing this down with debug output.
                     print("patch start %08x end %08x len %08x" % (patch_start_addr, patch_end_addr, patch_data_length))
                     print("chunk start %08x end %08x len %08x" % (addr, chunk_end_addr, chunk_len))
                     print("chunk patch start %08x end %08x len %08x nbytes %x" % (chunk_patch_start_addr, chunk_patch_end_addr, chunk_patch_data_length, chunk_patch_data_nbytes))
-                    print("ok")
+                    print("patch check val %s" % patch_check_val)
 
                     #first run through this patch, sanity-check first byte of input
                     if patch_continue == 0:
-                        print(data[chunk_patch_start_addr])
+                        #print(data[chunk_patch_start_addr])
                         if int(data[chunk_patch_start_addr]) != int(patch_check_val):
                             print('check failed')
                             patched = True
@@ -213,6 +211,7 @@ class TestPatching:
                     # are we patching anything in this chunk?
                     # we need to account for how far through this patch we are.
                     if chunk_patch_start_addr >= (addr - patch_start_addr) + patch_continue and chunk_patch_end_addr <= chunk_end_addr:
+
                         print('doing it')
                         #we need to patch data in this chunk.
                         byte_idx = int(chunk_patch_start_addr)
@@ -223,13 +222,11 @@ class TestPatching:
                         k=0
                         for e in patch_bytes:
                             barr[byte_idx+k] = e
-                            print(barr[byte_idx+k])
+                            #print(barr[byte_idx+k])
                             k += 1
 
-                        print('replacing')
-
                         data = bytes(barr)
-                        print(len(data))
+                        #print(len(data))
 
                         #TODO: loop each byte to patch from chunk_patch_start_addr and replace the indexed byte in data
 
@@ -240,6 +237,7 @@ class TestPatching:
 
                             # patch continues beyond the end of this chunk. Find out how far, and turn it into an byte-array indexable value.
                             patch_continue = (patch_end_addr - chunk_end_addr) / 0xff
+                            continues[patch_start_addr] = patch_continue
 
                             #TODO: comment this out for release. no sense in slowing this down with debug output.
                             print("patch data continues %08x (%d bytes) beyond this chunk" % ((patch_end_addr - chunk_end_addr), patch_continue))
@@ -248,8 +246,11 @@ class TestPatching:
                             print("patch from %08x done." % patch_start_addr)
                             patched = True
                             patch_continue = 0
-
-                    continues[patch_start_addr] = patch_continue
+                            #remove from patchlist and continuity tracking if applicable
+                            if patch_start_addr in dict.keys(continues):
+                                chunk_patches.pop(patch_start_addr)
+                            if patch_start_addr in dict.keys(continues):
+                                continues.pop(patch_start_addr)
 
             #if key:
                 #data = d.encrypt(data[::-1])[::-1]
