@@ -352,83 +352,10 @@ class DIMMLoader(Loader):
 
 		prg_counter = 0
 
-		# Set up our patching flags, bookmarks, and iterators
-		patch_continue = 0
-		if len(patchdata) < 1:
-			# This will make the following loop never check for patch data or attempt to apply any.
-			# Because we don't have any patches to apply.
-			patched = False
-			next_patch = False
-		else:
-			patched = True #we want to load the first patch on the first iteration
-			patch_iter = iter(patchdata)
-
 		while len(data) > 0:
-
-			# patch continue is set to the index of whatever patch data we need to continue on with the next chunk.
-			# if zero, we don't need to continue. load the next patch if we have already patched the one we were looking for.
-			if patched and patch_continue == 0:
-				#TODO: comment this out for release. no sense in slowing this down with debug output.
-				self._logger.debug("loading next patch.")
-				next_patch = next(patch_iter)
-				patched = False
 
 			#sys.stderr.write("%08x\r" % addr)
 			data = a.read(0x8000)
-
-			# Only process patch data if:
-			# 1. If we have patch data and the start address of the patch is within the chunk we are going to send
-			# 2. We have patch data and are continuing a patch from a previous chunk.
-			# Algorithm inside this if block is generic to both circumstances.
-			if next_patch and ((next_patch[0] >= addr and next_patch [0] <= addr + chunk_len) or patch_continue > 0):
-				chunk_end_addr = addr + chunk_len
-
-				# do some operations up front to save on processing.
-				patch_start_addr = next_patch[0]
-				patch_end_addr = next_patch[0] + len(next_patch[1]) * 0xff
-				patch_data_length = patch_end_addr - patch_start_addr
-
-				# patch information solely as far as the current chunk is concerned follows.
-
-				# if we are not continuing with a patch, patch_continue will be 0, and therefore ignored. Neat!
-				# We're wasting a number of operations the circumstances that A: there is nothing to apply in this chunk and B: patch_continue is 0....
-				# However I am prioritizing readability and maintainability in this project as much as possible.
-
-				# address to start patching at within this chunk
-				chunk_patch_start_addr = next_patch[0] + (0xff * patch_continue)
-				# address to end patching at within this chunk
-				chunk_patch_end_addr = (next_patch[0] + (0xff * patch_continue)) + (len(next_patch[1]) * 0xff)
-				# length of the data to patch within this chunk
-				chunk_patch_data_length = chunk_patch_end_addr - chunk_patch_start_addr
-				# number of bytes to patch within this chunkW
-				chunk_patch_data_nbytes = chunk_patch_data_length / 0xff
-
-				#TODO: comment these out for release. no sense in slowing this down with debug output.
-				self._logger.debug("patch start %08x end %08x len %08x" % (patch_start_addr, patch_end_addr, patch_data_length))
-				self._logger.debug("chunk patch start %08x end %08x len %08x" % (chunk_patch_start_addr, chunk_patch_end_addr, chunk_patch_data_length))
-
-				# are we patching anything in this chunk?
-				# we need to account for how far through this patch we are.
-				if chunk_patch_start_addr >= addr and chunk_patch_end_addr <= chunk_end_addr:
-					#we need to patch data in this chunk.
-
-					#TODO: loop each byte to patch from chunk_patch_start_addr and replace the indexed byte in data
-
-					# we need to check if the patch extends beyond this chunk, and if so: how far?
-					# lvalue = end address of patch
-					# rvalue = end address of this chunk
-					if patch_end_addr > chunk_end_addr:
-
-						# patch continues beyond the end of this chunk. Find out how far, and turn it into an byte-array indexable value.
-						patch_continue = (patch_end_addr - chunk_end_addr) / 0xff
-
-						#TODO: comment this out for release. no sense in slowing this down with debug output.
-						self._logger.debug("patch data continues %08x (%d bytes) beyond this chunk" % ((patch_end_addr - chunk_end_addr), patch_continue))
-					else:
-						#TODO: comment these out for release. no sense in slowing this down with debug output.
-						self._logger.debug("patch from %08x done." % patch_start_addr)
-						patched = True
-						patch_continue = 0
 
 			if key:
 				data = d.encrypt(data[::-1])[::-1]

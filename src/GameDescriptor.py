@@ -138,7 +138,7 @@ class GameDescriptor(yaml.YAMLObject):
 				title = fp.read(32).strip(' ')
 				if title == "AWNAOMI":
 					self._naomi2_cv = True #Flag it as a conversion
-			else if header_magic[:4] == 'FATX':
+			elif header_magic[:4] == 'FATX':
 				# Probably Chihiro, since it's a FATX image. 
 				# Let's double-check though, some dingus might be trying to load an XBOX image onto a Chihiro.
 				fp.seek(0x15020)
@@ -157,7 +157,7 @@ class GameDescriptor(yaml.YAMLObject):
 				#The rom didn't seem like any system other than triforce. Let's make sure it's actually a triforce rom
 				fp.seek(0x800020)
 				header_magic = fp.read(4)
-				if not header magic == 'GCAM':
+				if not header_magic == 'GCAM':
 					#Not valid rom
 					fp.close()
 					return False
@@ -208,29 +208,6 @@ class GameDescriptor(yaml.YAMLObject):
 		except Exception as ex:
 			print('gettitle failed'+repr(ex))
 			# TODO: thing
-
-	@property
-	def _file_get_target_system(self) -> str:
-		'Get the system that this game is meant to run on from the header'
-		try:
-			fp = open(self.filepath, 'rb')
-			header_magic = fp.read(8).decode('utf-8')
-			fp.close()
-			if header_magic[:5] == 'NAOMI':
-				return 'NAOMI'
-			elif header_magic[:6] == 'Naomi2':
-				return 'NAOMI2'
-			elif header_magic[:4] == 'FATX':
-				return 'Chihiro'
-			# TODO: Triforce has some weird, maybe game-specific junk at offset 0x0. Can probably do title detection with that.
-			#elif header_magic == 'TRIFORCE':
-			#	return 'TRIFORCE'
-			else:
-				return False
-
-		except Exception as ex:
-			# TODO: the thing
-			return False
 
 	@property
 	def _checksum(self) -> str:

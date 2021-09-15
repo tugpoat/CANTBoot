@@ -125,7 +125,6 @@ def write_ifconfig(prefs):
 		'eth0_mask': prefs.get('Network', 'eth0_netmask'),
 		'eth0_netw': str(eth0n.network.network_address),
 		'eth0_bcast': str(eth0n.network.broadcast_address),
-
 	}
 
 	data.append("#-----Managed by CANTBoot, don't touch\n")

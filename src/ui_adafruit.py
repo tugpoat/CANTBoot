@@ -513,19 +513,19 @@ class UI_Adafruit(Thread):
 			if self._scandone:
 				menu = UIAdaNodesMenu(self._lcd, self._nodes)
 
-					if nextmenu:
-						prevmenu = nextmenu
-						if nextmenu == UIAdaMenus.main:
-							menu = UIAdaMainMenu(self._lcd)
-						elif nextmenu == UIAdaMenus.nodes:
-							menu = UIAdaNodesMenu(self._lcd, self._nodes)
-						elif nextmenu == UIAdaMenus.games:
-							menu = UIAdaGamesMenu(self._lcd, self._games, self._nodes[sel_idx].node_id)
-							#menu = UIAdaGamesMenu(self._lcd, self._games, '0')
+				if nextmenu:
+					prevmenu = nextmenu
+					if nextmenu == UIAdaMenus.main:
+						menu = UIAdaMainMenu(self._lcd)
+					elif nextmenu == UIAdaMenus.nodes:
+						menu = UIAdaNodesMenu(self._lcd, self._nodes)
+					elif nextmenu == UIAdaMenus.games:
+						menu = UIAdaGamesMenu(self._lcd, self._games, self._nodes[sel_idx].node_id)
+						#menu = UIAdaGamesMenu(self._lcd, self._games, '0')
 
-					menuret = menu.run_menu()
-					nextmenu = menuret[0]
-					sel_idx = menuret[1]
+				menuret = menu.run_menu()
+				nextmenu = menuret[0]
+				sel_idx = menuret[1]
 
 					#process return values here and determine if we need to do anything special, e.g. load a game
 			else:

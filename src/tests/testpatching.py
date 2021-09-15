@@ -15,12 +15,12 @@ class TestPatching:
 
     def doTest(self):
         #add patches
-        with open('/home/pat/devel/arcade/naomi/CANTBoot/cfg/patches/MarvelVsCapcom2_unlocked.binpatch') as pin:
+        with open('/home/pat/devel/arcade/naomi/CANTBoot/cfg/patches/wraptest.binpatch') as pin:
             self.addPatch(pin.read())
             pin.close()
 
         #run patch
-        self.patchROM('/home/pat/devel/arcade/naomi/CANTBoot/roms/mvc2_stock.bin', '/home/pat/devel/arcade/naomi/CANTBoot/roms/patched_mvc2.bin')
+        self.patchROM('/home/pat/devel/arcade/naomi/CANTBoot/roms/mvc2_stock.bin', '/home/pat/devel/arcade/naomi/CANTBoot/roms/patched_wraptest.bin')
 
         #check files
 
@@ -43,12 +43,6 @@ class TestPatching:
             # Make a tuple of the data indexable by the target address, in a dict.
             # Then put it into our temporary list
 
-            #Format byte string
-           # tmps = ''
-           # for o,t in zip(e[3][::2],e[3][1::2]):
-           #     tmps = "\x%s%s" % (o, t)
-            #e[3] = str.encode(e[3])
-            print(e[3])
             tmpl.append({int(e[1], 16): [e[2], e[3]]})
             # Keep track of the target addresses (keys) we use so we can ensure they are sorted properly
             tkeys.append(e[1])
@@ -104,6 +98,8 @@ class TestPatching:
 
         #FIXME: PATCHING ROUTINE IS GROSS, REFACTOR IT
         #IT APPEARS TO WORK NOW THOUGH :)
+
+        #TODO: Test patches that extend into multiple chunks
 
 
         # Set up our patching flags, bookmarks, and iterators
@@ -168,16 +164,27 @@ class TestPatching:
                     patch_continue = continues[patch_start_addr]
 
                 if chunk_patch and ((patch_start_addr  >= addr and patch_start_addr <= addr + chunk_len) or patch_continue > 0):
+                    patch_check_val = list(chunk_patch.values())[0][0]
+                    chunk_patch_offset = 0
 
+                    #FIXME: the whole patch_continue and patch_offset thing need simplification
+                    if patch_continue > 0:
+                        print(list(chunk_patch.values())[0][1][patch_continue-1:])
+                        patch_bytes = bytes.fromhex(list(chunk_patch.values())[0][1][patch_continue-3:])
+                    else:
+                        patch_bytes = bytes.fromhex(list(chunk_patch.values())[0][1])
 
-                    patch_check_val = list(next_patch.values())[0][0]
-                    patch_bytes = bytes.fromhex(list(next_patch.values())[0][1])
                     chunk_end_addr = addr + chunk_len
 
                     # do some operations up front to save on processing.
                     #patch_start_addr = next_patch[0]
-                    patch_end_addr = patch_start_addr + int(len(patch_bytes) / 2) * 0xff
+                    patch_end_addr = patch_start_addr + int(len(patch_bytes)) * 0xff
                     patch_data_length = patch_end_addr - patch_start_addr
+
+                    #truncate working patch to end of chunk
+                    if patch_end_addr > chunk_end_addr:
+                        patch_bytes = patch_bytes[:-int((patch_end_addr-chunk_end_addr)/0xff)]
+
 
                     # patch information solely as far as the current chunk is concerned follows.
 
@@ -186,12 +193,13 @@ class TestPatching:
                     # However I am prioritizing readability and maintainability in this project as much as possible.
 
                     # address to start patching at within this chunk
-                    chunk_patch_start_addr = int((patch_start_addr + (0xff * patch_continue)) - addr)
+                    print((0xff * patch_continue))
+                    print(patch_continue)
+                    chunk_patch_start_addr = int((patch_start_addr - addr) + (0xff * patch_continue))
                     # address to end patching at within this chunk
                     chunk_patch_end_addr = int((patch_start_addr + (0xff * patch_continue)) + (int(len(patch_bytes)) * 0xff) - addr)
                     # length of the data to patch within this chunk
                     chunk_patch_data_length = int(chunk_patch_end_addr - chunk_patch_start_addr)
-                    #chunk_patch_data_length =
                     # number of bytes to patch within this chunk
                     chunk_patch_data_nbytes = int(chunk_patch_data_length / 0xff)
 
@@ -214,33 +222,35 @@ class TestPatching:
 
                         print('doing it')
                         #we need to patch data in this chunk.
-                        byte_idx = int(chunk_patch_start_addr)
+                        byte_idx = int(chunk_patch_start_addr+chunk_patch_offset)
 
                         barr = bytearray(data)
-                        #print( barr[byte_idx])
                         patch_bytes = bytearray(patch_bytes)
-                        k=0
-                        for e in patch_bytes:
-                            barr[byte_idx+k] = e
-                            #print(barr[byte_idx+k])
-                            k += 1
+                        print(patch_bytes)
+                        barr[byte_idx] = patch_bytes[0]
 
                         data = bytes(barr)
                         #print(len(data))
 
-                        #TODO: loop each byte to patch from chunk_patch_start_addr and replace the indexed byte in data
-
                         # we need to check if the patch extends beyond this chunk, and if so: how far?
-                        # lvalue = end address of patch
-                        # rvalue = end address of this chunk
                         if patch_end_addr > chunk_end_addr:
 
                             # patch continues beyond the end of this chunk. Find out how far, and turn it into an byte-array indexable value.
-                            patch_continue = (patch_end_addr - chunk_end_addr) / 0xff
+                            patch_continue = int((patch_end_addr - chunk_end_addr) / 0xff)
                             continues[patch_start_addr] = patch_continue
 
                             #TODO: comment this out for release. no sense in slowing this down with debug output.
                             print("patch data continues %08x (%d bytes) beyond this chunk" % ((patch_end_addr - chunk_end_addr), patch_continue))
+                            i=0
+                            for elem in chunk_patches:
+                                if list(elem.keys())[0] == patch_start_addr:
+                                    #FIXME: THIS IS GROSS SWITCH TO A DICT OF DICT INSTEAD OF A DICT OF LIST
+                                    #ALSO JUST REMOVE THE LENGTH OF PATCH_BYTES FROM THE BEGINNING OF THE DATA
+                                    print(list(chunk_patches[i].values()))
+                                    chunk_patches[i] = {patch_start_addr: [list(chunk_patches[i].values())[0][0], list(chunk_patches[i].values())[0][1][-(patch_continue+1)*2:]]}
+                                    print(chunk_patches[i])
+                                i+=1
+
                         else:
                             #TODO: comment these out for release. no sense in slowing this down with debug output.
                             print("patch from %08x done." % patch_start_addr)
@@ -248,8 +258,13 @@ class TestPatching:
                             patch_continue = 0
                             #remove from patchlist and continuity tracking if applicable
                             if patch_start_addr in dict.keys(continues):
-                                chunk_patches.pop(patch_start_addr)
-                            if patch_start_addr in dict.keys(continues):
+                                i=0
+                                for elem in chunk_patches:
+                                    if list(elem.keys())[0] == patch_start_addr:
+                                        chunk_patches.pop(i)
+                                        break
+                                    i+=1
+
                                 continues.pop(patch_start_addr)
 
             #if key:

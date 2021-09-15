@@ -238,8 +238,7 @@ MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
 # Let's not even bother trying to touch the system if we're not running on a raspi.
 if on_raspi:
 	MBus.add_handler(FTPDEnableMessage, handle_FTPDEnableMessage)
-
-MBus.add_handler(ApplySysConfig, handle_ApplySysConfig)
+	MBus.add_handler(ApplySysConfig, handle_ApplySysConfig)
 
 
 #TODO: Handle signals properly instead of what I'm doing now
