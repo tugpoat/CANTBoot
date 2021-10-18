@@ -138,6 +138,8 @@ class GameDescriptor(yaml.YAMLObject):
 				title = fp.read(32).strip(' ')
 				if title == "AWNAOMI":
 					self._naomi2_cv = True #Flag it as a conversion
+
+				#TODO: Check against known checksums
 			elif header_magic[:4] == 'FATX':
 				# Probably Chihiro, since it's a FATX image. 
 				# Let's double-check though, some dingus might be trying to load an XBOX image onto a Chihiro.
@@ -153,6 +155,8 @@ class GameDescriptor(yaml.YAMLObject):
 				# Chihiro game ident offset: 0x15030
 				fp.seek(0x15030)
 				self._rom_ident = fp.read(4).strip()
+
+				#TODO: Check against known checksums
 			else:
 				#The rom didn't seem like any system other than triforce. Let's make sure it's actually a triforce rom
 				fp.seek(0x800020)
@@ -167,6 +171,7 @@ class GameDescriptor(yaml.YAMLObject):
 				fp.seek(0x800030)
 				self._rom_ident = fp.read(4).strip()
 
+				#TODO: Check against known checksums
 			fp.close()
 			return True
 			
@@ -210,6 +215,7 @@ class GameDescriptor(yaml.YAMLObject):
 			# TODO: thing
 
 	@property
+	#TODO: Generate patchsets here, rename function
 	def _checksum(self) -> str:
 		try:
 			m = hashlib.md5()
