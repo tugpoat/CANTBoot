@@ -237,6 +237,7 @@ MBus.add_handler(SaveConfigToDisk, handle_SaveConfigToDisk)
 
 # Let's not even bother trying to touch the system if we're not running on a raspi.
 if on_raspi:
+	logger.info("Raspberry Pi detected, enabling message handlers for FTPD and System Configuration")
 	MBus.add_handler(FTPDEnableMessage, handle_FTPDEnableMessage)
 	MBus.add_handler(ApplySysConfig, handle_ApplySysConfig)
 

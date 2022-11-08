@@ -1,7 +1,8 @@
 !!python/object:NodeDescriptor.NodeDescriptor
+_hostname: 192.168.0.2
 controls: !!python/tuple
-- 25
-- 2L12B
+- 1
+- Baseball
 dimm_ram: !!python/tuple
 - 20
 - 256MB
@@ -50,15 +51,13 @@ game: !!python/object:GameDescriptor.GameDescriptor
   rom_title: MARVEL VS CAPCOM2  JAPAN
   system_name: NAOMI
   title: Marvel vs. Capcom 2
-hostname: default.local
 ip: 192.168.0.2
 monitor: !!python/tuple
 - 14
 - Horizontal
 nickname: default
-node_id: e7b7d426547ff42c3d46c7d5f566cde0
+node_id: b6683ebb15f47e121295fdd97ba6ee66
 port: 10703
-node_type: 0
 system: !!python/tuple
 - 2
 - NAOMI2
