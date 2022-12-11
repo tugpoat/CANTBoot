@@ -100,28 +100,40 @@ class GameList():
 
 				MBus.handle(GameList_ScanEventMessage(payload=file))
 
-				identity = database.getGameInformation(tgame.rom_title)
+				#identity = database.getGameInformation(tgame.rom_title)
+				identity = database.getGameInformationByChecksum(tgame.checksum)
 
 				if identity:
 
 					# We know what it is. Let's fill in everything from the DB.
 					tgame.game_id = identity[0]
 					tgame.title = identity[1]
+					tgame.description = identity[2]
 
 					tgame.setSystem(database.getGameSystem(identity[0]))
 					tgame.setAttributes(database.getGameAttributes(identity[0]))
-					self.append(tgame)
-					self.__logger.info("\tAdded " + tgame.title)
+					self.__logger.info("\tAdded via checksum: " + tgame.title)
 				else:
-					# We were unable to retrieve information about this game from the database. 
-					# Just fill in whatever we can and pass it along.
-					self.__logger.info("\tUnable to identify " + file)
-					tgame.game_id = 0
-					tgame.checksum_status = True
-					tgame.title = file
-					tgame.attributes = []
-					tgame.setSystem(database.getSystemFromName(tgame.system_name.upper()))
-					self.append(tgame)
+					#TODO: Fallback to less accurate method of checking the header and comparing it to what we know.
+					identity = database.getGameInformation(tgame.rom_title)
+					
+					if identity:
+						tgame.game_id = identity[0]
+						tgame.title = identity[1]
+						tgame.setSystem(database.getGameSystem(identity[0]))
+						tgame.setAttributes(database.getGameAttributes(identity[0]))
+						self.__logger.info("\tAdded via header ident: " + tgame.title)
+					else:
+						# We were unable to retrieve information about this game from the database. 
+						# Just fill in whatever we can and pass it along.
+						self.__logger.info("\tUnable to identify " + file)
+						tgame.game_id = 0
+						tgame.checksum_status = True
+						tgame.title = file
+						tgame.attributes = []
+						tgame.setSystem(database.getSystemFromName(tgame.system_name.upper()))
+				
+				self.append(tgame)
 
 		if old_len != self.len():
 			tmplist = self._games

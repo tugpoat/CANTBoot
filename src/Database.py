@@ -39,6 +39,26 @@ class ACNTBootDatabase:
 		else:
 			result.fetchone()
 
+	def getGameInformationByChecksum(self, md5sum: str) -> list:
+		result = self._sqlite.execute("SELECT games.id, games.title, description FROM game_checksums WHERE game_checksums.md5 = ? JOIN game ON game_checksums.game_id = games.id LIMIT 1", [md5sum]).fetchone()
+		if self._sqlite.rowcount < 1:
+			return [] # not found
+		'''
+		md5row = self._sqlite.execute("SELECT game_id, description FROM game_checksums WHERE md5 = ?", [md5sum]).fetchone()
+		if self._sqlite.rowcount < 1:
+			return false
+
+		game_id = md5row[0]
+		descr = md5row[1]
+		md5row = None #save a little memory maybe, depending on GC
+
+		self._sqlite.execute("SELECT id, title FROM games WHERE id = ? LIMIT 1", [game_id]).fetchone()
+
+		if self._sqlite.rowcount < 1:
+			return false
+		'''
+		return result
+
 	def getGameInformationById(self, game_id: int) -> list:
 		return self._sqlite.execute("SELECT id, title FROM games WHERE id = ? LIMIT 1", [game_id]).fetchone()
 
@@ -79,7 +99,9 @@ class ACNTBootDatabase:
 		return self._sqlite.execute("SELECT id, value from attributes_values WHERE attribute_id= ?", [attribute_id]).fetchall()
 
 	def getGameKnownChecksums(self, game_id: int) -> list:
-		pass
+		return self._sqlite.execute("SELECT md5, description from game_checksums WHERE game_id = ?", [game_id]).fetchall()
+
+	
 
 	def validateGameChecksum(game_id: int, checksum: str) -> bool:
 		pass

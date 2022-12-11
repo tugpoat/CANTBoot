@@ -25,6 +25,7 @@ class GameDescriptor(yaml.YAMLObject):
 	# Things from DB
 	game_id = None
 	title = None
+	description = None
 	attributes = [] # TODO: is this even needed?
 
 	_system = None
@@ -75,6 +76,10 @@ class GameDescriptor(yaml.YAMLObject):
 	def setSystem(self, system: tuple):
 		if type(system) is tuple:
 			self._system = (system[0], system[1])
+
+	@property
+	def checksum(self) -> str:
+		return self.file_checksum
 
 	@property
 	def getSystem(self) -> tuple:

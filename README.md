@@ -132,11 +132,11 @@ On Hold
 ----
   * Unit tests and E2E tests
   * Set up build pipeline and automatic SD image generation
+  * Card emulation
 
 TODO
 ----
  * DHCP configuration of NetDIMM(s)
- * Card emulation
  * Implement DragonMinded's universal freeplay/monitor force patches
  * Some kind of user authentication so some dingus on the network can't just reconfigure everything
  * Some kind of API authentication so some dingus on the network can't just reconfigure everything
