@@ -1,8 +1,7 @@
 CANTBoot
 ========
-********WARNING: THIS MAY OR MAY NOT WORK.
+********LIABILITY DISCLAIMER: I've done my best to test this and ensure that it works as intended. However as with all community software, the author(s) shall not be held responsible for any possible damages that could result from its use or misuse.********
 
-It should work and load games and stuff, and I try my best to make sure that it does with each commit.
 
 CANTBoot is loosely based on NAOMIWeb, and started life as a fork of it.
 ### Github links:
@@ -12,11 +11,9 @@ CANTBoot is loosely based on NAOMIWeb, and started life as a fork of it.
 
 I wanted a cleanly-written, easy-to-use, efficient, and easily extensible loader, which was also functional and pleasant to look at.
 I couldn't find one, so I wrote it. It's currently a bit more gross than I'd like, however.
-This will be what I think a NetDIMM loader should be.
-
 It's written in Python 3, using Bottle and Bootstrap.
 
-Note: This is still a major work in progress.
+
 
 Requirements
 ------------
@@ -24,8 +21,9 @@ Requirements
  * Any of the following:
   - Sega NAOMI mainboard (Must use one of the following BIOS revisions: E, F, G, H. Region shouldn't matter)
   - Sega NAOMI 2 mainboard (BIOS revision A or later)
-  - Sega Chihiro (TODO)
-  - Triforce (TODO)
+  - Sega Chihiro (Needs testing)
+  - Triforce (Needs testing)
+  - Sammy Atomiswave (Needs testing)
 
  * NetDIMM cartridge w/ security PIC (NULL PIC recommended, but other PICs may work)
  * Raspberry Pi 3,4 (2 may work but will not be supported)

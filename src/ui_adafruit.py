@@ -272,16 +272,19 @@ class UIAdaMainMenu(TwoLineLcdMenu):
 Config Menu
 '''
 class UIAdaConfigMenu(TwoLineLcdMenu):
-	def __init__(self, lcd):
+	_prefs = None
+	def __init__(self, lcd, prefs):
 		super().__init__(lcd)
 
 		self._logger = logging.getLogger("UIAdaConfigMenu " + str(id(self)))
 		self._logger.debug("init logger")
 
-		self.mlist = ['Filter games by monitor', '']
+		self.mlist = ['Toggle WiFi', 'Filter by monitor', 'Filter by system']
 
 		self.line1 = "N/A"
-		self.line2 = "L:Exit U/D:toggle"
+		self.line2 = "L:Exit SEL:toggle"
+
+		self._prefs = prefs
 
 		MBus.add_handler(FOAD, self.die)
 
@@ -291,6 +294,25 @@ class UIAdaConfigMenu(TwoLineLcdMenu):
 	def btn_press_left(self):
 		self.nextmenu = UIAdaMenus.main
 		self.exitmenu = True
+
+	def btn_press_up(self):
+		super().btn_press_up()
+		if self._lcd.UP in TwoLineLcdMenu._pressed_buttons: return
+
+		self.mindex += 1
+		if self.mindex >= len(self.mlist): self.mindex = 0
+
+		self.line1 = self.mlist[self.mindex]
+
+	def btn_press_dn(self):
+		super().btn_press_dn()
+		if self._lcd.DOWN in TwoLineLcdMenu._pressed_buttons: return
+
+		self.mindex -= 1
+		self._logger.debug(self.mlist[0])
+		if self.mindex < 0: self.mindex = len(self.mlist) - 1
+
+		self.line1 = self.mlist[self.mindex]
 
 
 '''
@@ -357,7 +379,9 @@ class UIAdaGamesMenu(TwoLineLcdMenu):
 	_is_booting = False
 	_nodestate = None
 
-	def __init__(self, lcd, gameslist, sel_node : str):
+	_prefs = None
+
+	def __init__(self, lcd, gameslist, sel_node : str, prefs):
 		super().__init__(lcd)
 
 		self._logger = logging.getLogger("UIAdaNodeMenu " + str(id(self)))
@@ -373,6 +397,7 @@ class UIAdaGamesMenu(TwoLineLcdMenu):
 
 		#non-inherited
 		self.node_id = sel_node
+		self._prefs = prefs
 		
 		if len(self.mlist) < 1: 
 			self.line2 = "No games! :("
@@ -444,6 +469,8 @@ class UI_Adafruit(Thread):
 	_pi_rev = None
 	_lcd = None
 
+	_prefs = None
+
 	menu = None
 	prevmenu = None
 	nextmenu = None
@@ -479,8 +506,8 @@ class UI_Adafruit(Thread):
 		self._lcd.message("CANTBoot Loading\n    Hold up.")
 
 		self._games = games
-
 		self._nodes = nodeman.nodes
+		self._prefs = prefs
 
 	def die(self, data):
 		self.line1="Goodbye George<3"
@@ -519,9 +546,10 @@ class UI_Adafruit(Thread):
 						menu = UIAdaMainMenu(self._lcd)
 					elif nextmenu == UIAdaMenus.nodes:
 						menu = UIAdaNodesMenu(self._lcd, self._nodes)
+					elif nextmenu == UIAdaMenus.config:
+						menu = UIAdaConfigMenu(self._lcd, self._prefs)
 					elif nextmenu == UIAdaMenus.games:
-						menu = UIAdaGamesMenu(self._lcd, self._games, self._nodes[sel_idx].node_id)
-						#menu = UIAdaGamesMenu(self._lcd, self._games, '0')
+						menu = UIAdaGamesMenu(self._lcd, self._games, self._nodes[sel_idx].node_id, self._prefs)
 
 				menuret = menu.run_menu()
 				nextmenu = menuret[0]
