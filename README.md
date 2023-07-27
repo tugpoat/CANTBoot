@@ -19,8 +19,8 @@ Requirements
 ------------
 ### Hardware:
  * Any of the following:
-  - Sega NAOMI mainboard (Must use one of the following BIOS revisions: E, F, G, H. Region shouldn't matter)
-  - Sega NAOMI 2 mainboard (BIOS revision A or later)
+  - Sega NAOMI mainboard (Must use one of the following BIOS revisions: E, F, G, H, 2020 MultiBIOS recommended)
+  - Sega NAOMI 2 mainboard (BIOS revision A or later, 2020 MultiBIOS recommended)
   - Sega Chihiro (Needs testing)
   - Triforce (Needs testing)
   - Sammy Atomiswave (Needs testing)
@@ -132,6 +132,9 @@ On Hold
   * Set up build pipeline and automatic SD image generation
   * Card emulation
 
+Won't Do
+----
+  * API Master/Slave modes for large networks and GPIO reset support for every node (Deprecated by new multibios release)
 TODO
 ----
  * DHCP configuration of NetDIMM(s)

@@ -66,9 +66,7 @@ class NodeManager():
 		#DO EET NOW
 		if self._loaders[node_id]:
 			self.__logger.debug("Booting game")
-
-			#self._loaders[node_id].addPatch(self.file_get_contents('patches/MarvelVsCapcom2_unlocked.binpatch'))
-			#self._loaders[node_id].addPatch(self.file_get_contents('patches/conflict.binpatch'))
+			
 			return self._loaders[node_id].bootGame()
 
 		return False

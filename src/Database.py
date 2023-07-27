@@ -40,6 +40,7 @@ class ACNTBootDatabase:
 			result.fetchone()
 
 	def getGameInformationByChecksum(self, md5sum: str) -> list:
+		#TODO: test
 		result = self._sqlite.execute("SELECT games.id, games.title, description FROM game_checksums WHERE game_checksums.md5 = ? JOIN game ON game_checksums.game_id = games.id LIMIT 1", [md5sum]).fetchone()
 		if self._sqlite.rowcount < 1:
 			return [] # not found
