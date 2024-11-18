@@ -19,6 +19,8 @@ class GameDescriptor(yaml.YAMLObject):
 
 	_rom_ident = None
 
+	_valid = False
+
 	# For Atomiswave conversions
 	_naomi2_cv = False
 
@@ -51,6 +53,7 @@ class GameDescriptor(yaml.YAMLObject):
 			self._control = filepath._control
 			self._max_players = filepath._max_players
 			self._dimm_ram = filepath._dimm_ram
+			self._valid = True
 			return
 
 		# Gather all the information we can from the filesystem
@@ -124,10 +127,10 @@ class GameDescriptor(yaml.YAMLObject):
 		try:
 			fp = open(self.filepath, 'rb')
 
-			header_magic = fp.read(8)
 
-			if header_magic[:5] == 'NAOMI' or header_magic[:6] == 'Naomi2':
-				self.system_name = header_magic.strip().ucase()
+			header_magic = fp.read(8)
+			if header_magic[:5] == b'NAOMI' or header_magic[:6] == b'Naomi2':
+				self.system_name = str(header_magic).strip()
 				# NAOMI game ident offset: 0x134
 				# NAOMI2 game ident offset: 0x134
 				fp.seek(0x134)
@@ -135,15 +138,16 @@ class GameDescriptor(yaml.YAMLObject):
 
 				# OK now check to see if it's one of Darksoft's Atomiswave conversions
 				fp.seek(0x30)
-				title = fp.read(32).strip(' ')
-				if title == "AWNAOMI":
+				title = str(fp.read(32)).strip(' ')
+
+				if title == b'AWNAOMI':
 					self._naomi2_cv = True #Flag it as a conversion
 			elif header_magic[:4] == 'FATX':
 				# Probably Chihiro, since it's a FATX image. 
 				# Let's double-check though, some dingus might be trying to load an XBOX image onto a Chihiro.
 				fp.seek(0x15020)
 				header_magic = fp.read(4)
-				if not header_magic == 'XBAM':
+				if not header_magic == b'XBAM':
 					#Not valid rom
 					fp.close()
 					return False
@@ -168,6 +172,7 @@ class GameDescriptor(yaml.YAMLObject):
 				self._rom_ident = fp.read(4).strip()
 
 			fp.close()
+			self._valid = True
 			return True
 			
 		except Exception as ex:
@@ -255,7 +260,7 @@ class GameDescriptor(yaml.YAMLObject):
 
 	@property
 	def isValid(self) -> bool:
-		return (self.system_name in ['NAOMI', 'NAOMI2', 'Atomiswave', 'Chihiro', 'Triforce'])
+		return self._valid
 
 	@property
 	def serialize(self) -> str:
