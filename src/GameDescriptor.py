@@ -138,7 +138,7 @@ class GameDescriptor(yaml.YAMLObject):
 				title = fp.read(32).strip(' ')
 				if title == "AWNAOMI":
 					self._naomi2_cv = True #Flag it as a conversion
-			else if header_magic[:4] == 'FATX':
+			elif header_magic[:4] == 'FATX':
 				# Probably Chihiro, since it's a FATX image. 
 				# Let's double-check though, some dingus might be trying to load an XBOX image onto a Chihiro.
 				fp.seek(0x15020)
@@ -157,7 +157,7 @@ class GameDescriptor(yaml.YAMLObject):
 				#The rom didn't seem like any system other than triforce. Let's make sure it's actually a triforce rom
 				fp.seek(0x800020)
 				header_magic = fp.read(4)
-				if not header magic == 'GCAM':
+				if not header_magic == 'GCAM':
 					#Not valid rom
 					fp.close()
 					return False
