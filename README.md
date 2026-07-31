@@ -1,8 +1,5 @@
 CANTBoot
 ========
-********WARNING: THIS MAY OR MAY NOT WORK.
-
-It should work and load games and stuff, and I try my best to make sure that it does with each commit.
 
 CANTBoot is loosely based on NAOMIWeb, and started life as a fork of it.
 ### Github links:
